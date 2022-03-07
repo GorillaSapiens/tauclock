@@ -79,6 +79,6 @@ void thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
                        unsigned int color, int thickness);
 void arc_canvas(Canvas * canvas, int center_x, int center_y, int radius,
                 int strokewidth, unsigned int strokecolor,
-                unsigned int forecolor, double begin_deg, double end_deg);
+                double begin_deg, double end_deg);
 
 #endif

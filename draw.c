@@ -441,7 +441,6 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @param radius The radius of the arc
 /// @param strokewidth The width of the drawn arc
 /// @param strokecolor The color to draw inside the arc
-/// @param forecolor The color to draw edge of the arc
 /// @param begin_deg The starting angle for the arc
 /// @param end_deg The ending angle for the arc
 /// @return void
@@ -449,21 +448,13 @@ void
 arc_canvas(Canvas * canvas,
            int center_x, int center_y, int radius,
            int strokewidth, unsigned int strokecolor,
-           unsigned int forecolor, double begin_deg, double end_deg) {
+           double begin_deg, double end_deg) {
    float theta;
 
    if (end_deg <= begin_deg) {
       end_deg += 360.0;
    }
 
-   if (forecolor != COLOR_NONE) {
-      for (theta = begin_deg; theta <= end_deg; theta += THETA_STEP) {
-         int x, y;
-         x = center_x + radius * cos(theta * M_PI / 180.0);
-         y = center_y + radius * sin(theta * M_PI / 180.0);
-         line_canvas(canvas, center_x, center_y, x, y, forecolor);
-      }
-   }
    if (strokecolor != COLOR_NONE) {
       for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
          int x1, y1, x2, y2;

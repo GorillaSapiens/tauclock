@@ -447,7 +447,7 @@ do_moon_draw(Canvas * canvas,
    }
 
    // outline
-   arc_canvas(canvas, cx, cy, 40, 1, COLOR_DARKGRAY, COLOR_NONE, 0, 360.0);
+   arc_canvas(canvas, cx, cy, 40, 1, COLOR_DARKGRAY, 0, 360.0);
 
    int is_up = -1;
    for (int i = 0; i < event_spot; i++) {
@@ -468,8 +468,8 @@ do_moon_draw(Canvas * canvas,
       }
    }
    if (is_up == 1) {
-      arc_canvas(canvas, cx, cy, 40, 1, COLOR_MOONBAND, COLOR_NONE, 0, 360.0);
-      arc_canvas(canvas, cx, cy, 43, 1, COLOR_MOONBAND, COLOR_NONE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, 40, 1, COLOR_MOONBAND, 0, 360.0);
+      arc_canvas(canvas, cx, cy, 43, 1, COLOR_MOONBAND, 0, 360.0);
    }
 }
 
@@ -511,7 +511,7 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
                double stop_angle =
                   frac(events[i].jd) * 360.0 - up_angle + 270.0;
                arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                          canvas->w / 2 / 2 + 128 + 16, 5, color, COLOR_NONE,
+                          canvas->w / 2 / 2 + 128 + 16, 5, color,
                           start_angle, stop_angle);
 
                last = events[i].jd;
@@ -525,7 +525,7 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                 canvas->w / 2 / 2 + 128 + 16, 5, color, COLOR_NONE,
+                 canvas->w / 2 / 2 + 128 + 16, 5, color,
                  start_angle, stop_angle);
    }
 
@@ -1386,7 +1386,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                           canvas->h / 2,
                           canvas->w / 2 / 2,
                           canvas->h / 2 / 2, color,
-                          COLOR_NONE, start_angle, stop_angle);
+                          start_angle, stop_angle);
 
                // accumulate daylight and darkness
                start_angle = normalize_angle(start_angle);
@@ -1489,7 +1489,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    double start_angle = frac(last) * 360.0 - up_angle + 270.0;
    double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
    arc_canvas(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
-              canvas->h / 2 / 2, color, COLOR_NONE, start_angle, stop_angle);
+              canvas->h / 2 / 2, color, start_angle, stop_angle);
 
    // accumulate daylight and darkness
    start_angle = normalize_angle(start_angle);
@@ -1671,10 +1671,8 @@ Canvas *do_all(double lat, double lng, double offset) {
    do_hour_ticks(canvas, mid, mid, mid / 2 + 128, up);
 
    // black border bands
-   arc_canvas(canvas, mid, mid, mid / 2 - 128, 1, COLOR_BLACK, COLOR_NONE,
-              0, 360.0);
-   arc_canvas(canvas, mid, mid, mid / 2 + 128, 1, COLOR_BLACK, COLOR_NONE,
-              0, 360.0);
+   arc_canvas(canvas, mid, mid, mid / 2 - 128, 1, COLOR_BLACK, 0, 360.0);
+   arc_canvas(canvas, mid, mid, mid / 2 + 128, 1, COLOR_BLACK, 0, 360.0);
 
    // our rotating "now" hand
    do_now_hand(canvas, up, JD);

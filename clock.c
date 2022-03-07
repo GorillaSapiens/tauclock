@@ -318,6 +318,7 @@ do_moon_draw(Canvas * canvas,
    int chunk_r = abs(chunk_x - b);
 
    // this won't make sense, because it's derived from earlier code...
+   // but it really does draw the moon...
    for (int dx = -40; dx <= 40; dx++) {
       for (int dy = -40; dy <= 40; dy++) {
          double d_interior = sqrt(dx * dx + dy * dy);
@@ -519,8 +520,6 @@ void events_dump(void) {
    }
 }
 
-// ########
-
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
@@ -659,7 +658,6 @@ my_get_everything(double JDstart,
       if (i >= JDstart) {
          if (sun_angle_1 < LN_SOLAR_ASTRONOMICAL_HORIZON &&
              sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
-            //events[event_spot++] = (Event){ i, "astronomical", EVENT_RISE };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -668,7 +666,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
              sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
-            //events[event_spot++] = (Event){ i, "nautical", EVENT_RISE };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -677,7 +674,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
              sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
-            //events[event_spot++] = (Event){ i, "civil", EVENT_RISE };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -686,7 +682,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
              sun_angle >= LN_SOLAR_STANDART_HORIZON) {
-            //events[event_spot++] = (Event){ i, "solar", EVENT_RISE };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -696,7 +691,6 @@ my_get_everything(double JDstart,
 
          if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
              sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
-            //events[event_spot++] = (Event){ i, "astronomical", EVENT_SET };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -705,7 +699,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
              sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
-            //events[event_spot++] = (Event){ i, "nautical", EVENT_SET };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -714,7 +707,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
              sun_angle < LN_SOLAR_CIVIL_HORIZON) {
-            //events[event_spot++] = (Event){ i, "civil", EVENT_SET };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -723,7 +715,6 @@ my_get_everything(double JDstart,
          }
          if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
              sun_angle < LN_SOLAR_STANDART_HORIZON) {
-            //events[event_spot++] = (Event){ i, "solar", EVENT_SET };
             my_get_everything_helper(i,
                                      observer,
                                      get_equ_sun_coords,
@@ -732,7 +723,6 @@ my_get_everything(double JDstart,
          }
 
          if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
-            // events[event_spot++] = (Event){ i - ONE_MINUTE_JD, "solar", EVENT_TRANSIT };
             my_get_everything_helper(i, observer, get_equ_sun_coords, -90.1,    // a fake horizon
                                      "solar", EVENT_TRANSIT);
          }
@@ -876,6 +866,7 @@ my_get_everything(double JDstart,
       events[event_spot++] = (Event) {
       earliest, "solar", EVENT_UP};
    }
+
    // lunar
 
    get_equ_moon_coords(earliest, &moon_posn);
@@ -891,8 +882,6 @@ my_get_everything(double JDstart,
       earliest, "lunar", EVENT_DOWN};
    }
 }
-
-// ########
 
 void events_populate(double JD, struct ln_lnlat_posn *observer) {
    my_get_everything(JD - 2.0, JD + 1.0, observer,
@@ -945,7 +934,7 @@ void do_weather(Canvas * canvas) {
       char buffer[128];
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
-      }                         // location
+      }                         //location
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1023,7 +1012,6 @@ void do_zodiac(Canvas * canvas, double ra) {
       buf[0] = 'a' + sign;
       text_canvas(shadow, astro_32_bdf, cx, cy, COLOR_BLACK, COLOR_NONE, buf, 1,
                   3);
-      //text_canvas(djsmb_16_bdf,cx,cy+48,COLOR_GRAY,COLOR_WHITE,signs[sign],1,3);
 
       theta += (360.0 / 12.0 / 2.0);
       cx = canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20 +
@@ -1204,7 +1192,9 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
                if (started) {
                   times_written++;
-                  do_tr_time_sun(canvas, now, last, start_angle, (canvas->w / 3 - 24), fore, back);     // TODO FIX check size
+                  // TODO FIX check size
+                  do_tr_time_sun(canvas, now, last, start_angle,
+                                 (canvas->w / 3 - 24), fore, back);
                }
 
                last = here;
@@ -1368,7 +1358,6 @@ double get_lunar_new(double now) {
       if (lunar_disk < min) {
          min = lunar_disk;
          when = now + i;
-         //printf("XXX %f %f\n", when, min);
       }
    }
 
@@ -1379,7 +1368,6 @@ double get_lunar_new(double now) {
       if (lunar_disk < min) {
          min = lunar_disk;
          when = now + i;
-         //printf("YYY %f %f\n", when, min);
       }
    }
 
@@ -1397,7 +1385,6 @@ double get_moon_angle(double JD, double lunar_new) {
 }
 
 Canvas *do_all(double lat, double lng, double offset) {
-   //struct ln_zonedate rise, set;
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
    struct ln_equ_posn sun_equatorial;
@@ -1408,8 +1395,6 @@ Canvas *do_all(double lat, double lng, double offset) {
    /* observers location, used to calc rst */
    observer.lat = lat;          // degrees, North is positive
    observer.lng = lng;          // degrees, East is positive
-
-   //printf("location %f,%f\n", observer.lat, observer.lng);
 
    /* get Julian day from local time */
    JD = ln_get_julian_from_sys() + offset;
@@ -1440,11 +1425,12 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    int mid = canvas->w / 2;
 
-   // this must be first
+   // draw the moon
    double moon_angle = get_moon_angle(JD, lunar_new);
    do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
                 moon_angle);
 
+   // colored bands for the sun
    do_sun_bands(canvas, up, JD);
 
    // hour ticks
@@ -1456,12 +1442,16 @@ Canvas *do_all(double lat, double lng, double offset) {
    arc_canvas(canvas, mid, mid, mid / 2 + 128, 1, COLOR_BLACK, COLOR_NONE,
               0, 360.0);
 
+   // our rotating "now" hand
    do_now_hand(canvas, up, JD);
 
+   // zodiac, skip because woo-woo
    //do_zodiac(canvas, sun_equatorial.ra);
 
+   // colored band for the moon
    do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);
 
+   // information in the center
    do_now_time(canvas, JD);
    do_now_weekday(canvas, JD);
    do_now_date(canvas, JD);
@@ -1469,8 +1459,10 @@ Canvas *do_all(double lat, double lng, double offset) {
    //do_timezone();
    do_now_smalldate(canvas, JD);
 
+   // embedded watch won't have weather info
    //do_weather(canvas);
 
+   // for debugging, put the Julian date in the lower right
    char buf[64];
    sprintf(buf, "JD=%f", JD);
    text_canvas(canvas, djsmb_20_bdf, canvas->w * 27 / 32, canvas->h - 16,

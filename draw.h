@@ -32,31 +32,32 @@
 
 #include "fonts/icons_128x128.h"
 
-#define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))
-
 #define COLOR_NONE       0x00000000
+
+#define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))
 
 #define COLOR_BLACK      RGB(  0,   0,   0)
 #define COLOR_BLUE       RGB(  0,   0, 255)
 #define COLOR_CYAN       RGB(  0, 255, 255)
 #define COLOR_DARKBLUE   RGB(  0,   0, 128)
-#define COLOR_GRAY       RGB(128, 128, 128)
-#define COLOR_LIGHTGRAY  RGB(192, 192, 192)
 #define COLOR_DARKGRAY   RGB( 64,  64,  64)
+#define COLOR_GRAY       RGB(128, 128, 128)
 #define COLOR_GREEN      RGB(  0, 255,   0)
 #define COLOR_LIGHTBLUE  RGB( 76, 171, 244)
+#define COLOR_LIGHTGRAY  RGB(192, 192, 192)
 #define COLOR_MAGENTA    RGB(255,   0, 255)
+#define COLOR_MOONBAND   RGB(136,  88, 222)
 #define COLOR_ORANGE     RGB(255, 165,   0)
 #define COLOR_PURPLE     RGB(128,   0, 128)
 #define COLOR_RED        RGB(255,   0,   0)
 #define COLOR_WHITE      RGB(255, 255, 255)
 #define COLOR_YELLOW     RGB(255, 255,   0)
-#define COLOR_MOONBAND   RGB(136,  88, 222)
 
+/// @brief A struct defining an area to draw on.
 typedef struct Canvas {
-   int w;
-   int h;
-   unsigned int *data;
+   int w; ///< The width of the Canvas
+   int h; ///< The height of the Canvas
+   unsigned int *data; ///< Pointer to Canvas data
 } Canvas;
 
 Canvas *new_canvas(int w, int h, unsigned char fill);

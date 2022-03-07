@@ -1385,8 +1385,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                arc_canvas(canvas, canvas->w / 2,
                           canvas->h / 2,
                           canvas->w / 2 / 2,
-                          canvas->h / 2 / 2, color,
-                          start_angle, stop_angle);
+                          canvas->h / 2 / 2, color, start_angle, stop_angle);
 
                // accumulate daylight and darkness
                start_angle = normalize_angle(start_angle);

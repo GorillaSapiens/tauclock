@@ -629,6 +629,14 @@ my_get_everything_helper(double JD,
    return;
 }
 
+// collect all events
+//
+// one may ask, why not use ln_get_solar_rst() and various related functions?
+// turns out these functions are buggy near the poles. so instead we
+// roll our own, and look for horizon crossings (for rise/set) and local
+// maxima (for transits).  we do this first with an approximated position
+// for the object (to save computation time) which we then refine in the
+// my_get_everything_helper() above.
 void
 my_get_everything(double JDstart,
                   double JDend,

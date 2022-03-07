@@ -89,6 +89,10 @@ int event_spot = 0;
 
 #define SIZE 1024
 
+/// @brief Normalize an angle in the range 0.0 .. 360.0
+///
+/// @param angle The angle to normalize, in degrees
+/// @returns The same angle in the range 0.0 .. 360.0
 double normalize_angle(double angle) {
    if (angle < 0.0) {
       angle += 360.0 * (1.0 - (int)(angle / 360.0));
@@ -1071,14 +1075,14 @@ accum_helper(Canvas * canvas,
    text_canvas(canvas, djsmb_20_bdf, x, y + 16, fore, back, label, 1, 3);
 }
 
-typedef struct SunMemory {
+typedef struct TimeDrawnMemory {
    int x;
    int y;
    int w;
    int h;
-} SunMemory;
-SunMemory sunmemory[32];
-int sunspot = 0;
+} TimeDrawnMemory;
+TimeDrawnMemory timedrawnmemory[32];
+int timedrawnspot = 0;
 
 int check(int x, int y, int w, int h) {
    w += 4;
@@ -1086,11 +1090,11 @@ int check(int x, int y, int w, int h) {
    x -= w / 2;
    y -= h / 2;
 
-   for (int i = 0; i < sunspot; i++) {
-      int rw = sunmemory[i].w + 4;
-      int rh = sunmemory[i].h + 4;
-      int rx = sunmemory[i].x - rw / 2;
-      int ry = sunmemory[i].y - rh / 2;
+   for (int i = 0; i < timedrawnspot; i++) {
+      int rw = timedrawnmemory[i].w + 4;
+      int rh = timedrawnmemory[i].h + 4;
+      int rx = timedrawnmemory[i].x - rw / 2;
+      int ry = timedrawnmemory[i].y - rh / 2;
 
       if (rx > x + w) {
          continue;
@@ -1132,7 +1136,7 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
    }
    while (collision);
 
-   sunmemory[sunspot++] = (SunMemory) {
+   timedrawnmemory[timedrawnspot++] = (TimeDrawnMemory) {
    x, y, w, h};
 
    do_xy_time(canvas, now, jd, x, y, fg, bg);

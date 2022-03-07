@@ -1006,7 +1006,11 @@ void do_weather(Canvas * canvas) {
    }
 }
 
-void do_zodiac(Canvas * canvas, double ra) {
+void do_zodiac(Canvas * canvas, double JD) {
+   struct ln_equ_posn sun_equatorial;
+   ln_get_solar_equ_coords(JD, &sun_equatorial);
+   double ra = sun_equatorial.ra;
+
    Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
    char buf[2] = { 0, 0 };
    for (int sign = 0; sign < 12; sign++) {
@@ -1395,24 +1399,21 @@ double get_moon_angle(double JD, double lunar_new) {
 Canvas *do_all(double lat, double lng, double offset) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
-   struct ln_equ_posn sun_equatorial;
 
    double JD;
    double up;
 
-   /* observers location, used to calc rst */
+   // observer's location
    observer.lat = lat;          // degrees, North is positive
    observer.lng = lng;          // degrees, East is positive
 
-   /* get Julian day from local time */
+   // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
 
-   /* local time */
+   // local time
    ln_get_local_date(JD, &now);
 
    // all of the data
-   ln_get_solar_equ_coords(JD, &sun_equatorial);
-
    events_clear();
    events_populate(JD, &observer);
    events_sort();
@@ -1421,7 +1422,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    // get the transit time
    up = events_transit(JD);
 
-   /* lunar disk, phase and bright limb */
+   // lunar disk, phase and bright limb
    float lunar_disk = ln_get_lunar_disk(JD);    // 0 to 1
    float lunar_phase = ln_get_lunar_phase(JD);  // 0 to 180
    float lunar_bright_limb = ln_get_lunar_bright_limb(JD);      // 0 to 360
@@ -1454,7 +1455,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    do_now_hand(canvas, up, JD);
 
    // zodiac, skip because woo-woo
-   //do_zodiac(canvas, sun_equatorial.ra);
+   // do_zodiac(canvas, JD);
 
    // colored band for the moon
    do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);

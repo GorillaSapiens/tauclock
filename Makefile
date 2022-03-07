@@ -14,7 +14,10 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: fonts/.bdf calcdata libnova-0.15.0/doc/html
+all: fonts/.bdf calcdata libnova-0.15.0/doc/html doxygen
+
+doxygen:
+	doxygen doxygen.conf
 
 indent:
 	indent -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -nce -ci3 \

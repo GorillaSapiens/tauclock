@@ -33,9 +33,13 @@
 
 #include "draw.h"
 
+/// @brief A macro to convert Degrees to Radians
 #define DEG2RAD(x) ((x) * M_PI / 180.0)
+
+/// @brief A macro to convert Radians to Degrees
 #define RAD2DEG(x) ((x) * 180.0 / M_PI)
 
+/// @brief An array containing month names.
 const char *months[] = {
    "January",
    "February",
@@ -51,6 +55,7 @@ const char *months[] = {
    "December"
 };
 
+/// @brief An array containing weekday names.
 const char *weekdays[] = {
    "Sunday",
    "Monday",
@@ -61,6 +66,7 @@ const char *weekdays[] = {
    "Saturday"
 };
 
+/// @brief An array containing zodiac sign names
 const char *signs[] = {
    "Aries", "Taurus", "Gemini",
    "Cancer", "Leo", "Virgo",
@@ -68,14 +74,25 @@ const char *signs[] = {
    "Capricorn", "Aquarius", "Pisces"
 };
 
+/// @brief The object set some time before this time
 #define EVENT_DOWN 0
-#define EVENT_RISE 1
-#define EVENT_TRANSIT 2
-#define EVENT_SET 3
-#define EVENT_UP 4
-#define EVENT_NONE 5
-const char *typenames[] = { "down", "rise", "transit", "set", "up", "none" };
 
+/// @brief The object rises at this time.
+#define EVENT_RISE 1
+
+/// @brief The object reaches a visible local maxima at this time.
+#define EVENT_TRANSIT 2
+
+/// @brief The object sets at this time.
+#define EVENT_SET 3
+
+/// @brief The object rose some time before this time
+#define EVENT_UP 4
+
+/// @brief Human readable names for the EVENT_* defines
+const char *typenames[] = { "down", "rise", "transit", "set", "up" };
+
+/// @brief A structure denoting a up/down/rise/transit/set event.
 typedef struct {
    double jd;
    const char *fn_name;
@@ -83,16 +100,22 @@ typedef struct {
    int prune;
 } Event;
 
+/// @brief The size of the events array
 #define NUM_EVENTS 4096
+
+/// @brief An array containing events
 Event events[NUM_EVENTS];
+
+/// @brief An integer denoting the next free slot in the events array
 int event_spot = 0;
 
+/// @brief The size of the generated image
 #define SIZE 1024
 
 /// @brief Normalize an angle in the range 0.0 .. 360.0
 ///
 /// @param angle The angle to normalize, in degrees
-/// @returns The same angle in the range 0.0 .. 360.0
+/// @return The same angle in the range 0.0 .. 360.0
 double normalize_angle(double angle) {
    if (angle < 0.0) {
       angle += 360.0 * (1.0 - (int)(angle / 360.0));
@@ -103,15 +126,30 @@ double normalize_angle(double angle) {
    return angle;
 }
 
+/// @brief Determine the angle between two angles.
+///
+/// @param a The first angle
+/// @param b The second angle
+/// @return The positive angle between angles a and b.
 double angle_between(double a, double b) {
    return fabs(RAD2DEG(atan2(sin(DEG2RAD(a - b)), cos(DEG2RAD(a - b)))));
 }
 
+/// @brief Get the fractional part of a double, discarding the integer part.
+///
+/// @param The double of interest
+/// @return The non-intefer part of arg
 double frac(double arg) {
    double integer;
    return modf(arg, &integer);
 }
 
+/// @brief Remove newlines in a string.
+///
+/// This routine is dumb, and simply terminates any string with nonprinting chars.
+///
+/// @param p Pointer to string
+/// @return void, the string is modified in place.
 void remove_newlines(char *p) {
    while (*p) {
       if (((unsigned char)*p) < ' ') {
@@ -122,6 +160,13 @@ void remove_newlines(char *p) {
    }
 }
 
+/// @brief Draw stars on COLOR_DARKBLUE areas
+///
+/// This is dead code.  The intent was to draw fanciful stars
+/// on the darkness portion of the clock.  It's unused, as it
+/// didn't look all that great.
+///
+/// @param canvas The Canvas to draw on
 void do_stars(Canvas * canvas) {
    for (int i = 0; i < 1000; i++) {
       int x = rand() % canvas->w;
@@ -150,6 +195,16 @@ void do_stars(Canvas * canvas) {
    }
 }
 
+/// @brief Draw a time at x,y coordinates
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian date
+/// @param jd The time to draw
+/// @param x X coordinate to center the text on
+/// @param y Y coordinate to center the text on
+/// @param fg The foreground color of the text
+/// @param bg The background color of the text
+/// @return The return value of text_canvas()
 int
 do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
            unsigned int fg, unsigned int bg) {
@@ -161,6 +216,16 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
                       fg, bg, time, 1, 3);
 }
 
+/// @brief Draw ticks every hour around the outside edge
+///
+/// Ticks are drawn using xor logic, so they should always be visible
+///
+/// @param canvas The Canvas to draw on
+/// @param x The X coordinate of the center of the clock
+/// @param y The Y coordinate of the center of the clock
+/// @param r The radius of the clock
+/// @param up The angle used as "up"
+/// @return void
 void do_hour_ticks(Canvas * canvas, int x, int y, int r, double up) {
    double angle = -frac(up) * 360.0;
 
@@ -181,6 +246,14 @@ void do_hour_ticks(Canvas * canvas, int x, int y, int r, double up) {
    delete_canvas(shadow);
 }
 
+/// @brief Draw the "now" hand
+///
+/// The now hand is drawn using xor logic
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date used as "up"
+/// @param now The current Julian Date
+/// @return void
 void do_now_hand(Canvas * canvas, double up, double now) {
 
    Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
@@ -202,6 +275,11 @@ void do_now_hand(Canvas * canvas, double up, double now) {
    delete_canvas(shadow);
 }
 
+/// @brief Draw the current time in the center of the Canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @return void
 void do_now_time(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
@@ -211,6 +289,11 @@ void do_now_time(Canvas * canvas, double now) {
                COLOR_BLACK, COLOR_WHITE, time, 1, 12);
 }
 
+/// @brief Draw the current weekday in the center of the Canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @return void
 void do_now_weekday(Canvas * canvas, double now) {
    struct ln_zonedate zonedate;
    ln_get_local_date(now, &zonedate);
@@ -229,6 +312,11 @@ void do_now_weekday(Canvas * canvas, double now) {
                COLOR_BLACK, COLOR_WHITE, text, 1, 2);
 }
 
+/// @brief Draw the current date in the center of the Canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @return void
 void do_now_date(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
@@ -238,6 +326,11 @@ void do_now_date(Canvas * canvas, double now) {
                COLOR_BLACK, COLOR_WHITE, time, 1, 2);
 }
 
+/// @brief Draw the location in the center of the Canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param observer The lat/long of the observer position
+/// @return void
 void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    char location[128];
 
@@ -261,6 +354,11 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
                COLOR_BLACK, COLOR_WHITE, location, 1, 2);
 }
 
+/// @brief Draw the current date in the center of the Canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @return void
 void do_now_smalldate(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
@@ -271,6 +369,16 @@ void do_now_smalldate(Canvas * canvas, double now) {
                COLOR_BLACK, COLOR_WHITE, time, 1, 2);
 }
 
+/// @brief Draw the moon
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date used as "up" on the clock
+/// @param now The current Julian Date
+/// @param lunar_phase The current lunar_phase as returned by libnova
+/// @param lunar_bright_limb The current lunar_bright_limb as returned by libnova
+/// @param lunar_disk The current lunar_disk as returned by libnova
+/// @param where_angle The clock angle at which to draw the moon
+/// @return void
 void
 do_moon_draw(Canvas * canvas,
              double up,
@@ -365,6 +473,14 @@ do_moon_draw(Canvas * canvas,
    }
 }
 
+/// @brief Draw the perimeter band indicating lunar rise/transit/set
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date used as "up" on the clock
+/// @param now The current Julian Date
+/// @param moon_angle The clock angle at which to draw the moon
+/// @param color The color to use when drawing
+/// @return void
 void
 do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
              unsigned int color) {
@@ -452,10 +568,15 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
    }
 }
 
+/// @brief Clear the events list
 void events_clear(void) {
    event_spot = 0;
 }
 
+/// @brief Compare two events
+///
+/// This is a helpwer function used by qsort() to order
+/// the events in the event list.
 int event_compar(const void *a, const void *b) {
    Event *pa = (Event *) a;
    Event *pb = (Event *) b;
@@ -500,16 +621,26 @@ int event_compar(const void *a, const void *b) {
    }
 }
 
+/// @brief Sort the events list
+///
+/// Uses the event_compar function
 void events_sort(void) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
 
+/// @brief Mark events of interest / noninterest
+///
+/// Used to mark events occurring +/- 12 hours from current time.
+///
+/// @param jd The curren Julian Date
+/// @return void
 void events_prune(double jd) {
    for (int i = 0; i < event_spot; i++) {
       events[i].prune = (fabs(events[i].jd - jd) > 0.5) ? 1 : 0;
    }
 }
 
+/// @brief For debugging, print the events list
 void events_dump(void) {
    struct ln_zonedate zonedate;
 
@@ -522,10 +653,21 @@ void events_dump(void) {
    }
 }
 
+/// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
+/// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
+/// @brief A helper function to place rise/transit/set events in event list
+///
+/// @param JD The current Julian Date
+/// @param observer The lat/lon of the observer position
+/// @param get_equ_coords A function returning Equ coordinates for object
+/// @param horizon The horizon angle of interest
+/// @param fn_name The name of the event we're interested in
+/// @param event_type An EVENT_* macro indicating event type
+/// @return void
 void
 my_get_everything_helper(double JD,
                          struct ln_lnlat_posn *observer,
@@ -631,14 +773,21 @@ my_get_everything_helper(double JD,
    return;
 }
 
-// collect all events
-//
-// one may ask, why not use ln_get_solar_rst() and various related functions?
-// turns out these functions are buggy near the poles. so instead we
-// roll our own, and look for horizon crossings (for rise/set) and local
-// maxima (for transits).  we do this first with an approximated position
-// for the object (to save computation time) which we then refine in the
-// my_get_everything_helper() above.
+/// @brief Collect all events that might be of interest
+///
+/// one may ask, why not use ln_get_solar_rst() and various related functions?
+/// turns out these functions are buggy near the poles. so instead we
+/// roll our own, and look for horizon crossings (for rise/set) and local
+/// maxima (for transits).  we do this first with an approximated position
+/// for the object (to save computation time) which we then refine in the
+/// my_get_everything_helper() above.
+///
+/// @param JDstart The Julian Date of the start of the interesting period
+/// @param JDend The Julian Date of the end of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @param get_equ_sun_coords Function returning sun coordinats
+/// @param get_equ_moon_coords Function returning moon coordinats
+/// @return void
 void
 my_get_everything(double JDstart,
                   double JDend,
@@ -893,11 +1042,20 @@ my_get_everything(double JDstart,
    }
 }
 
+/// @brief Populate the event list
+///
+/// @param JD The current Julian Date
+/// @param observer The observer's lat/lon coordinates
+/// @return void
 void events_populate(double JD, struct ln_lnlat_posn *observer) {
    my_get_everything(JD - 2.0, JD + 1.0, observer,
                      ln_get_solar_equ_coords, ln_get_lunar_equ_coords);
 }
 
+/// @brief Figure out which way is "up"
+///
+/// @param jd The current Julian Date
+/// @return A Julian Date useful as "up", usually a solar transit
 double events_transit(double jd) {
    // any non pruned, non lunar, will do...
    for (int i = 0; i < event_spot; i++) {
@@ -938,6 +1096,12 @@ double events_transit(double jd) {
    return frac(ret);
 }
 
+/// @brief Read the weather.txt file, and add details to the clock
+///
+/// This is dead code.
+///
+/// @param canvas The Canvas to draw on
+/// @return void
 void do_weather(Canvas * canvas) {
    FILE *f = fopen("weather.txt", "r");
    if (f) {
@@ -1008,6 +1172,13 @@ void do_weather(Canvas * canvas) {
    }
 }
 
+/// @brief Add zodiac details to the clock
+///
+/// This is dead code.
+///
+/// @param canvas The Canvas to draw on
+/// @paran JD the current Julian Date
+/// @return void
 void do_zodiac(Canvas * canvas, double JD) {
    struct ln_equ_posn sun_equatorial;
    ln_get_solar_equ_coords(JD, &sun_equatorial);
@@ -1044,6 +1215,15 @@ void do_zodiac(Canvas * canvas, double JD) {
    delete_canvas(shadow);
 }
 
+/// @brief Helper function to accumulate total sunlight/night/whatever hours
+///
+/// @param canvas The Canvas to draw on
+/// @param angle The angle used to derive total time
+/// @param label The string label to draw
+/// @param draw_angle Where to draw it
+/// @param fore The foreground color
+/// @param back The background color
+/// @return void
 void
 accum_helper(Canvas * canvas,
              double angle,
@@ -1075,15 +1255,27 @@ accum_helper(Canvas * canvas,
    text_canvas(canvas, djsmb_20_bdf, x, y + 16, fore, back, label, 1, 3);
 }
 
+/// @brief A struct used to remember where something is drawn.
 typedef struct TimeDrawnMemory {
    int x;
    int y;
    int w;
    int h;
 } TimeDrawnMemory;
+
+/// @brief An array of things drawn
 TimeDrawnMemory timedrawnmemory[32];
+
+/// @brief The next open spot in the array
 int timedrawnspot = 0;
 
+/// @brief A helper function toe determine when labels collide
+///
+/// @param x X coordinate of desired label
+/// @param y Y coordinate of desired label
+/// @param w Width of desired label
+/// @param h height of desired label
+/// @return 1 if there is a collision, 0 otherwise
 int check(int x, int y, int w, int h) {
    w += 4;
    h += 4;
@@ -1114,9 +1306,19 @@ int check(int x, int y, int w, int h) {
    return 0;
 }
 
+/// @brief Draw a time for the sun band given theta,radius
+///
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @param jd The Julian Date for the event of interest
+/// @param theta The desired angle
+/// @param r The desired radius
+/// @param fg The foreground color for text
+/// @param bg The background color for text
+/// @return void
 void
 do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
-               double r, unsigned int fg, unsigned int bg) {
+               double radius, unsigned int fg, unsigned int bg) {
 
    // get width and height by drawing offscreen
    int wh = do_xy_time(canvas, now, jd, -300, -300, fg, bg);
@@ -1127,12 +1329,12 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
    int x, y;
 
    do {
-      x = (canvas->w / 2) + r * cos(DEG2RAD(theta));
-      y = (canvas->h / 2) + r * sin(DEG2RAD(theta));
+      x = (canvas->w / 2) + radius * cos(DEG2RAD(theta));
+      y = (canvas->h / 2) + radius * sin(DEG2RAD(theta));
 
       collision = check(x, y, w, h);
 
-      r--;
+      radius--;
    }
    while (collision);
 
@@ -1142,6 +1344,12 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
    do_xy_time(canvas, now, jd, x, y, fg, bg);
 }
 
+/// @brief Draw colored bands for solar position
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date for "up"
+/// @param now The Julian Date for the current time
+/// @return void
 void do_sun_bands(Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
@@ -1363,6 +1571,10 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 }
 
+/// @brief Get a Julian Date for the last New Moon
+///
+/// @param now The current Julian Date
+/// @return The Julian Date for the New Moon preceeding today
 double get_lunar_new(double now) {
    double min = ln_get_lunar_disk(now);
    double when = now;
@@ -1388,6 +1600,11 @@ double get_lunar_new(double now) {
    return when;
 }
 
+/// @brief Get the angle at which to draw the moon
+///
+/// @param JD The current Julian Date
+/// @param lunar_new The Julian Date of the last new moon
+/// @return An angle representation of the current phase
 double get_moon_angle(double JD, double lunar_new) {
    const double synodic_month = 29.530588;      // lunar synodic month
    while (lunar_new > JD) {
@@ -1398,6 +1615,12 @@ double get_moon_angle(double JD, double lunar_new) {
    return angle;
 }
 
+/// @brief Do all of the things
+///
+/// @param lat The observer's Latitude in degrees, South is negative
+/// @param lng The observer's Longitude in degrees, West is negative
+/// @param offset An offset from the current Julian Date
+/// @return A canvas that has been drawn upon
 Canvas *do_all(double lat, double lng, double offset) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;

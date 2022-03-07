@@ -26,6 +26,12 @@
 #define INCLUDE_FONT_DATA
 #include "draw.h"
 
+/// @brief Create a new canvas suitable for drawing on
+///
+/// @param w The width of the canvas
+/// @param h The height of the canvas
+/// @param fill The byte value to fill with on initialization
+/// @return A new Canvas object
 Canvas *new_canvas(int w, int h, unsigned char fill) {
    Canvas *ret = (Canvas *) malloc(sizeof(Canvas));
    ret->w = w;
@@ -35,11 +41,20 @@ Canvas *new_canvas(int w, int h, unsigned char fill) {
    return ret;
 }
 
+/// @brief Deletes an existing Canvas object
+///
+/// @param canvas The canvas to delete
+/// @return void
 void delete_canvas(Canvas * canvas) {
    free(canvas->data);
    free(canvas);
 }
 
+/// @brief Write raw Canvas data to a file
+///
+/// @param canvas The Canvas to dump
+/// @param fname The filename to write to
+/// @return void
 void dump_canvas(Canvas * canvas, const char *fname) {
    int fd = open(fname, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU);
 
@@ -57,6 +72,11 @@ void dump_canvas(Canvas * canvas, const char *fname) {
    close(fd);
 }
 
+/// @brief Apply an XOR mask to a canvas
+///
+/// @param mask The Canvas used as a mask
+/// @param target The Canvas written to
+/// @return void
 void xor_canvas(Canvas * mask, Canvas * target) {
    for (int y = 0; y < mask->h; y++) {
       for (int x = 0; x < mask->w; x++) {
@@ -71,6 +91,13 @@ void xor_canvas(Canvas * mask, Canvas * target) {
    }
 }
 
+/// @brief Write a color to an x,y on a canvas
+///
+/// @param canvas The Canvas to write to
+/// @param x The X coordinate to write to
+/// @param y The Y coordinate to write to
+/// @param color The color to write
+/// @return void
 void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
    if (0 <= x && x < canvas->w) {
       if (0 <= y && y < canvas->h) {
@@ -79,6 +106,14 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
    }
 }
 
+/// @brief Write a color to an x,y on a canvas if it equals a certain color
+///
+/// @param canvas The Canvas to write to
+/// @param x The X coordinate to write to
+/// @param y The Y coordinate to write to
+/// @param color The new color to write
+/// @param old The old color to match against
+/// @return void
 void
 conditional_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,
                         unsigned int old) {
@@ -91,6 +126,12 @@ conditional_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,
    }
 }
 
+/// @brief Get the current color of an x,y coordinate on the canvas
+///
+/// @param canvas The Canvas to read from
+/// @param x The X coordinate to read from
+/// @param y The Y coordinate to read from
+/// @return The color at x,y on the canvas
 unsigned int peek_canvas(Canvas * canvas, int x, int y) {
    if (0 <= x && x < canvas->w) {
       if (0 <= y && y < canvas->h) {
@@ -100,6 +141,10 @@ unsigned int peek_canvas(Canvas * canvas, int x, int y) {
    return COLOR_NONE;
 }
 
+/// @brief A helper function to decode UTF-8 text
+///
+/// @param p The string pointer
+/// @return The unicode value of the first character of the string
 static int utf8parse(const char *p) {
    static const unsigned char *q;
    int ret = 0;
@@ -146,6 +191,7 @@ static int utf8parse(const char *p) {
    }
 }
 
+/// @brief a struct to hold information about a glyph
 struct Glyph {
    int glyph;
    int width;
@@ -156,7 +202,12 @@ struct Glyph {
    uint8_t *data;
 };
 
-struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
+/// @brief Given a font and a unicode point, find the Glyph
+///
+/// @param font Pointer to a font
+/// @param glyph The unicode point of interest
+/// @return The Glyph struct coresponding to the unicode point
+static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
    int font_height = font[1];
    int font_dy = (signed char)font[3];
 
@@ -181,6 +232,18 @@ struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
    return ret;
 }
 
+/// @brief Draw text on a canvas
+///
+/// @param canvas The Canvas to draw on
+/// @param font A pointer to the font being used
+/// @param x The X coordinate of the center of the text
+/// @param y The Y coordinate of the center of the text
+/// @param fg The foreground color
+/// @param bg The background color
+/// @param p A pointer to a UTF-8 string
+/// @param mult A magnification multiplier
+/// @param gap The pixel gap between characters
+/// @return An integer encoding the text width and height
 int
 text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
             unsigned int bg, const char *p, int mult, int gap) {
@@ -294,6 +357,14 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
    return ret;
 }
 
+/// @brief Like poke_canvas(), but with a larger area
+///
+/// @param canvas The Canvas to draw on
+/// @param x The X coordinate to center on
+/// @param y The Y coordinate to center on
+/// @param color The color to draw
+/// @param blur A value indicating the size of the poke
+/// @return void
 void
 blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color, int blur) {
    for (int i = -blur; i <= blur; i++) {
@@ -303,6 +374,17 @@ blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color, int blur) {
    }
 }
 
+/// @brief Draw a line
+///
+/// This function uses recursion to draw the line
+///
+/// @param canvas The Canvas to draw on
+/// @param x1 The start X coordinate
+/// @param y1 The start Y coordinate
+/// @param x2 The end X coordinate
+/// @param y2 The end Y coordinate
+/// @param color The color to draw
+/// @return void
 void
 line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
             unsigned int color) {
@@ -319,6 +401,18 @@ line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
+/// @brief Draw a thick line
+///
+/// This function uses the recursive line_canvas to draw the line
+///
+/// @param canvas The Canvas to draw on
+/// @param x1 The start X coordinate
+/// @param y1 The start Y coordinate
+/// @param x2 The end X coordinate
+/// @param y2 The end Y coordinate
+/// @param color The color to draw
+/// @param thickness The thickness of the line to be drawn
+/// @return void
 void
 thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
                   unsigned int color, int thickness) {
@@ -334,7 +428,23 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
+/// @brief A step value used by arc_canvas()
 #define THETA_STEP 0.10
+
+/// @brief Draw an arc on the canvas
+///
+/// This function uses the recursive line_canvas to draw short segments of arc
+///
+/// @param canvas The Canvas to draw on
+/// @param center_x The center X coordinate used by the arc
+/// @param center_y The center Y coordinate used by the arc
+/// @param radius The radius of the arc
+/// @param strokewidth The width of the drawn arc
+/// @param strokecolor The color to draw inside the arc
+/// @param forecolor The color to draw edge of the arc
+/// @param begin_deg The starting angle for the arc
+/// @param end_deg The ending angle for the arc
+/// @return void
 void
 arc_canvas(Canvas * canvas,
            int center_x, int center_y, int radius,

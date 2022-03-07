@@ -159,9 +159,7 @@ struct Glyph {
 };
 
 struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
-   //int font_width = font[0];
    int font_height = font[1];
-   //int font_dx = (signed char) font[2];
    int font_dy = (signed char)font[3];
 
    font += 4;
@@ -174,16 +172,13 @@ struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
       ret.width = font[0];
       ret.height = font[1];
       ret.step = (ret.width + 7) / 8;
-      ret.dx = 0;               // (font_width + font_dx) - (ret.width + (signed char) font[2]);
+      ret.dx = 0;
       ret.dy = (font_height + font_dy) - (ret.height + (signed char)font[3]);
       ret.data = font + 4;
 
       font += 4 + ret.step * ret.height;
    }
    while (ret.glyph != glyph && ret.glyph != 0xFFFF);
-
-//   printf("%d g=%d w=%d h=%d s=%d x=%d y=%d p=%p\n",
-//         glyph, ret.glyph, ret.width, ret.height, ret.step, ret.dx, ret.dy, ret.data);
 
    return ret;
 }
@@ -261,19 +256,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
                                 = -mult * outline; dy <= mult * outline; dy++) {
                               poke_canvas
                                  (canvas,
-                                  x
-                                  +
-                                  w
-                                  *
-                                  mult
-                                  +
-                                  mx
-                                  +
-                                  dx
-                                  +
-                                  glyph.dx
-                                  *
-                                  mult,
+                                  x + w * mult + mx + dx + glyph.dx * mult,
                                   y + h * mult + my + dy + glyph.dy * mult, bg);
                            }
                         }
@@ -299,11 +282,8 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
                for (int mx = 0; mx < mult; mx++) {
                   for (int my = 0; my < mult; my++) {
                      poke_canvas(canvas,
-                                 x +
-                                 w * mult +
-                                 mx +
-                                 glyph.dx *
-                                 mult, y + h * mult + my + glyph.dy * mult, fg);
+                                 x + w * mult + mx + glyph.dx * mult,
+                                 y + h * mult + my + glyph.dy * mult, fg);
                   }
                }
             }

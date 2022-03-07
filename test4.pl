@@ -24,7 +24,7 @@ $rate=30;
 $start=0;
 $length=366;
 
-`rm *.png out*.txt *.mp4`;
+`rm out*.png out*.txt *.mp4`;
 $n = 0;
 for ($i = $start; $i < ($length+$start); $i += $step) {
    print "=== $i $n\n";

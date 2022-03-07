@@ -16,7 +16,7 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-`rm *.png *.mp4 out_*.txt`;
+`rm out*.png *.mp4 out_*.txt`;
 $n = 0;
 for ($i = 0; $i < (28.0+7.0); $i += (1/60)) {
    print "=== $i $n\n";

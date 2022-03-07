@@ -6,7 +6,7 @@ a clock for camping in the desert
 
 This program was built on Ubuntu Linux.  It is assumed the build system
 will have standard developer tools like gcc, make, and perl, as well as
-other common user tools like wget and ImageMagick convert.
+other common user tools like wget, ffmpeg, and ImageMagick convert.
 
 IF all these tools are in place, "make" followed by "./test0.sh" should
 produce an out.png similar to the example.png provided.

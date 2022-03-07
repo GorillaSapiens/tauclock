@@ -57,4 +57,4 @@ possible, but were considered "out of scope" at this time.
 == Fini
 
 I hope you find this useful.  The home repository is
-https://github.com/GorillaSapiens/sunclock 
+https://github.com/GorillaSapiens/sunclock

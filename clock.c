@@ -27,6 +27,13 @@
 
 #include <libnova/solar.h>
 #include <libnova/lunar.h>
+
+#include <libnova/mercury.h>
+#include <libnova/venus.h>
+#include <libnova/mars.h>
+#include <libnova/jupiter.h>
+#include <libnova/saturn.h>
+
 #include <libnova/julian_day.h>
 #include <libnova/rise_set.h>
 #include <libnova/transform.h>
@@ -87,12 +94,18 @@ typedef enum EventCategory {
    CAT_NAUTICAL,
    CAT_CIVIL,
    CAT_ASTRONOMICAL,
-   CAT_LUNAR
+   CAT_LUNAR,                   // moon and planets from here on
+   CAT_MERCURY,
+   CAT_VENUS,
+   CAT_MARS,
+   CAT_JUPITER,
+   CAT_SATURN
 } EventCategory;
 
 /// @brief Human readable names for the CAT_* defines
-const char *categorynames[] =
-   { "sun", "nautical", "civil", "astronomical", "lunar" };
+const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
+   "lunar", "mercury", "venus", "mars", "jupiter", "saturn"
+};
 
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "down", "rise", "transit", "set", "up" };
@@ -586,6 +599,105 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
    }
 }
 
+/// @brief Draw the perimeter band indicating planet rise/transit/set
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date used as "up" on the clock
+/// @param now The current Julian Date
+/// @param color The color to use when drawing
+/// @param radius The radius at which to draw the band
+/// @param category The planet category
+/// @return void
+void
+do_planet_band(Canvas * canvas, double up, double now,
+               unsigned int color, double radius, EventCategory category) {
+   double up_angle = frac(up) * 360.0;
+
+   double last = now - .5;
+   int is_up = -1;
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].jd > now + .5) {
+         break;
+      }
+      if (events[i].category == category) {
+         switch (events[i].type) {
+            case EVENT_UP:
+            case EVENT_RISE:
+            case EVENT_TRANSIT:
+               if (is_up == 0) {
+                  if (events[i].jd > last) {
+                     last = events[i].jd;
+                  }
+               }
+               is_up = 1;
+               break;
+            case EVENT_DOWN:
+            case EVENT_SET:
+               if (events[i].jd > last && is_up == 1) {
+                  double start_angle = frac(last) * 360.0 - up_angle + 270.0;
+                  double stop_angle =
+                     frac(events[i].jd) * 360.0 - up_angle + 270.0;
+                  arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
+                             radius, 1, color, start_angle, stop_angle);
+
+                  last = events[i].jd;
+               }
+               is_up = 0;
+               break;
+         }
+      }
+   }
+   if (is_up == 1) {
+      double start_angle = frac(last) * 360.0 - up_angle + 270.0;
+      double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
+      arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
+                 radius, 1, color, start_angle, stop_angle);
+   }
+
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].category == category) {
+         if (!events[i].prune) {
+            switch (events[i].type) {
+               case EVENT_UP:
+               case EVENT_DOWN:
+                  // do nothing
+                  break;
+               case EVENT_RISE:
+                  {
+                     double x, y;
+                     double angle =
+                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
+                     char sym[2] = { 0, 0 };
+
+                     sym[0] = 'C' + (category - CAT_MERCURY);
+
+                     x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
+                     y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
+                     text_canvas(canvas, astro_32_bdf, x, y, color, COLOR_WHITE,
+                                 sym, 1, 1);
+                  }
+                  // fallthrough
+               case EVENT_TRANSIT:
+               case EVENT_SET:
+                  {
+                     double x1, y1, x2, y2;
+                     double angle =
+                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
+
+                     x1 = canvas->w / 2 + (radius - 16) * cos(DEG2RAD(angle));
+                     y1 = canvas->h / 2 + (radius - 16) * sin(DEG2RAD(angle));
+                     x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
+                     y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
+
+                     line_canvas(canvas, x1, y1, x2, y2, color);
+                  }
+                  break;
+            }
+         }
+      }
+   }
+}
+
 /// @brief Clear the events list
 void events_clear(void) {
    event_spot = 0;
@@ -622,11 +734,21 @@ int event_compar(const void *a, const void *b) {
          CAT_NAUTICAL,
          CAT_CIVIL,
          CAT_SOLAR,
-         CAT_LUNAR
+         CAT_LUNAR,
+         CAT_MERCURY,
+         CAT_VENUS,
+         CAT_MARS,
+         CAT_JUPITER,
+         CAT_SATURN
       };
 
       static const EventCategory order_down[] = {       //"lscna"
          CAT_LUNAR,
+         CAT_MERCURY,
+         CAT_VENUS,
+         CAT_MARS,
+         CAT_JUPITER,
+         CAT_SATURN,
          CAT_SOLAR,
          CAT_CIVIL,
          CAT_NAUTICAL,
@@ -641,7 +763,7 @@ int event_compar(const void *a, const void *b) {
 
       // TODO FIX revisit this logic
 
-      for (int p = 0; p < 5; p++) {
+      for (int p = 0; p < 10; p++) {
          if (pa->category == order[p]) {
             return -1;
          }
@@ -1082,6 +1204,100 @@ void my_get_everything_lunar_updowns(double earliest,
    }
 }
 
+/// @brief Collect planet rise/transit/set events that might be of interest
+///
+/// @param JDstart The Julian Date of the start of the interesting period
+/// @param JDend The Julian Date of the end of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @param get_equ_coords Function to get equ coords of the planet
+/// @param category The EventCategory to use
+/// @return void
+void
+my_get_everything_planet(double JDstart,
+                         double JDend, struct ln_lnlat_posn *observer,
+                         Get_Equ_Coords get_equ_coords,
+                         EventCategory category) {
+   struct ln_equ_posn planet_posn;
+   double planet_angle_2 = 0.0;
+   double planet_angle_1 = 0.0;
+
+   // the planet doesn't move much, calculate it once
+
+   get_equ_coords((JDstart + JDend) / 2.0, &planet_posn);
+
+   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
+        i += ONE_MINUTE_JD) {
+      struct ln_hrz_posn planet_hrz_posn;
+      ln_get_hrz_from_equ(&planet_posn, observer, i, &planet_hrz_posn);
+      double planet_angle = planet_hrz_posn.alt;
+
+      if (i >= JDstart) {
+         if (planet_angle_1 < 0.0 && planet_angle >= 0.0) {
+            my_get_everything_helper(i,
+                                     observer,
+                                     get_equ_coords, 0.0, category, EVENT_RISE);
+         }
+
+         if (planet_angle_1 >= 0.0 && planet_angle < 0.0) {
+            my_get_everything_helper(i,
+                                     observer,
+                                     get_equ_coords, 0.0, category, EVENT_SET);
+         }
+
+         if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
+            my_get_everything_helper(i, observer, get_equ_coords, -90.1,        // a fake horizon
+                                     category, EVENT_TRANSIT);
+         }
+      }
+
+      planet_angle_2 = planet_angle_1;
+      planet_angle_1 = planet_angle;
+   }
+}
+
+/// @brief Collect planet up/down events that might be of interest
+///
+/// @param earliest The Julian Date of the start of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @param get_equ_coords Function to get equ coords of the planet
+/// @param category The EventCategory to use
+/// @return void
+void my_get_everything_planet_updowns(double earliest,
+                                      struct ln_lnlat_posn *observer,
+                                      Get_Equ_Coords get_equ_coords,
+                                      EventCategory category) {
+   struct ln_equ_posn planet_posn;
+   get_equ_coords(earliest, &planet_posn);
+
+   struct ln_hrz_posn planet_hrz_posn;
+   ln_get_hrz_from_equ(&planet_posn, observer, earliest, &planet_hrz_posn);
+   double planet_angle = planet_hrz_posn.alt;
+
+   if (planet_angle < 0.0) {
+      events[event_spot++] = (Event) {
+      earliest, category, EVENT_DOWN};
+   }
+
+   if (planet_angle >= 0.0) {
+      events[event_spot++] = (Event) {
+      earliest, category, EVENT_UP};
+   }
+}
+
+#define PLANET(x,y) \
+void my_get_everything_ ## x(double JDstart, double JDend, struct ln_lnlat_posn *observer) {\
+   my_get_everything_planet( JDstart, JDend, observer, ln_get_ ## x ## _equ_coords, y);\
+}\
+void my_get_everything_ ## x ## _updowns(double earliest, struct ln_lnlat_posn *observer) {\
+   my_get_everything_planet_updowns(earliest, observer, ln_get_ ## x ## _equ_coords, y);\
+}
+
+PLANET(mercury, CAT_MERCURY);
+PLANET(venus, CAT_VENUS);
+PLANET(mars, CAT_MARS);
+PLANET(jupiter, CAT_JUPITER);
+PLANET(saturn, CAT_SATURN);
+
 /// @brief Collect all events that might be of interest
 ///
 /// one may ask, why not use ln_get_solar_rst() and various related functions?
@@ -1102,6 +1318,12 @@ my_get_everything(double JDstart,
    my_get_everything_solar(JDstart, JDend, observer);
    my_get_everything_lunar(JDstart, JDend, observer);
 
+   my_get_everything_mercury(JDstart, JDend, observer);
+   my_get_everything_venus(JDstart, JDend, observer);
+   my_get_everything_mars(JDstart, JDend, observer);
+   my_get_everything_jupiter(JDstart, JDend, observer);
+   my_get_everything_saturn(JDstart, JDend, observer);
+
    // find the earliest time
 
    double earliest = events[0].jd;
@@ -1116,6 +1338,12 @@ my_get_everything(double JDstart,
 
    my_get_everything_solar_updowns(earliest, observer);
    my_get_everything_lunar_updowns(earliest, observer);
+
+   my_get_everything_mercury_updowns(earliest, observer);
+   my_get_everything_venus_updowns(earliest, observer);
+   my_get_everything_mars_updowns(earliest, observer);
+   my_get_everything_jupiter_updowns(earliest, observer);
+   my_get_everything_saturn_updowns(earliest, observer);
 }
 
 /// @brief Populate the event list
@@ -1135,7 +1363,7 @@ double events_transit(double jd) {
    // any non pruned, non lunar, will do...
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
-          events[i].type == EVENT_TRANSIT && events[i].category != CAT_LUNAR) {
+          events[i].type == EVENT_TRANSIT && events[i].category < CAT_LUNAR) {
          return frac(events[i].jd);
       }
    }
@@ -1448,7 +1676,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
-      if (events[i].category != CAT_LUNAR) {
+      if (events[i].category < CAT_LUNAR) {
          if (events[i].type != EVENT_TRANSIT) {
             if (events[i].prune == 0) {
                double here = events[i].jd;
@@ -1527,6 +1755,11 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
+               case CAT_MERCURY:
+               case CAT_VENUS:
+               case CAT_MARS:
+               case CAT_JUPITER:
+               case CAT_SATURN:
                   // do nothing
                   break;
             }
@@ -1555,6 +1788,11 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
+               case CAT_MERCURY:
+               case CAT_VENUS:
+               case CAT_MARS:
+               case CAT_JUPITER:
+               case CAT_SATURN:
                   // do nothing
                   break;
             }
@@ -1720,6 +1958,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    events_populate(JD, &observer);
    events_sort();
    events_prune(JD);
+   events_dump();
 
    // get the transit time
    up = events_transit(JD);
@@ -1756,6 +1995,18 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    // zodiac, skip because woo-woo
    // do_zodiac(canvas, JD);
+
+   double r = canvas->w / 2 / 2 + 128 + 16 + 5;
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN);
 
    // colored band for the moon
    do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);

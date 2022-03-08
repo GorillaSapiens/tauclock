@@ -55,9 +55,9 @@
 
 /// @brief A struct defining an area to draw on.
 typedef struct Canvas {
-   int w; ///< The width of the Canvas
-   int h; ///< The height of the Canvas
-   unsigned int *data; ///< Pointer to Canvas data
+   int w;                       ///< The width of the Canvas
+   int h;                       ///< The height of the Canvas
+   unsigned int *data;          ///< Pointer to Canvas data
 } Canvas;
 
 Canvas *new_canvas(int w, int h, unsigned char fill);

@@ -706,7 +706,8 @@ void
 my_get_everything_helper(double JD,
                          struct ln_lnlat_posn *observer,
                          Get_Equ_Coords get_equ_coords,
-                         double horizon, EventCategory category, int type) {
+                         double horizon, EventCategory category,
+                         EventType type) {
 
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
@@ -720,6 +721,10 @@ my_get_everything_helper(double JD,
    angle = hrz_posn.alt;
 
    switch (type) {
+      case EVENT_UP:
+      case EVENT_DOWN:
+         // ignore it
+         break;
       case EVENT_RISE:
          while (angle >= horizon) {
             iterations++;

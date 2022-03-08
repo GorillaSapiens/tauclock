@@ -22,11 +22,14 @@
 #include "draw.h"
 #include "clock.h"
 
+/// @brief A useless function required by the C runtime library.
 int main(int argc, char *argv[]) {
    if (argc < 3) {
-      printf("Usage: %s <lat> <lon> [<delta>]\n", argv[0]);
+      printf("Usage: %s <lat> <lon> [<date>] [<offset>]\n", argv[0]);
       printf("       for <lat>, N is positive, S is negative\n");
       printf("       for <lon>, E is positive, W is negative\n");
+      printf("       <date> in YYYY/MM/DD format\n");
+      printf("       <offset> additional float applied to date\n");
       exit(-1);
    }
 

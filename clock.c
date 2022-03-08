@@ -807,40 +807,22 @@ my_get_everything_helper(double JD,
    return;
 }
 
-/// @brief Collect all events that might be of interest
-///
-/// one may ask, why not use ln_get_solar_rst() and various related functions?
-/// turns out these functions are buggy near the poles. so instead we
-/// roll our own, and look for horizon crossings (for rise/set) and local
-/// maxima (for transits).  we do this first with an approximated position
-/// for the object (to save computation time) which we then refine in the
-/// my_get_everything_helper() above.
+/// @brief Collect solar rise/transit/set events that might be of interest
 ///
 /// @param JDstart The Julian Date of the start of the interesting period
 /// @param JDend The Julian Date of the end of the interesting period
 /// @param observer The lat/lon of the observer's position
-/// @param get_equ_sun_coords Function returning sun coordinats
-/// @param get_equ_moon_coords Function returning moon coordinats
 /// @return void
 void
-my_get_everything(double JDstart,
-                  double JDend,
-                  struct ln_lnlat_posn *observer,
-                  Get_Equ_Coords get_equ_sun_coords,
-                  Get_Equ_Coords get_equ_moon_coords) {
-
+my_get_everything_solar(double JDstart,
+                        double JDend, struct ln_lnlat_posn *observer) {
    struct ln_equ_posn sun_posn;
-   struct ln_equ_posn moon_posn;
-
    double sun_angle_2 = 0.0;
    double sun_angle_1 = 0.0;
 
-   double moon_angle_2 = 0.0;
-   double moon_angle_1 = 0.0;
-
    // the sun doesn't move much, calculate it once
 
-   get_equ_sun_coords((JDstart + JDend) / 2.0, &sun_posn);
+   ln_get_solar_equ_coords((JDstart + JDend) / 2.0, &sun_posn);
 
    for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
         i += ONE_MINUTE_JD) {
@@ -853,7 +835,7 @@ my_get_everything(double JDstart,
              sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_ASTRONOMICAL_HORIZON,
                                      CAT_ASTRONOMICAL, EVENT_RISE);
          }
@@ -861,7 +843,7 @@ my_get_everything(double JDstart,
              sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_NAUTIC_HORIZON,
                                      CAT_NAUTICAL, EVENT_RISE);
          }
@@ -869,7 +851,7 @@ my_get_everything(double JDstart,
              sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_CIVIL_HORIZON,
                                      CAT_CIVIL, EVENT_RISE);
          }
@@ -877,7 +859,7 @@ my_get_everything(double JDstart,
              sun_angle >= LN_SOLAR_STANDART_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_STANDART_HORIZON,
                                      CAT_SOLAR, EVENT_RISE);
          }
@@ -886,7 +868,7 @@ my_get_everything(double JDstart,
              sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_ASTRONOMICAL_HORIZON,
                                      CAT_ASTRONOMICAL, EVENT_SET);
          }
@@ -894,7 +876,7 @@ my_get_everything(double JDstart,
              sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_NAUTIC_HORIZON,
                                      CAT_NAUTICAL, EVENT_SET);
          }
@@ -902,7 +884,7 @@ my_get_everything(double JDstart,
              sun_angle < LN_SOLAR_CIVIL_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_CIVIL_HORIZON,
                                      CAT_CIVIL, EVENT_SET);
          }
@@ -910,13 +892,13 @@ my_get_everything(double JDstart,
              sun_angle < LN_SOLAR_STANDART_HORIZON) {
             my_get_everything_helper(i,
                                      observer,
-                                     get_equ_sun_coords,
+                                     ln_get_solar_equ_coords,
                                      LN_SOLAR_STANDART_HORIZON,
                                      CAT_SOLAR, EVENT_SET);
          }
 
          if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
-            my_get_everything_helper(i, observer, get_equ_sun_coords, -90.1,    // a fake horizon
+            my_get_everything_helper(i, observer, ln_get_solar_equ_coords, -90.1,       // a fake horizon
                                      CAT_SOLAR, EVENT_TRANSIT);
          }
       }
@@ -924,104 +906,18 @@ my_get_everything(double JDstart,
       sun_angle_2 = sun_angle_1;
       sun_angle_1 = sun_angle;
    }
+}
 
-   // the moon moves a lot more, so it is more complicated.
+/// @brief Collect solar up/down events that might be of interest
+///
+/// @param earliest The Julian Date of the start of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @return void
+void my_get_everything_solar_updowns(double earliest,
+                                     struct ln_lnlat_posn *observer) {
+   struct ln_equ_posn sun_posn;
+   ln_get_solar_equ_coords(earliest, &sun_posn);
 
-   double moon_angle;
-   struct ln_hrz_posn moon_hrz_posn;
-
-   // now do a quick pass for rough times,
-   // and call a helper for refinement
-
-   struct ln_equ_posn moon_posn_start;
-   double moon_jd_start = JDstart - (ONE_MINUTE_JD * 2.0);
-   get_equ_moon_coords(moon_jd_start, &moon_posn_start);
-   float moon_xyz_start[3];
-   moon_xyz_start[0] =
-      cos(DEG2RAD(moon_posn_start.dec)) * cos(DEG2RAD(moon_posn_start.ra));
-   moon_xyz_start[1] =
-      cos(DEG2RAD(moon_posn_start.dec)) * sin(DEG2RAD(moon_posn_start.ra));
-   moon_xyz_start[2] = sin(DEG2RAD(moon_posn_start.dec));
-
-   struct ln_equ_posn moon_posn_end;
-   double moon_jd_end = JDend;
-   get_equ_moon_coords(moon_jd_end, &moon_posn_end);
-   float moon_xyz_end[3];
-   moon_xyz_end[0] =
-      cos(DEG2RAD(moon_posn_end.dec)) * cos(DEG2RAD(moon_posn_end.ra));
-   moon_xyz_end[1] =
-      cos(DEG2RAD(moon_posn_end.dec)) * sin(DEG2RAD(moon_posn_end.ra));
-   moon_xyz_end[2] = sin(DEG2RAD(moon_posn_end.dec));
-
-   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
-        i += ONE_MINUTE_JD) {
-
-      // === INTERPOLATE_MOON POSITION (because it is faster)
-      float fraction = (i - JDstart) / (JDend - JDstart);
-      float xyz[3];
-      xyz[0] =
-         moon_xyz_start[0] + fraction * (moon_xyz_end[0] - moon_xyz_start[0]);
-      xyz[1] =
-         moon_xyz_start[1] + fraction * (moon_xyz_end[1] - moon_xyz_start[1]);
-      xyz[2] =
-         moon_xyz_start[2] + fraction * (moon_xyz_end[2] - moon_xyz_start[2]);
-      float d = sqrt(xyz[0] * xyz[0] + xyz[1] * xyz[1] + xyz[2] * xyz[2]);
-      xyz[0] /= d;
-      xyz[1] /= d;
-      xyz[2] /= d;
-      moon_posn.ra = RAD2DEG(atan2(xyz[1], xyz[0]));
-      moon_posn.dec = RAD2DEG(asin(xyz[2]));
-      // === END
-
-      ln_get_hrz_from_equ(&moon_posn, observer, i, &moon_hrz_posn);
-      moon_angle = moon_hrz_posn.alt;
-
-      if (i >= JDstart) {
-         if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
-             moon_angle >= LN_LUNAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_moon_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_RISE);
-         }
-
-         if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
-             moon_angle < LN_LUNAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_moon_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_SET);
-         }
-
-         if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
-            my_get_everything_helper(i, observer,
-                                     get_equ_moon_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_TRANSIT);
-         }
-      }
-
-      moon_angle_2 = moon_angle_1;
-      moon_angle_1 = moon_angle;
-   }
-
-   // find the earliest time
-
-   double earliest = events[0].jd;
-   for (int i = 1; i < event_spot; i++) {
-      if (events[i].jd < earliest) {
-         earliest = events[i].jd;
-      }
-   }
-   earliest -= ONE_MINUTE_JD;
-
-   // now do all the up downs for the earliest time
-
-   // solar
-
-   get_equ_sun_coords(earliest, &sun_posn);
    struct ln_hrz_posn sun_hrz_posn;
    ln_get_hrz_from_equ(&sun_posn, observer, earliest, &sun_hrz_posn);
    double sun_angle = sun_hrz_posn.alt;
@@ -1059,12 +955,117 @@ my_get_everything(double JDstart,
       events[event_spot++] = (Event) {
       earliest, CAT_SOLAR, EVENT_UP};
    }
+}
 
-   // lunar
+/// @brief Collect solar rise/transit/set events that might be of interest
+///
+/// @param JDstart The Julian Date of the start of the interesting period
+/// @param JDend The Julian Date of the end of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @return void
+void
+my_get_everything_lunar(double JDstart,
+                        double JDend, struct ln_lnlat_posn *observer) {
+   // the moon moves a lot more, so it is more complicated.
+   struct ln_equ_posn moon_posn;
 
-   get_equ_moon_coords(earliest, &moon_posn);
+   double moon_angle_2 = 0.0;
+   double moon_angle_1 = 0.0;
+
+   struct ln_hrz_posn moon_hrz_posn;
+
+   // now do a quick pass for rough times,
+   // and call a helper for refinement
+
+   struct ln_equ_posn moon_posn_start;
+   double moon_jd_start = JDstart - (ONE_MINUTE_JD * 2.0);
+
+   ln_get_lunar_equ_coords(moon_jd_start, &moon_posn_start);
+   float moon_xyz_start[3];
+   moon_xyz_start[0] =
+      cos(DEG2RAD(moon_posn_start.dec)) * cos(DEG2RAD(moon_posn_start.ra));
+   moon_xyz_start[1] =
+      cos(DEG2RAD(moon_posn_start.dec)) * sin(DEG2RAD(moon_posn_start.ra));
+   moon_xyz_start[2] = sin(DEG2RAD(moon_posn_start.dec));
+
+   struct ln_equ_posn moon_posn_end;
+   double moon_jd_end = JDend;
+   ln_get_lunar_equ_coords(moon_jd_end, &moon_posn_end);
+   float moon_xyz_end[3];
+   moon_xyz_end[0] =
+      cos(DEG2RAD(moon_posn_end.dec)) * cos(DEG2RAD(moon_posn_end.ra));
+   moon_xyz_end[1] =
+      cos(DEG2RAD(moon_posn_end.dec)) * sin(DEG2RAD(moon_posn_end.ra));
+   moon_xyz_end[2] = sin(DEG2RAD(moon_posn_end.dec));
+
+   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
+        i += ONE_MINUTE_JD) {
+
+      // === INTERPOLATE_MOON POSITION (because it is faster)
+      float fraction = (i - JDstart) / (JDend - JDstart);
+      float xyz[3];
+      xyz[0] =
+         moon_xyz_start[0] + fraction * (moon_xyz_end[0] - moon_xyz_start[0]);
+      xyz[1] =
+         moon_xyz_start[1] + fraction * (moon_xyz_end[1] - moon_xyz_start[1]);
+      xyz[2] =
+         moon_xyz_start[2] + fraction * (moon_xyz_end[2] - moon_xyz_start[2]);
+      float d = sqrt(xyz[0] * xyz[0] + xyz[1] * xyz[1] + xyz[2] * xyz[2]);
+      xyz[0] /= d;
+      xyz[1] /= d;
+      xyz[2] /= d;
+      moon_posn.ra = RAD2DEG(atan2(xyz[1], xyz[0]));
+      moon_posn.dec = RAD2DEG(asin(xyz[2]));
+      // === END
+
+      ln_get_hrz_from_equ(&moon_posn, observer, i, &moon_hrz_posn);
+      double moon_angle = moon_hrz_posn.alt;
+
+      if (i >= JDstart) {
+         if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
+             moon_angle >= LN_LUNAR_STANDART_HORIZON) {
+            my_get_everything_helper(i,
+                                     observer,
+                                     ln_get_lunar_equ_coords,
+                                     LN_LUNAR_STANDART_HORIZON,
+                                     CAT_LUNAR, EVENT_RISE);
+         }
+
+         if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
+             moon_angle < LN_LUNAR_STANDART_HORIZON) {
+            my_get_everything_helper(i,
+                                     observer,
+                                     ln_get_lunar_equ_coords,
+                                     LN_LUNAR_STANDART_HORIZON,
+                                     CAT_LUNAR, EVENT_SET);
+         }
+
+         if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
+            my_get_everything_helper(i, observer,
+                                     ln_get_lunar_equ_coords,
+                                     LN_LUNAR_STANDART_HORIZON,
+                                     CAT_LUNAR, EVENT_TRANSIT);
+         }
+      }
+
+      moon_angle_2 = moon_angle_1;
+      moon_angle_1 = moon_angle;
+   }
+}
+
+/// @brief Collect lunar up/down events that might be of interest
+///
+/// @param earliest The Julian Date of the start of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @return void
+void my_get_everything_lunar_updowns(double earliest,
+                                     struct ln_lnlat_posn *observer) {
+   struct ln_equ_posn moon_posn;
+   ln_get_lunar_equ_coords(earliest, &moon_posn);
+
+   struct ln_hrz_posn moon_hrz_posn;
    ln_get_hrz_from_equ(&moon_posn, observer, earliest, &moon_hrz_posn);
-   moon_angle = moon_hrz_posn.alt;
+   double moon_angle = moon_hrz_posn.alt;
 
    if (moon_angle >= LN_LUNAR_STANDART_HORIZON) {
       events[event_spot++] = (Event) {
@@ -1076,14 +1077,49 @@ my_get_everything(double JDstart,
    }
 }
 
+/// @brief Collect all events that might be of interest
+///
+/// one may ask, why not use ln_get_solar_rst() and various related functions?
+/// turns out these functions are buggy near the poles. so instead we
+/// roll our own, and look for horizon crossings (for rise/set) and local
+/// maxima (for transits).  we do this first with an approximated position
+/// for the object (to save computation time) which we then refine in the
+/// my_get_everything_helper() above.
+///
+/// @param JDstart The Julian Date of the start of the interesting period
+/// @param JDend The Julian Date of the end of the interesting period
+/// @param observer The lat/lon of the observer's position
+/// @return void
+void
+my_get_everything(double JDstart,
+                  double JDend, struct ln_lnlat_posn *observer) {
+
+   my_get_everything_solar(JDstart, JDend, observer);
+   my_get_everything_lunar(JDstart, JDend, observer);
+
+   // find the earliest time
+
+   double earliest = events[0].jd;
+   for (int i = 1; i < event_spot; i++) {
+      if (events[i].jd < earliest) {
+         earliest = events[i].jd;
+      }
+   }
+   earliest -= ONE_MINUTE_JD;
+
+   // now do all the up downs for the earliest time
+
+   my_get_everything_solar_updowns(earliest, observer);
+   my_get_everything_lunar_updowns(earliest, observer);
+}
+
 /// @brief Populate the event list
 ///
 /// @param JD The current Julian Date
 /// @param observer The observer's lat/lon coordinates
 /// @return void
 void events_populate(double JD, struct ln_lnlat_posn *observer) {
-   my_get_everything(JD - 2.0, JD + 1.0, observer,
-                     ln_get_solar_equ_coords, ln_get_lunar_equ_coords);
+   my_get_everything(JD - 2.0, JD + 1.0, observer);
 }
 
 /// @brief Figure out which way is "up"

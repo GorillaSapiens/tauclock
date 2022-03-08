@@ -74,20 +74,24 @@ const char *signs[] = {
    "Capricorn", "Aquarius", "Pisces"
 };
 
-/// @brief The object set some time before this time
-#define EVENT_DOWN 0
+typedef enum EventType {
+   EVENT_DOWN,
+   EVENT_RISE,
+   EVENT_TRANSIT,
+   EVENT_SET, 
+   EVENT_UP 
+} EventType;
 
-/// @brief The object rises at this time.
-#define EVENT_RISE 1
+typedef enum EventCategory {
+   CAT_SOLAR,
+   CAT_NAUTICAL,
+   CAT_CIVIL,
+   CAT_ASTRONOMICAL,
+   CAT_LUNAR
+} EventCategory;
 
-/// @brief The object reaches a visible local maxima at this time.
-#define EVENT_TRANSIT 2
-
-/// @brief The object sets at this time.
-#define EVENT_SET 3
-
-/// @brief The object rose some time before this time
-#define EVENT_UP 4
+/// @brief Human readable names for the CAT_* defines
+const char *categorynames[] = { "sun", "nautical", "civil", "astronomical", "lunar" };
 
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "down", "rise", "transit", "set", "up" };
@@ -95,8 +99,8 @@ const char *typenames[] = { "down", "rise", "transit", "set", "up" };
 /// @brief A structure denoting a up/down/rise/transit/set event.
 typedef struct {
    double jd;
-   const char *fn_name;
-   int event_type;
+   EventCategory category;
+   EventType type;
    int prune;
 } Event;
 
@@ -137,8 +141,8 @@ double angle_between(double a, double b) {
 
 /// @brief Get the fractional part of a double, discarding the integer part.
 ///
-/// @param The double of interest
-/// @return The non-intefer part of arg
+/// @param arg The double of interest
+/// @return The non-integer part of arg
 double frac(double arg) {
    double integer;
    return modf(arg, &integer);
@@ -454,8 +458,8 @@ do_moon_draw(Canvas * canvas,
       if (events[i].jd > now) {
          break;
       }
-      if (events[i].fn_name[0] == 'l') {
-         switch (events[i].event_type) {
+      if (events[i].category == CAT_LUNAR) {
+         switch (events[i].type) {
          case EVENT_UP:
          case EVENT_RISE:
             is_up = 1;
@@ -463,6 +467,9 @@ do_moon_draw(Canvas * canvas,
          case EVENT_DOWN:
          case EVENT_SET:
             is_up = 0;
+            break;
+         case EVENT_TRANSIT:
+            // do nothing
             break;
          }
       }
@@ -492,8 +499,8 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
       if (events[i].jd > now + .5) {
          break;
       }
-      if (events[i].fn_name[0] == 'l') {
-         switch (events[i].event_type) {
+      if (events[i].category == CAT_LUNAR) {
+         switch (events[i].type) {
          case EVENT_UP:
          case EVENT_RISE:
          case EVENT_TRANSIT:
@@ -530,38 +537,42 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
    }
 
    for (int i = 0; i < event_spot; i++) {
-      if (events[i].fn_name[0] == 'l') {
+      if (events[i].category == CAT_LUNAR) {
          if (!events[i].prune) {
-            switch (events[i].event_type) {
-            case EVENT_RISE:
-            case EVENT_TRANSIT:
-            case EVENT_SET:
-               {
-                  double x1, y1, x2, y2;
-                  double x, y;
-                  double angle = frac(events[i].jd) * 360.0 - up_angle + 270.0;
+            switch (events[i].type) {
+               case EVENT_UP:
+               case EVENT_DOWN:
+                  // do nothing
+                  break;
+               case EVENT_RISE:
+               case EVENT_TRANSIT:
+               case EVENT_SET:
+                  {
+                     double x1, y1, x2, y2;
+                     double x, y;
+                     double angle = frac(events[i].jd) * 360.0 - up_angle + 270.0;
 
-                  x1 = canvas->w / 2 +
-                     (canvas->w / 2 / 2 + 128 + 16 - 16) * cos(DEG2RAD(angle));
-                  y1 = canvas->h / 2 +
-                     (canvas->h / 2 / 2 + 128 + 16 - 16) * sin(DEG2RAD(angle));
-                  x2 = canvas->w / 2 +
-                     (canvas->w / 2 / 2 + 128 + 16 + 16) * cos(DEG2RAD(angle));
-                  y2 = canvas->h / 2 +
-                     (canvas->h / 2 / 2 + 128 + 16 + 16) * sin(DEG2RAD(angle));
-                  thick_line_canvas(canvas, x1, y1, x2, y2, color, 3);
+                     x1 = canvas->w / 2 +
+                        (canvas->w / 2 / 2 + 128 + 16 - 16) * cos(DEG2RAD(angle));
+                     y1 = canvas->h / 2 +
+                        (canvas->h / 2 / 2 + 128 + 16 - 16) * sin(DEG2RAD(angle));
+                     x2 = canvas->w / 2 +
+                        (canvas->w / 2 / 2 + 128 + 16 + 16) * cos(DEG2RAD(angle));
+                     y2 = canvas->h / 2 +
+                        (canvas->h / 2 / 2 + 128 + 16 + 16) * sin(DEG2RAD(angle));
+                     thick_line_canvas(canvas, x1, y1, x2, y2, color, 3);
 
-                  if (angle_between(angle, moon_angle) < 10.0) {
-                     angle = moon_angle - 10.0;
+                     if (angle_between(angle, moon_angle) < 10.0) {
+                        angle = moon_angle - 10.0;
+                     }
+                     x = (canvas->w / 2) +
+                        (canvas->w / 2 / 2 + 128 + 16 + 50) * cos(DEG2RAD(angle));
+                     y = (canvas->h / 2) +
+                        (canvas->h / 2 / 2 + 128 + 16 + 50) * sin(DEG2RAD(angle));
+                     do_xy_time(canvas, now,
+                           events[i].jd, x, y, COLOR_BLACK, COLOR_WHITE);
                   }
-                  x = (canvas->w / 2) +
-                     (canvas->w / 2 / 2 + 128 + 16 + 50) * cos(DEG2RAD(angle));
-                  y = (canvas->h / 2) +
-                     (canvas->h / 2 / 2 + 128 + 16 + 50) * sin(DEG2RAD(angle));
-                  do_xy_time(canvas, now,
-                             events[i].jd, x, y, COLOR_BLACK, COLOR_WHITE);
-               }
-               break;
+                  break;
             }
          }
       }
@@ -587,37 +598,53 @@ int event_compar(const void *a, const void *b) {
    else if (pa->jd > pb->jd) {
       return 1;
    }
-   else if (pa->event_type < pb->event_type) {
+   else if (pa->type < pb->type) {
       return -1;
    }
-   else if (pa->event_type > pb->event_type) {
+   else if (pa->type > pb->type) {
       return 1;
    }
    else {
-      if (pa->fn_name[0] == pb->fn_name[0]) {
+      if (pa->category == pb->category) {
          return 0;
       }
-      // same type, different names
-      static const char *order_up = "ancsl";
-      static const char *order_down = "lscna";
+ 
+      // same type, different category
+      static const EventCategory order_up[] = { //"ancsl"
+         CAT_ASTRONOMICAL,
+         CAT_NAUTICAL,
+         CAT_CIVIL,
+         CAT_SOLAR,
+         CAT_LUNAR
+      };
 
-      const char *order = order_up;
+      static const EventCategory order_down[] = { //"lscna"
+         CAT_LUNAR,
+         CAT_SOLAR,
+         CAT_CIVIL,
+         CAT_NAUTICAL,
+         CAT_ASTRONOMICAL
+      };
 
-      if (pa->event_type == EVENT_DOWN) {
+      const EventCategory *order = order_up;
+
+      if (pa->type == EVENT_DOWN) {
          order = order_down;
       }
 
-      for (const char *p = order; *p; p++) {
-         if (pa->fn_name[0] == *p) {
+      // TODO FIX revisit this logic
+
+      for (int p = 0; p < 5; p++) {
+         if (pa->category == order[p]) {
             return -1;
          }
-         if (pb->fn_name[0] == *p) {
+         if (pb->category == order[p]) {
             return 1;
          }
       }
 
-      // huh???
-      return strcmp(pa->fn_name, pb->fn_name);
+      // huh??? this should never happen
+      return 0;
    }
 }
 
@@ -648,8 +675,8 @@ void events_dump(void) {
       ln_get_local_date(events[i].jd, &zonedate);
       printf("%6.12f %02d:%02d %d %s %s\n", events[i].jd,
              zonedate.hours, zonedate.minutes,
-             events[i].prune, typenames[events[i].event_type],
-             events[i].fn_name);
+             events[i].prune, typenames[events[i].type],
+             categorynames[events[i].category]);
    }
 }
 
@@ -665,14 +692,14 @@ typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 /// @param observer The lat/lon of the observer position
 /// @param get_equ_coords A function returning Equ coordinates for object
 /// @param horizon The horizon angle of interest
-/// @param fn_name The name of the event we're interested in
-/// @param event_type An EVENT_* macro indicating event type
+/// @param category The event category we're interested in
+/// @param type An EVENT_* macro indicating event type
 /// @return void
 void
 my_get_everything_helper(double JD,
                          struct ln_lnlat_posn *observer,
                          Get_Equ_Coords get_equ_coords,
-                         double horizon, const char *fn_name, int event_type) {
+                         double horizon, EventCategory category, int type) {
 
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
@@ -685,7 +712,7 @@ my_get_everything_helper(double JD,
    ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
    angle = hrz_posn.alt;
 
-   switch (event_type) {
+   switch (type) {
    case EVENT_RISE:
       while (angle >= horizon) {
          iterations++;
@@ -708,7 +735,7 @@ my_get_everything_helper(double JD,
          }
       }
       events[event_spot++] = (Event) {
-      JD, fn_name, EVENT_RISE};
+      JD, category, EVENT_RISE};
       break;
    case EVENT_SET:
       while (angle >= horizon) {
@@ -732,7 +759,7 @@ my_get_everything_helper(double JD,
          }
       }
       events[event_spot++] = (Event) {
-      JD, fn_name, EVENT_SET};
+      JD, category, EVENT_SET};
       break;
    case EVENT_TRANSIT:
       angles[1] = angle;
@@ -765,7 +792,7 @@ my_get_everything_helper(double JD,
       // only maxima above horizon count as "transit"
       if (angles[1] > horizon) {
          events[event_spot++] = (Event) {
-         JD, fn_name, EVENT_TRANSIT};
+         JD, category, EVENT_TRANSIT};
       }
       break;
    }
@@ -821,7 +848,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_ASTRONOMICAL_HORIZON,
-                                     "astronomical", EVENT_RISE);
+                                     CAT_ASTRONOMICAL, EVENT_RISE);
          }
          if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
              sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
@@ -829,7 +856,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_NAUTIC_HORIZON,
-                                     "nautical", EVENT_RISE);
+                                     CAT_NAUTICAL, EVENT_RISE);
          }
          if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
              sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
@@ -837,7 +864,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_CIVIL_HORIZON,
-                                     "civil", EVENT_RISE);
+                                     CAT_CIVIL, EVENT_RISE);
          }
          if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
              sun_angle >= LN_SOLAR_STANDART_HORIZON) {
@@ -845,7 +872,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_STANDART_HORIZON,
-                                     "solar", EVENT_RISE);
+                                     CAT_SOLAR, EVENT_RISE);
          }
 
          if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
@@ -854,7 +881,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_ASTRONOMICAL_HORIZON,
-                                     "astronomical", EVENT_SET);
+                                     CAT_ASTRONOMICAL, EVENT_SET);
          }
          if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
              sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
@@ -862,7 +889,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_NAUTIC_HORIZON,
-                                     "nautical", EVENT_SET);
+                                     CAT_NAUTICAL, EVENT_SET);
          }
          if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
              sun_angle < LN_SOLAR_CIVIL_HORIZON) {
@@ -870,7 +897,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_CIVIL_HORIZON,
-                                     "civil", EVENT_SET);
+                                     CAT_CIVIL, EVENT_SET);
          }
          if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
              sun_angle < LN_SOLAR_STANDART_HORIZON) {
@@ -878,12 +905,12 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_sun_coords,
                                      LN_SOLAR_STANDART_HORIZON,
-                                     "solar", EVENT_SET);
+                                     CAT_SOLAR, EVENT_SET);
          }
 
          if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
             my_get_everything_helper(i, observer, get_equ_sun_coords, -90.1,    // a fake horizon
-                                     "solar", EVENT_TRANSIT);
+                                     CAT_SOLAR, EVENT_TRANSIT);
          }
       }
 
@@ -949,7 +976,7 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_moon_coords,
                                      LN_LUNAR_STANDART_HORIZON,
-                                     "lunar", EVENT_RISE);
+                                     CAT_LUNAR, EVENT_RISE);
          }
 
          if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
@@ -958,14 +985,14 @@ my_get_everything(double JDstart,
                                      observer,
                                      get_equ_moon_coords,
                                      LN_LUNAR_STANDART_HORIZON,
-                                     "lunar", EVENT_SET);
+                                     CAT_LUNAR, EVENT_SET);
          }
 
          if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
             my_get_everything_helper(i, observer,
                                      get_equ_moon_coords,
                                      LN_LUNAR_STANDART_HORIZON,
-                                     "lunar", EVENT_TRANSIT);
+                                     CAT_LUNAR, EVENT_TRANSIT);
          }
       }
 
@@ -994,36 +1021,36 @@ my_get_everything(double JDstart,
 
    if (sun_angle < LN_SOLAR_STANDART_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "solar", EVENT_DOWN};
+      earliest, CAT_SOLAR, EVENT_DOWN};
    }
    if (sun_angle < LN_SOLAR_CIVIL_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "civil", EVENT_DOWN};
+      earliest, CAT_CIVIL, EVENT_DOWN};
    }
    if (sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "nautical", EVENT_DOWN};
+      earliest, CAT_NAUTICAL, EVENT_DOWN};
    }
    if (sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "astronomical", EVENT_DOWN};
+      earliest, CAT_ASTRONOMICAL, EVENT_DOWN};
    }
 
    if (sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "astronomical", EVENT_UP};
+      earliest, CAT_ASTRONOMICAL, EVENT_UP};
    }
    if (sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "nautical", EVENT_UP};
+      earliest, CAT_NAUTICAL, EVENT_UP};
    }
    if (sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "civil", EVENT_UP};
+      earliest, CAT_CIVIL, EVENT_UP};
    }
    if (sun_angle >= LN_SOLAR_STANDART_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "solar", EVENT_UP};
+      earliest, CAT_SOLAR, EVENT_UP};
    }
 
    // lunar
@@ -1034,11 +1061,11 @@ my_get_everything(double JDstart,
 
    if (moon_angle >= LN_LUNAR_STANDART_HORIZON) {
       events[event_spot++] = (Event) {
-      earliest, "lunar", EVENT_UP};
+      earliest, CAT_LUNAR, EVENT_UP};
    }
    else {
       events[event_spot++] = (Event) {
-      earliest, "lunar", EVENT_DOWN};
+      earliest, CAT_LUNAR, EVENT_DOWN};
    }
 }
 
@@ -1060,16 +1087,16 @@ double events_transit(double jd) {
    // any non pruned, non lunar, will do...
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
-          events[i].event_type == EVENT_TRANSIT &&
-          strcmp(events[i].fn_name, "lunar")) {
+          events[i].type == EVENT_TRANSIT &&
+          events[i].category != CAT_LUNAR) {
          return frac(events[i].jd);
       }
    }
    // non?  how about a lunar transit?
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
-          events[i].event_type == EVENT_TRANSIT &&
-          !strcmp(events[i].fn_name, "lunar")) {
+          events[i].type == EVENT_TRANSIT &&
+          events[i].category == CAT_LUNAR) {
          return frac(events[i].jd);
       }
    }
@@ -1177,7 +1204,7 @@ void do_weather(Canvas * canvas) {
 /// This is dead code.
 ///
 /// @param canvas The Canvas to draw on
-/// @paran JD the current Julian Date
+/// @param JD the current Julian Date
 /// @return void
 void do_zodiac(Canvas * canvas, double JD) {
    struct ln_equ_posn sun_equatorial;
@@ -1312,7 +1339,7 @@ int check(int x, int y, int w, int h) {
 /// @param now The current Julian Date
 /// @param jd The Julian Date for the event of interest
 /// @param theta The desired angle
-/// @param r The desired radius
+/// @param radius The desired radius
 /// @param fg The foreground color for text
 /// @param bg The background color for text
 /// @return void
@@ -1375,8 +1402,8 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
-      if (strcmp(events[i].fn_name, "lunar")) {
-         if (events[i].event_type != EVENT_TRANSIT) {
+      if (events[i].category != CAT_LUNAR) {
+         if (events[i].type != EVENT_TRANSIT) {
             if (events[i].prune == 0) {
                double here = events[i].jd;
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
@@ -1435,49 +1462,55 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
             }
          }
 
-         if (events[i].event_type == EVENT_UP
-             || events[i].event_type == EVENT_RISE) {
-            switch (events[i].fn_name[0]) {
-            case 'a':          // astronomical
-               color = back = COLOR_BLUE;
-               fore = COLOR_WHITE;
-               break;
-            case 'n':          // nautical
-               color = back = COLOR_LIGHTBLUE;
-               fore = COLOR_WHITE;
-               break;
-            case 'c':          // civil
-               color = back = COLOR_ORANGE;
-               fore = COLOR_BLACK;
-               break;
-            case 's':          // solar
-               color = back = COLOR_YELLOW;
-               fore = COLOR_BLACK;
-               break;
+         if (events[i].type == EVENT_UP
+             || events[i].type == EVENT_RISE) {
+            switch (events[i].category) {
+               case CAT_ASTRONOMICAL:
+                  color = back = COLOR_BLUE;
+                  fore = COLOR_WHITE;
+                  break;
+               case CAT_NAUTICAL:
+                  color = back = COLOR_LIGHTBLUE;
+                  fore = COLOR_WHITE;
+                  break;
+               case CAT_CIVIL:
+                  color = back = COLOR_ORANGE;
+                  fore = COLOR_BLACK;
+                  break;
+               case CAT_SOLAR:
+                  color = back = COLOR_YELLOW;
+                  fore = COLOR_BLACK;
+                  break;
+               case CAT_LUNAR:
+                  // do nothing
+                  break;
             }
          }
 
-         if (events[i].event_type == EVENT_SET) {
-            switch (events[i].fn_name[0]) {
-            case 'a':          // astronomical
+         if (events[i].type == EVENT_SET) {
+            switch (events[i].category) {
+               case CAT_ASTRONOMICAL:
                back = color;
                color = COLOR_DARKBLUE;
                fore = COLOR_WHITE;
                break;
-            case 'n':          // nautical
+               case CAT_NAUTICAL:
                back = color;
                color = COLOR_BLUE;
                fore = COLOR_WHITE;
                break;
-            case 'c':          // civil
+               case CAT_CIVIL:
                back = color;
                color = COLOR_LIGHTBLUE;
                fore = COLOR_BLACK;
                break;
-            case 's':          // solar
+               case CAT_SOLAR:
                back = color;
                color = COLOR_ORANGE;
                fore = COLOR_BLACK;
+               break;
+               case CAT_LUNAR:
+               // do nothing
                break;
             }
          }

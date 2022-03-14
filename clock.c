@@ -130,6 +130,39 @@ int event_spot = 0;
 /// @brief The size of the generated image
 #define SIZE 1024
 
+/// @brief Get the true local date
+///
+/// The libnova ln_get_local_date is buggy in that it gives a time
+/// using the now current time zone, and NOT the time zone current
+/// at that particular time.  This causes goofy behavior when crossing
+/// standard / daylight time boundaries.
+///
+/// @param JD The Julian Date to convert
+/// @param zonedate Pointer to ln_zonedate to be filled in
+void my_get_local_date(double JD, struct ln_zonedate *zonedate) {
+   struct ln_date date;
+   time_t curtime;
+   struct tm *loctime;
+   long gmtoff;
+
+   ln_get_date (JD, &date);
+
+   /* add day light savings time and hour angle */
+#ifdef __WIN32__
+   _tzset();
+   gmtoff = _timezone;
+   if (_daylight)
+      gmtoff += 3600;
+#else
+   ln_get_timet_from_julian (JD, &curtime); // (AND NOT!!!) curtime = time (NULL);
+   loctime = localtime(&curtime);
+   gmtoff = loctime->tm_gmtoff;
+   // otherwise there is no reasonable way how to get that:(
+   // tm_gmtoff already included DST
+#endif
+   ln_date_to_zonedate (&date, zonedate, gmtoff);
+}
+
 /// @brief Normalize an angle in the range 0.0 .. 360.0
 ///
 /// @param angle The angle to normalize, in degrees
@@ -228,7 +261,7 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
            unsigned int fg, unsigned int bg) {
    char time[32];
    struct ln_zonedate zonedate;
-   ln_get_local_date(jd, &zonedate);
+   my_get_local_date(jd, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    return text_canvas(canvas, jd < now ? djsmo_20_bdf : djsmb_20_bdf, x, y,
                       fg, bg, time, 1, 3);
@@ -301,7 +334,7 @@ void do_now_hand(Canvas * canvas, double up, double now) {
 void do_now_time(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
-   ln_get_local_date(now, &zonedate);
+   my_get_local_date(now, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    text_canvas(canvas, djsmb_50_bdf, canvas->w / 2, canvas->h / 2,
                COLOR_BLACK, COLOR_WHITE, time, 1, 12);
@@ -314,7 +347,7 @@ void do_now_time(Canvas * canvas, double now) {
 /// @return void
 void do_now_weekday(Canvas * canvas, double now) {
    struct ln_zonedate zonedate;
-   ln_get_local_date(now, &zonedate);
+   my_get_local_date(now, &zonedate);
 
    struct ln_date date;
    date.years = zonedate.years;
@@ -338,7 +371,7 @@ void do_now_weekday(Canvas * canvas, double now) {
 void do_now_date(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
-   ln_get_local_date(now, &zonedate);
+   my_get_local_date(now, &zonedate);
    sprintf(time, "%s-%d", months[zonedate.months - 1], zonedate.days);
    text_canvas(canvas, djsmb_20_bdf, canvas->w / 2, canvas->h / 2 - 60,
                COLOR_BLACK, COLOR_WHITE, time, 1, 2);
@@ -380,7 +413,7 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
 void do_now_smalldate(Canvas * canvas, double now) {
    char time[32];
    struct ln_zonedate zonedate;
-   ln_get_local_date(now, &zonedate);
+   my_get_local_date(now, &zonedate);
    sprintf(time, "%04d-%02d-%02d", zonedate.years, zonedate.months,
            zonedate.days);
    text_canvas(canvas, djsmb_16_bdf, canvas->w / 2, canvas->h / 2 + 72,
@@ -801,7 +834,7 @@ void events_dump(void) {
    struct ln_zonedate zonedate;
 
    for (int i = 0; i < event_spot; i++) {
-      ln_get_local_date(events[i].jd, &zonedate);
+      my_get_local_date(events[i].jd, &zonedate);
       printf("%6.12f %02d:%02d %d %s %s\n", events[i].jd,
              zonedate.hours, zonedate.minutes,
              events[i].prune, typenames[events[i].type],
@@ -1376,7 +1409,7 @@ double events_transit(double jd) {
    }
    // still nothing? LOCAL noon it is i guess
    struct ln_zonedate now;
-   ln_get_local_date(jd, &now);
+   my_get_local_date(jd, &now);
    double ret = jd;
    if (now.seconds != 0) {
       ret += (60.0 - now.seconds) / (24.0 * 60.0 * 60.0);
@@ -1951,7 +1984,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    JD = ln_get_julian_from_sys() + offset;
 
    // local time
-   ln_get_local_date(JD, &now);
+   my_get_local_date(JD, &now);
 
    // all of the data
    events_clear();

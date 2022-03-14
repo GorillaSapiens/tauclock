@@ -54,6 +54,10 @@ monthly basis.  This was deemed "out of scope" for the intended use case.
 Alarms set for "an hour before sunset" or "an hour after sunrise" are
 possible, but were considered "out of scope" at this time.
 
+Notes for timezones from lat/lon:
+https://github.com/BertoldVdb/ZoneDetect
+https://github.com/evansiroky/timezone-boundary-builder
+
 == Fini
 
 I hope you find this useful.  The home repository is

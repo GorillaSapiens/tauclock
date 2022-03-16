@@ -27,9 +27,11 @@ clean:
 	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_50.bdf
 	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_20.bdf
 	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_16.bdf
-	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_50.bdf
 	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_20.bdf
-	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_16.bdf
+	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_60.bdf
+	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
+	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
+	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
 	touch .part_a
 
 .part_b: png2h.pl

@@ -17,13 +17,15 @@
 #ifndef _INCLUDE_DRAW_H_
 #define _INCLUDE_DRAW_H_
 
+#include "fonts/djsmb_60_bdf.h"
 #include "fonts/djsmb_50_bdf.h"
+#include "fonts/djsmb_40_bdf.h"
+#include "fonts/djsmb_32_bdf.h"
 #include "fonts/djsmb_20_bdf.h"
 #include "fonts/djsmb_16_bdf.h"
 
-#include "fonts/djsmo_50_bdf.h"
+#include "fonts/djsmo_40_bdf.h"
 #include "fonts/djsmo_20_bdf.h"
-#include "fonts/djsmo_16_bdf.h"
 
 #include "fonts/astro_50_bdf.h"
 #include "fonts/astro_32_bdf.h"

@@ -277,20 +277,39 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
 /// @param r The radius of the clock
 /// @param up The angle used as "up"
 /// @return void
-void do_hour_ticks(Canvas * canvas, int x, int y, int r, double up) {
-   double angle = -frac(up) * 360.0;
-
-   double xa, ya;
-   double xc, yc;
+void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
+   double up_angle = frac(up) * 360.0;
 
    Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
 
-   for (int i = 0; i < 24; i++) {
-      xa = x + (r - 8) * cos(DEG2RAD(angle + i * (360.0 / 24.0)));
-      ya = y + (r - 8) * sin(DEG2RAD(angle + i * (360.0 / 24.0)));
-      xc = x + r * cos(DEG2RAD(angle + i * (360.0 / 24.0)));
-      yc = y + r * sin(DEG2RAD(angle + i * (360.0 / 24.0)));
+#define HALFHOUR (1.0 / 24.0 / 2.0)
+
+   for (double when = JD - 0.5 + HALFHOUR;
+         when < JD + 0.5 - HALFHOUR;
+         when += 1.0/24.0) {
+      struct ln_zonedate zonedate;
+      my_get_local_date(when, &zonedate);
+      int hour = zonedate.hours;
+
+      double mark = when - (float) zonedate.minutes / (24.0 * 60.0);
+
+      double xa, ya;
+      double xc, yc;
+
+      double angle = frac(mark) * 360.0;
+
+      xa = x + (r - 8) * cos(DEG2RAD(angle - up_angle + 270.0));
+      ya = y + (r - 8) * sin(DEG2RAD(angle - up_angle + 270.0));
+      xc = x + r * cos(DEG2RAD(angle - up_angle + 270.0));
+      yc = y + r * sin(DEG2RAD(angle - up_angle + 270.0));
       line_canvas(shadow, xa, ya, xc, yc, COLOR_BLACK);
+
+      xa = x + (r - 30) * cos(DEG2RAD(angle - up_angle + 270.0));
+      ya = y + (r - 30) * sin(DEG2RAD(angle - up_angle + 270.0));
+      char buf[32];
+      sprintf(buf, "%02d", hour);
+      text_canvas(shadow, djsmb_16_bdf, xa, ya,
+               COLOR_BLACK, COLOR_NONE, buf, 1, 3);
    }
    xor_canvas(shadow, canvas);
 
@@ -2070,7 +2089,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    do_sun_bands(canvas, up, JD);
 
    // hour ticks
-   do_hour_ticks(canvas, mid, mid, mid / 2 + 128, up);
+   do_hour_ticks(canvas, JD, mid, mid, mid / 2 + 128, up);
 
    // black border bands
    arc_canvas(canvas, mid, mid, mid / 2 - 128, 1, COLOR_BLACK, 0, 360.0);

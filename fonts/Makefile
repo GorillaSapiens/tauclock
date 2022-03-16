@@ -32,6 +32,10 @@ clean:
 	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
 	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
 	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
+	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_24.bdf
+	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_10.bdf
+	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_8.bdf
+	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_10.bdf
 	touch .part_a
 
 .part_b: png2h.pl
@@ -52,6 +56,7 @@ clean:
 	-otf2bdf -p 20 AstroDotBasic.ttf -o astro_20.bdf
 	-otf2bdf -p 32 AstroDotBasic.ttf -o astro_32.bdf
 	-otf2bdf -p 50 AstroDotBasic.ttf -o astro_50.bdf
+	-otf2bdf -p 24 AstroDotBasic.ttf -o astro_24.bdf
 	touch .part_c
 
 .part_d:

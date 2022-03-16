@@ -49,13 +49,22 @@
 #define FONT_BOLD_MED djsmb_20_bdf
 #define FONT_BOLD_SMALL djsmb_16_bdf
 #define FONT_ITALIC_MED djsmo_20_bdf
-#else
+#endif
+#ifdef ORIGx2
 #define SIZE 2048
 #define ASTRO_FONT astro_50_bdf
 #define FONT_BOLD_BIG djsmb_60_bdf
 #define FONT_BOLD_MED djsmb_40_bdf
 #define FONT_BOLD_SMALL djsmb_32_bdf
 #define FONT_ITALIC_MED djsmo_40_bdf
+#endif
+#ifdef SMALL
+#define SIZE 400
+#define ASTRO_FONT astro_24_bdf
+#define FONT_BOLD_BIG djsmb_24_bdf
+#define FONT_BOLD_MED djsmb_10_bdf
+#define FONT_BOLD_SMALL djsmb_8_bdf
+#define FONT_ITALIC_MED djsmo_10_bdf
 #endif
 
 #define SCALE(x) ((x) * SIZE / 1024)
@@ -599,7 +608,7 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                             canvas->w / 2 / 2 + SCALE(128 + 16), 5, color,
+                             canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5), color,
                              start_angle, stop_angle);
 
                   last = events[i].jd;
@@ -613,7 +622,7 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                 canvas->w / 2 / 2 + SCALE(128 + 16), 5, color,
+                 canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5), color,
                  start_angle, stop_angle);
    }
 

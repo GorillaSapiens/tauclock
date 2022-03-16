@@ -1963,6 +1963,26 @@ double get_moon_angle(double JD, double lunar_new) {
    return angle;
 }
 
+/// @brief Draw the perimeter bands for all planets
+///
+/// @param canvas The Canvas to draw on
+/// @param JD The current Julian Date
+/// @param up The Julian Date used as "up" on the clock
+/// @return void
+void do_planet_bands(Canvas * canvas, double JD, double up) {
+   double r = canvas->w / 2 / 2 + 128 + 16 + 5;
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER);
+   r += 20;
+   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN);
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2008,6 +2028,9 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    int mid = canvas->w / 2;
 
+   // colored bands for planets
+   do_planet_bands(canvas, JD, up);
+
    // draw the moon
    double moon_angle = get_moon_angle(JD, lunar_new);
    do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
@@ -2028,18 +2051,6 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    // zodiac, skip because woo-woo
    // do_zodiac(canvas, JD);
-
-   double r = canvas->w / 2 / 2 + 128 + 16 + 5;
-   r += 20;
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY);
-   r += 20;
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS);
-   r += 20;
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS);
-   r += 20;
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER);
-   r += 20;
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN);
 
    // colored band for the moon
    do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);

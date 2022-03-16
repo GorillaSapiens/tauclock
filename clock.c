@@ -1983,6 +1983,36 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
    do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN);
 }
 
+void do_debug_info(Canvas *canvas, double JD) {
+   // for debugging, put the Julian date in the lower right
+   char buf[1024];
+   sprintf(buf, "JD=%f", JD);
+   int wh =text_canvas(canvas, djsmb_20_bdf, -1000, -1000,
+         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+   int w = wh >> 16;
+   int h = wh & 0xFFFF;
+   text_canvas(canvas, djsmb_20_bdf, canvas->w - w/2 - 6, canvas->h - h/2 - 3,
+         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+
+   // for debugging, put time zone info in the lower left
+   time_t present;
+   ln_get_timet_from_julian (JD, &present);
+   struct tm *tm = localtime(&present);
+   sprintf(buf, "%s%s%s/%s%s%s",
+         tm->tm_isdst ? "" : "[",
+         tzname[0] ? tzname[0] : "(null)",
+         tm->tm_isdst ? "" : "]",
+         tm->tm_isdst ? "[" : "",
+         tzname[1] ? tzname[1] : "(null)",
+         tm->tm_isdst ? "]" : "");
+   wh = text_canvas(canvas, djsmb_20_bdf, -1000, -1000,
+         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+   w = wh >> 16;
+   h = wh & 0xFFFF;
+   text_canvas(canvas, djsmb_20_bdf, w/2 + 6, canvas->h - h/2 - 3,
+         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2066,25 +2096,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    // embedded watch won't have weather info
    //do_weather(canvas);
 
-   // for debugging, put the Julian date in the lower right
-   char buf[1024];
-   sprintf(buf, "JD=%f", JD);
-   text_canvas(canvas, djsmb_20_bdf, canvas->w * 27 / 32, canvas->h - 16,
-               COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
-
-   // for debugging, put time zone info in the lower left
-   time_t present;
-   ln_get_timet_from_julian (JD, &present);
-   struct tm *tm = localtime(&present);
-   sprintf(buf, "%s%s%s/%s%s%s",
-         tm->tm_isdst ? "" : "[",
-         tzname[0] ? tzname[0] : "(null)",
-         tm->tm_isdst ? "" : "]",
-         tm->tm_isdst ? "[" : "",
-         tzname[1] ? tzname[1] : "(null)",
-         tm->tm_isdst ? "]" : "");
-   text_canvas(canvas, djsmb_20_bdf, canvas->w * 5 / 32, canvas->h - 16,
-               COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+   do_debug_info(canvas, JD);
 
    return canvas;
 }

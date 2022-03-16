@@ -19,7 +19,7 @@ all: .part_a .part_b .part_c .part_d
 
 clean:
 	rm -rf deja* ico* *.h *.bdf *.png *.zip *.ttf
-	rm .bdf .part_a .part_b .part_c .part_d
+	rm -f .bdf .part_a .part_b .part_c .part_d
 
 .part_a:
 	wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2
@@ -54,3 +54,4 @@ clean:
 
 .part_d:
 	find . -name \*.bdf | xargs -L 1 ./bdf2h.pl
+	touch .part_d

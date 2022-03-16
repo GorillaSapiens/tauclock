@@ -48,3 +48,8 @@ libnova-0.15.0: libnova-0.15.0.tar.gz
 
 libnova-0.15.0.tar.gz:
 	wget https://sourceforge.net/projects/libnova/files/libnova/v%200.15.0/libnova-0.15.0.tar.gz/download -O libnova-0.15.0.tar.gz
+
+clean:
+	rm -f out* *~ libnova.a doxygen.conf.bak calcdata
+	rm -rf libnova-0.15.0 latex html
+	( cd fonts ; make clean )

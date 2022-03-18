@@ -671,7 +671,7 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
    }
 }
 
-/// @brief Draw the perimeter band indicating planet rise/transit/set
+/// @brief Draw the perimeter planet band
 ///
 /// @param canvas The Canvas to draw on
 /// @param up The Julian Date used as "up" on the clock
@@ -679,10 +679,12 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
 /// @param color The color to use when drawing
 /// @param radius The radius at which to draw the band
 /// @param category The planet category
+/// @param mode 1=draw band, 2=draw tick, 3=draw both
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
-               unsigned int color, double radius, EventCategory category) {
+               unsigned int color, double radius, EventCategory category,
+               int mode) {
    double up_angle = frac(up) * 360.0;
 
    double last = now - .5;
@@ -709,8 +711,10 @@ do_planet_band(Canvas * canvas, double up, double now,
                   double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                  arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                             radius, 1, color, start_angle, stop_angle);
+                  if (mode & 1) {
+                     arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
+                           radius, 1, color, start_angle, stop_angle);
+                  }
 
                   last = events[i].jd;
                }
@@ -722,8 +726,10 @@ do_planet_band(Canvas * canvas, double up, double now,
    if (is_up == 1) {
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
-      arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                 radius, 1, color, start_angle, stop_angle);
+      if (mode & 1) {
+         arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
+               radius, 1, color, start_angle, stop_angle);
+      }
    }
 
    for (int i = 0; i < event_spot; i++) {
@@ -745,8 +751,10 @@ do_planet_band(Canvas * canvas, double up, double now,
 
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK,
-                                 sym, 1, 1);
+                     if (mode & 2) {
+                        text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK,
+                              sym, 1, 1);
+                     }
                   }
                   // fallthrough
                case EVENT_TRANSIT:
@@ -761,7 +769,9 @@ do_planet_band(Canvas * canvas, double up, double now,
                      x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
                      y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
 
+                     if (mode & 2) {
                      line_canvas(canvas, x1, y1, x2, y2, color);
+                     }
                   }
                   break;
             }
@@ -1620,20 +1630,24 @@ accum_helper(Canvas * canvas,
    }
    double x =
       (canvas->w / 2) +
-      ((canvas->w / 3 - 24) * 5 / 8) * cos(DEG2RAD(draw_angle));
+      ((canvas->w / 3 - SCALE(24)) * 5 / 8) * cos(DEG2RAD(draw_angle));
    double y =
       (canvas->h / 2) +
-      ((canvas->h / 3 - 24) * 5 / 8) * sin(DEG2RAD(draw_angle));
+      ((canvas->h / 3 - SCALE(24)) * 5 / 8) * sin(DEG2RAD(draw_angle));
    text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
    text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
 }
 
 /// @brief A struct used to remember where something is drawn.
 typedef struct TimeDrawnMemory {
+   double now;
+   double jd;
    int x;
    int y;
    int w;
    int h;
+   unsigned int fg;
+   unsigned int bg;
 } TimeDrawnMemory;
 
 /// @brief An array of things drawn
@@ -1712,9 +1726,28 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
    while (collision);
 
    timedrawnmemory[timedrawnspot++] = (TimeDrawnMemory) {
-   x, y, w, h};
+   now, jd, x, y, w, h, fg, bg};
 
-   do_xy_time(canvas, now, jd, x, y, fg, bg);
+   // don't draw here, we'll get it when we replay
+   // do_xy_time(canvas, now, jd, x, y, fg, bg);
+}
+
+/// @brief Redraw stored sun rise/set times
+///
+/// This fixes some drawing oddities on very small screens
+///
+/// @param canvas Pointer to the canvas object
+/// @returns void
+void replayTimeDrawnMemory(Canvas *canvas) {
+   for (int i = 0; i < timedrawnspot; i++) {
+      do_xy_time(canvas,
+            timedrawnmemory[i].now,
+            timedrawnmemory[i].jd,
+            timedrawnmemory[i].x,
+            timedrawnmemory[i].y,
+            timedrawnmemory[i].fg,
+            timedrawnmemory[i].bg);
+   }
 }
 
 /// @brief Draw colored bands for solar position
@@ -2010,16 +2043,28 @@ double get_moon_angle(double JD, double lunar_new) {
 /// @return void
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
+
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY);
+   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS);
+   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS);
+   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER);
+   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN);
+   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 1);
+
+   r -= SCALE(80);
+   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 2);
+   r += SCALE(20);
+   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 2);
+   r += SCALE(20);
+   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 2);
+   r += SCALE(20);
+   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 2);
+   r += SCALE(20);
+   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 2);
 }
 
 void do_debug_info(Canvas *canvas, double JD) {
@@ -2110,6 +2155,9 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
+
+   // redraw some text, to make things pretty
+   replayTimeDrawnMemory(canvas);
 
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);

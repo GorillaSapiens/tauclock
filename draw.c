@@ -32,12 +32,15 @@
 /// @param h The height of the canvas
 /// @param fill The byte value to fill with on initialization
 /// @return A new Canvas object
-Canvas *new_canvas(int w, int h, unsigned char fill) {
+Canvas *new_canvas(int w, int h, unsigned int fill) {
    Canvas *ret = (Canvas *) malloc(sizeof(Canvas));
    ret->w = w;
    ret->h = h;
    ret->data = (unsigned int *)malloc(sizeof(unsigned int) * w * h);
-   memset(ret->data, fill, sizeof(unsigned int) * w * h);
+   unsigned int *p = ret->data;
+   for (int i = 0; i < w * h; i++) {
+      *p++ = fill;
+   }
    return ret;
 }
 

@@ -306,7 +306,7 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
 void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
    double up_angle = frac(up) * 360.0;
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
+   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
 
 #define HALFHOUR (1.0 / 24.0 / 2.0)
 
@@ -352,7 +352,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
 /// @return void
 void do_now_hand(Canvas * canvas, double up, double now) {
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
+   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
 
    double up_angle = frac(up) * 360.0;
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
@@ -382,7 +382,7 @@ void do_now_time(Canvas * canvas, double now) {
    my_get_local_date(now, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    text_canvas(canvas, FONT_BOLD_BIG, canvas->w / 2, canvas->h / 2,
-               COLOR_BLACK, COLOR_WHITE, time, 1, 12);
+               COLOR_WHITE, COLOR_BLACK, time, 1, 12);
 }
 
 /// @brief Draw the current weekday in the center of the Canvas
@@ -405,7 +405,7 @@ void do_now_weekday(Canvas * canvas, double now) {
    char text[32];
    sprintf(text, "%s", weekdays[dow]);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2, canvas->h / 2 - SCALE(90),
-               COLOR_BLACK, COLOR_WHITE, text, 1, 2);
+               COLOR_WHITE, COLOR_BLACK, text, 1, 2);
 }
 
 /// @brief Draw the current date in the center of the Canvas
@@ -419,7 +419,7 @@ void do_now_date(Canvas * canvas, double now) {
    my_get_local_date(now, &zonedate);
    sprintf(time, "%s-%d", months[zonedate.months - 1], zonedate.days);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2, canvas->h / 2 - SCALE(60),
-               COLOR_BLACK, COLOR_WHITE, time, 1, 2);
+               COLOR_WHITE, COLOR_BLACK, time, 1, 2);
 }
 
 /// @brief Draw the location in the center of the Canvas
@@ -447,7 +447,7 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
 
    sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2, canvas->h / 2 + SCALE(48),
-               COLOR_BLACK, COLOR_WHITE, location, 1, 2);
+               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
 }
 
 /// @brief Draw the current date in the center of the Canvas
@@ -462,7 +462,7 @@ void do_now_smalldate(Canvas * canvas, double now) {
    sprintf(time, "%04d-%02d-%02d", zonedate.years, zonedate.months,
            zonedate.days);
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2, canvas->h / 2 + SCALE(72),
-               COLOR_BLACK, COLOR_WHITE, time, 1, 2);
+               COLOR_WHITE, COLOR_BLACK, time, 1, 2);
 }
 
 /// @brief Draw the moon
@@ -661,8 +661,8 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
                      x = (canvas->w / 2) +
                         (canvas->w / 2 / 2 + SCALE(128 + 16 + 50)) * cos(DEG2RAD(angle));
                      y = (canvas->h / 2) + (canvas->h / 2 / 2 + SCALE(128 + 16 + 50)) * sin(DEG2RAD(angle));
-                     do_xy_time(canvas, now, events[i].jd, x, y, COLOR_BLACK,
-                                COLOR_WHITE);
+                     do_xy_time(canvas, now, events[i].jd, x, y, COLOR_WHITE,
+                                COLOR_BLACK);
                   }
                   break;
             }
@@ -745,7 +745,7 @@ do_planet_band(Canvas * canvas, double up, double now,
 
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_WHITE,
+                     text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK,
                                  sym, 1, 1);
                   }
                   // fallthrough
@@ -1557,7 +1557,7 @@ void do_zodiac(Canvas * canvas, double JD) {
    ln_get_solar_equ_coords(JD, &sun_equatorial);
    double ra = sun_equatorial.ra;
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, 0);
+   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
    char buf[2] = { 0, 0 };
    for (int sign = 0; sign < 12; sign++) {
       // aries is at 0 + (360.0/12.0/2.0)
@@ -2027,11 +2027,11 @@ void do_debug_info(Canvas *canvas, double JD) {
    char buf[1024];
    sprintf(buf, "JD=%f", JD);
    int wh =text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, canvas->w - w/2 - 6, canvas->h - h/2 - 3,
-         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 
    // for debugging, put time zone info in the lower left
    time_t present;
@@ -2045,11 +2045,11 @@ void do_debug_info(Canvas *canvas, double JD) {
          tzname[1] ? tzname[1] : "(null)",
          tm->tm_isdst ? "]" : "");
    wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    w = wh >> 16;
    h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w/2 + 6, canvas->h - h/2 - 3,
-         COLOR_BLACK, COLOR_WHITE, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 
 /// @brief Do all of the things
@@ -2093,7 +2093,7 @@ Canvas *do_all(double lat, double lng, double offset) {
    double lunar_new = get_lunar_new(JD);
 
    //// drawing begins here
-   Canvas *canvas = new_canvas(SIZE, SIZE, 0xFF);
+   Canvas *canvas = new_canvas(SIZE, SIZE, COLOR_BLACK);
 
    int mid = canvas->w / 2;
 
@@ -2111,9 +2111,9 @@ Canvas *do_all(double lat, double lng, double offset) {
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
 
-   // black border bands
-   arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_BLACK, 0, 360.0);
-   arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_BLACK, 0, 360.0);
+   // border bands
+   arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+   arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
 
    // our rotating "now" hand
    do_now_hand(canvas, up, JD);

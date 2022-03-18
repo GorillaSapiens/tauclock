@@ -67,7 +67,7 @@ typedef struct Canvas {
    unsigned int *data;          ///< Pointer to Canvas data
 } Canvas;
 
-Canvas *new_canvas(int w, int h, unsigned char fill);
+Canvas *new_canvas(int w, int h, unsigned int fill);
 void delete_canvas(Canvas * canvas);
 void dump_canvas(Canvas * canvas, const char *fname);
 

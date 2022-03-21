@@ -171,7 +171,7 @@ void my_get_local_date(double JD, struct ln_zonedate *zonedate) {
    struct tm *loctime;
    long gmtoff;
 
-   ln_get_date (JD, &date);
+   ln_get_date(JD, &date);
 
    /* add day light savings time and hour angle */
 #ifdef __WIN32__
@@ -180,13 +180,13 @@ void my_get_local_date(double JD, struct ln_zonedate *zonedate) {
    if (_daylight)
       gmtoff += 3600;
 #else
-   ln_get_timet_from_julian (JD, &curtime); // (AND NOT!!!) curtime = time (NULL);
+   ln_get_timet_from_julian(JD, &curtime);      // (AND NOT!!!) curtime = time (NULL);
    loctime = localtime(&curtime);
    gmtoff = loctime->tm_gmtoff;
    // otherwise there is no reasonable way how to get that:(
    // tm_gmtoff already included DST
 #endif
-   ln_date_to_zonedate (&date, zonedate, gmtoff);
+   ln_date_to_zonedate(&date, zonedate, gmtoff);
 }
 
 /// @brief Normalize an angle in the range 0.0 .. 360.0
@@ -311,13 +311,12 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
 #define HALFHOUR (1.0 / 24.0 / 2.0)
 
    for (double when = JD - 0.5 + HALFHOUR;
-         when < JD + 0.5 - HALFHOUR;
-         when += 1.0/24.0) {
+        when < JD + 0.5 - HALFHOUR; when += 1.0 / 24.0) {
       struct ln_zonedate zonedate;
       my_get_local_date(when, &zonedate);
       int hour = zonedate.hours;
 
-      double mark = when - (float) zonedate.minutes / (24.0 * 60.0);
+      double mark = when - (float)zonedate.minutes / (24.0 * 60.0);
 
       double xa, ya;
       double xc, yc;
@@ -335,7 +334,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       char buf[32];
       sprintf(buf, "%02d", hour);
       text_canvas(shadow, FONT_BOLD_SMALL, xa, ya,
-               COLOR_BLACK, COLOR_NONE, buf, 1, 3);
+                  COLOR_BLACK, COLOR_NONE, buf, 1, 3);
    }
    xor_canvas(shadow, canvas);
 
@@ -357,13 +356,17 @@ void do_now_hand(Canvas * canvas, double up, double now) {
    double up_angle = frac(up) * 360.0;
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
    double xc =
-      canvas->w / 2 + (canvas->w / 2 / 2 + SCALE(128)) * cos(DEG2RAD(now_angle));
+      canvas->w / 2 + (canvas->w / 2 / 2 +
+                       SCALE(128)) * cos(DEG2RAD(now_angle));
    double yc =
-      canvas->h / 2 + (canvas->h / 2 / 2 + SCALE(128)) * sin(DEG2RAD(now_angle));
+      canvas->h / 2 + (canvas->h / 2 / 2 +
+                       SCALE(128)) * sin(DEG2RAD(now_angle));
    double xc2 =
-      canvas->w / 2 + (canvas->w / 2 / 2 - SCALE(128)) * cos(DEG2RAD(now_angle));
+      canvas->w / 2 + (canvas->w / 2 / 2 -
+                       SCALE(128)) * cos(DEG2RAD(now_angle));
    double yc2 =
-      canvas->h / 2 + (canvas->h / 2 / 2 - SCALE(128)) * sin(DEG2RAD(now_angle));
+      canvas->h / 2 + (canvas->h / 2 / 2 -
+                       SCALE(128)) * sin(DEG2RAD(now_angle));
 
    thick_line_canvas(shadow, xc2, yc2, xc, yc, COLOR_WHITE, 3);
    xor_canvas(shadow, canvas);
@@ -446,8 +449,9 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    char *degree = "\u00B0";     // in utf8, degree symbol
 
    sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
-   text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2, canvas->h / 2 + SCALE(48),
-               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
+   text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
+               canvas->h / 2 + SCALE(48), COLOR_WHITE, COLOR_BLACK, location, 1,
+               2);
 }
 
 /// @brief Draw the current date in the center of the Canvas
@@ -461,8 +465,8 @@ void do_now_smalldate(Canvas * canvas, double now) {
    my_get_local_date(now, &zonedate);
    sprintf(time, "%04d-%02d-%02d", zonedate.years, zonedate.months,
            zonedate.days);
-   text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2, canvas->h / 2 + SCALE(72),
-               COLOR_WHITE, COLOR_BLACK, time, 1, 2);
+   text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
+               canvas->h / 2 + SCALE(72), COLOR_WHITE, COLOR_BLACK, time, 1, 2);
 }
 
 /// @brief Draw the moon
@@ -485,8 +489,12 @@ do_moon_draw(Canvas * canvas,
    // this is, quite tedious.  here we go...
    int cx, cy;
 
-   cx = canvas->w / 2 + (canvas->w / 2 / 2 + SCALE(128 + 16 + 64)) * cos(DEG2RAD(where_angle));
-   cy = canvas->h / 2 + (canvas->h / 2 / 2 + SCALE(128 + 16 + 64)) * sin(DEG2RAD(where_angle));
+   cx =
+      canvas->w / 2 + (canvas->w / 2 / 2 +
+                       SCALE(128 + 16 + 64)) * cos(DEG2RAD(where_angle));
+   cy =
+      canvas->h / 2 + (canvas->h / 2 / 2 +
+                       SCALE(128 + 16 + 64)) * sin(DEG2RAD(where_angle));
 
    unsigned int interior_color;
    unsigned int chunk_color;
@@ -608,8 +616,8 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                             canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5), color,
-                             start_angle, stop_angle);
+                             canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5),
+                             color, start_angle, stop_angle);
 
                   last = events[i].jd;
                }
@@ -644,23 +652,31 @@ do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
                         frac(events[i].jd) * 360.0 - up_angle + 270.0;
 
                      x1 = canvas->w / 2 +
-                        (canvas->w / 2 / 2 + SCALE(128 + 16 - 16)) * cos(DEG2RAD(angle));
+                        (canvas->w / 2 / 2 +
+                         SCALE(128 + 16 - 16)) * cos(DEG2RAD(angle));
                      y1 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 + SCALE(128 + 16 - 16)) * sin(DEG2RAD(angle));
+                        canvas->h / 2 + (canvas->h / 2 / 2 +
+                                         SCALE(128 + 16 -
+                                               16)) * sin(DEG2RAD(angle));
                      x2 =
-                        canvas->w / 2 + (canvas->w / 2 / 2 + SCALE(128 + 16 +
-                                         16)) * cos(DEG2RAD(angle));
+                        canvas->w / 2 + (canvas->w / 2 / 2 +
+                                         SCALE(128 + 16 +
+                                               16)) * cos(DEG2RAD(angle));
                      y2 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 + SCALE(128 + 16 +
-                                         16)) * sin(DEG2RAD(angle));
+                        canvas->h / 2 + (canvas->h / 2 / 2 +
+                                         SCALE(128 + 16 +
+                                               16)) * sin(DEG2RAD(angle));
                      thick_line_canvas(canvas, x1, y1, x2, y2, color, 3);
 
                      if (angle_between(angle, moon_angle) < 10.0) {
                         angle = moon_angle - 10.0;
                      }
                      x = (canvas->w / 2) +
-                        (canvas->w / 2 / 2 + SCALE(128 + 16 + 50)) * cos(DEG2RAD(angle));
-                     y = (canvas->h / 2) + (canvas->h / 2 / 2 + SCALE(128 + 16 + 50)) * sin(DEG2RAD(angle));
+                        (canvas->w / 2 / 2 +
+                         SCALE(128 + 16 + 50)) * cos(DEG2RAD(angle));
+                     y = (canvas->h / 2) + (canvas->h / 2 / 2 +
+                                            SCALE(128 + 16 +
+                                                  50)) * sin(DEG2RAD(angle));
                      do_xy_time(canvas, now, events[i].jd, x, y, COLOR_WHITE,
                                 COLOR_BLACK);
                   }
@@ -713,7 +729,7 @@ do_planet_band(Canvas * canvas, double up, double now,
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   if (mode & 1) {
                      arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                           radius, 1, color, start_angle, stop_angle);
+                                radius, 1, color, start_angle, stop_angle);
                   }
 
                   last = events[i].jd;
@@ -728,7 +744,7 @@ do_planet_band(Canvas * canvas, double up, double now,
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       if (mode & 1) {
          arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-               radius, 1, color, start_angle, stop_angle);
+                    radius, 1, color, start_angle, stop_angle);
       }
    }
 
@@ -752,8 +768,8 @@ do_planet_band(Canvas * canvas, double up, double now,
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
                      if (mode & 2) {
-                        text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK,
-                              sym, 1, 1);
+                        text_canvas(canvas, ASTRO_FONT, x, y, color,
+                                    COLOR_BLACK, sym, 1, 1);
                      }
                   }
                   // fallthrough
@@ -770,7 +786,7 @@ do_planet_band(Canvas * canvas, double up, double now,
                      y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
 
                      if (mode & 2) {
-                     line_canvas(canvas, x1, y1, x2, y2, color);
+                        line_canvas(canvas, x1, y1, x2, y2, color);
                      }
                   }
                   break;
@@ -1367,12 +1383,12 @@ void my_get_everything_planet_updowns(double earliest,
 }
 
 #define PLANET(x,y) \
-void my_get_everything_ ## x(double JDstart, double JDend, struct ln_lnlat_posn *observer) {\
-   my_get_everything_planet( JDstart, JDend, observer, ln_get_ ## x ## _equ_coords, y);\
-}\
-void my_get_everything_ ## x ## _updowns(double earliest, struct ln_lnlat_posn *observer) {\
-   my_get_everything_planet_updowns(earliest, observer, ln_get_ ## x ## _equ_coords, y);\
-}
+   void my_get_everything_ ## x(double JDstart, double JDend, struct ln_lnlat_posn *observer) {\
+      my_get_everything_planet( JDstart, JDend, observer, ln_get_ ## x ## _equ_coords, y);\
+   }\
+   void my_get_everything_ ## x ## _updowns(double earliest, struct ln_lnlat_posn *observer) {\
+      my_get_everything_planet_updowns(earliest, observer, ln_get_ ## x ## _equ_coords, y);\
+   }
 
 PLANET(mercury, CAT_MERCURY);
 PLANET(venus, CAT_VENUS);
@@ -1634,8 +1650,10 @@ accum_helper(Canvas * canvas,
    double y =
       (canvas->h / 2) +
       ((canvas->h / 3 - SCALE(24)) * 5 / 8) * sin(DEG2RAD(draw_angle));
-   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
-   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1,
+               3);
+   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1,
+               3);
 }
 
 /// @brief A struct used to remember where something is drawn.
@@ -1738,15 +1756,14 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
 ///
 /// @param canvas Pointer to the canvas object
 /// @returns void
-void replayTimeDrawnMemory(Canvas *canvas) {
+void replayTimeDrawnMemory(Canvas * canvas) {
    for (int i = 0; i < timedrawnspot; i++) {
       do_xy_time(canvas,
-            timedrawnmemory[i].now,
-            timedrawnmemory[i].jd,
-            timedrawnmemory[i].x,
-            timedrawnmemory[i].y,
-            timedrawnmemory[i].fg,
-            timedrawnmemory[i].bg);
+                 timedrawnmemory[i].now,
+                 timedrawnmemory[i].jd,
+                 timedrawnmemory[i].x,
+                 timedrawnmemory[i].y,
+                 timedrawnmemory[i].fg, timedrawnmemory[i].bg);
    }
 }
 
@@ -2067,34 +2084,49 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
    do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 2);
 }
 
-void do_debug_info(Canvas *canvas, double JD) {
+/// @brief Draw debugging information
+///
+/// Timezone in lower left, Julian Date in lower right
+///
+/// @param canvas The Canvas to draw on
+/// @param JD The current Julian Date
+/// @return void
+void do_debug_info(Canvas * canvas, double JD) {
    // for debugging, put the Julian date in the lower right
    char buf[1024];
    sprintf(buf, "JD=%f", JD);
-   int wh =text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+                        COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w/2 - 6, canvas->h - h/2 - 3,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 6,
+               canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 
    // for debugging, put time zone info in the lower left
    time_t present;
-   ln_get_timet_from_julian (JD, &present);
+   ln_get_timet_from_julian(JD, &present);
    struct tm *tm = localtime(&present);
-   sprintf(buf, "%s%s%s/%s%s%s",
-         tm->tm_isdst ? "" : "[",
-         tzname[0] ? tzname[0] : "(null)",
-         tm->tm_isdst ? "" : "]",
-         tm->tm_isdst ? "[" : "",
-         tzname[1] ? tzname[1] : "(null)",
-         tm->tm_isdst ? "]" : "");
+
+   if (tzname[0] != NULL && tzname[1] != NULL) {
+      sprintf(buf, "%s%s%s/%s%s%s",
+              tm->tm_isdst ? "" : "[",
+              tzname[0],
+              tm->tm_isdst ? "" : "]",
+              tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
+   }
+   else if (tzname[0] != NULL) {
+      sprintf(buf, "[%s]", tzname[0]);
+   }
+   else {
+      sprintf(buf, "[(null)]");
+   }
+
    wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+                    COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    w = wh >> 16;
    h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, w/2 + 6, canvas->h - h/2 - 3,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 6, canvas->h - h / 2 - 3,
+               COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 
 /// @brief Do all of the things

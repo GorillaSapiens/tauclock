@@ -1838,7 +1838,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   times_written++;
                   // TODO FIX check size
                   do_tr_time_sun(canvas, now, last, start_angle,
-                                 (canvas->w / 3 - SCALE(24)), fore, back);
+                                 (canvas->w / 3 - SCALE(48)), fore, back);
                }
 
                last = here;
@@ -1954,13 +1954,13 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    if (times_written) {
       do_tr_time_sun(canvas, now, last, start_angle,
-                     canvas->w / 3 - SCALE(24), fore, back);
+                     canvas->w / 3 - SCALE(48), fore, back);
    }
 
    if (transited != 0.0) {
       double angle = frac(transited) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(canvas, now, transited, angle,
-                     canvas->w / 3 - SCALE(24), transit_fore, transit_back);
+                     canvas->w / 3 - SCALE(48), transit_fore, transit_back);
    }
 
    if (daylight > one_minute) {

@@ -19,9 +19,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val layObj: LinearLayout = findViewById<View>(R.id.parentLay) as LinearLayout
+        //val layObj: LinearLayout = findViewById<View>(R.id.parentLay) as LinearLayout
         val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-        val myDrawObj = SunclockDrawable()
+        val myDrawObj = SunclockDrawable(imageView.width, imageView.height)
         imageView.setImageDrawable(myDrawObj)
         imageView.invalidate()
     }

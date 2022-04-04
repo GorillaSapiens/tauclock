@@ -6,7 +6,7 @@ import android.os.Bundle
 class MainActivity : AppCompatActivity() {
     companion object {
       init {
-         System.loadLibrary("sunclock1")
+         System.loadLibrary("libnova")
       }
     }
 

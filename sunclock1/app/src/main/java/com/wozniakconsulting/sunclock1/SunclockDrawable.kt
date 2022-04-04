@@ -23,8 +23,10 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
         else {
             cr = mWidth / 2.0f
         }
-        cr=1000.0f
-        canvas.drawArc(-cr,-cr,cr,cr,0f,180f,false, mPaint)
+        val cx = 500f as Float;
+        val cy = 500f as Float;
+        cr = 500f;
+        canvas.drawArc(cx-cr,cy-cr, cx + cr,cy +cr,20f,140f,true, mPaint)
     }
 
     override fun getOpacity(): Int {

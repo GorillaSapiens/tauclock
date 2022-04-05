@@ -64,7 +64,10 @@ class MainActivity : AppCompatActivity() {
                     if (location == null) {
                         requestNewLocationData()
                     } else {
-                        mSunclockDrawable?.setLocation(location)
+                        if (mSunclockDrawable != null) {
+                            var something = do_all(location.latitude, location.longitude, 0.0);
+                            mSunclockDrawable?.setThing(something);
+                        }
                     }
                 }
             } else {
@@ -103,7 +106,10 @@ class MainActivity : AppCompatActivity() {
     private val mLocationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             val mLastLocation: Location = locationResult.lastLocation
-            mSunclockDrawable?.setLocation(mLastLocation)
+            if (mSunclockDrawable != null) {
+                var something = do_all(mLastLocation.latitude, mLastLocation.longitude, 0.0);
+                mSunclockDrawable?.setThing(something);
+            }
         }
     }
 
@@ -171,5 +177,5 @@ class MainActivity : AppCompatActivity() {
         getLastLocation();
     }
 
-    external fun do_all()
+    external fun do_all(lat:Double, lng:Double, offset:Double) : IntArray
 }

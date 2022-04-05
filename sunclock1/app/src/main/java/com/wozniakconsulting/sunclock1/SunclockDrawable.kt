@@ -12,8 +12,7 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
 
     //private native void do_all(double, double,double);
 
-    fun setLocation(location: Location) {
-        //do_all(location.latitude, location.longitude, 0.0f);
+    fun setThing(something: IntArray) {
     }
 
     override fun draw(canvas: Canvas) {

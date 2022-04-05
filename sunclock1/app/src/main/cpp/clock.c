@@ -2129,6 +2129,11 @@ void do_debug_info(Canvas * canvas, double JD) {
                COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 
+void initialize_all(void) {
+	event_spot = 0;
+	timedrawnspot = 0;
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2141,6 +2146,8 @@ Canvas *do_all(double lat, double lng, double offset) {
 
    double JD;
    double up;
+
+   initialize_all();
 
    // observer's location
    observer.lat = lat;          // degrees, North is positive

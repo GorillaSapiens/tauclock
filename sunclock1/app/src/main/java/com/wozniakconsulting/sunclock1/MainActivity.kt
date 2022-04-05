@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.View
@@ -26,10 +27,24 @@ class MainActivity : AppCompatActivity() {
     val PERMISSION_ID = 44
     var mSunclockDrawable: SunclockDrawable? = null
 
+    // Create the Handler object (on the main thread by default)
+    var mHandler = Handler()
+
     companion object {
       init {
          System.loadLibrary("libnova")
       }
+    }
+
+    private val runnableCode: Runnable = object : Runnable {
+        override fun run() {
+            requestNewLocationData()
+
+            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+            imageView.invalidate()
+
+            mHandler.postDelayed(this, 1000)
+        }
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -43,6 +58,8 @@ class MainActivity : AppCompatActivity() {
                 imageView.invalidate()
 
                 getLastLocation()
+
+                mHandler.post(runnableCode);
 
                 mDrawableInitialized = true
             }

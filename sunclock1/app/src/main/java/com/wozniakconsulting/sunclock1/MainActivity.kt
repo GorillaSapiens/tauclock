@@ -26,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     var mFusedLocationClient: FusedLocationProviderClient? = null
     val PERMISSION_ID = 44
     var mSunclockDrawable: SunclockDrawable? = null
+    var mHasFocus = false;
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler()
@@ -38,10 +39,12 @@ class MainActivity : AppCompatActivity() {
 
     private val runnableCode: Runnable = object : Runnable {
         override fun run() {
-            requestNewLocationData()
+            if (mHasFocus) {
+                requestNewLocationData()
 
-            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-            imageView.invalidate()
+                val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                imageView.invalidate()
+            }
 
             mHandler.postDelayed(this, 1000)
         }
@@ -64,6 +67,7 @@ class MainActivity : AppCompatActivity() {
                 mDrawableInitialized = true
             }
         }
+        mHasFocus = hasFocus;
     }
 
     @SuppressLint("MissingPermission")
@@ -196,6 +200,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+//      actionBar?.setTitle("Tau");
+//      supportActionBar?.setTitle("Tao");
+        actionBar?.hide();
+        supportActionBar?.hide();
+
+
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();

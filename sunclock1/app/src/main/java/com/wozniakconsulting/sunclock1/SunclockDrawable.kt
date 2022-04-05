@@ -47,22 +47,14 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
                 r = Rect((x+w).toInt(),y.toInt(),mWidth.toInt(), (y+h).toInt());
                 canvas.drawRect(r, mPaint);
             } else {
-                // Set the correct values in the Paint
-                mPaint.setARGB(255, 255, 0, 0)
+                mPaint.setARGB(255, 0, 0, 0)
                 mPaint.setStrokeWidth(2.0f)
                 mPaint.setStyle(Style.FILL)
 
-                // Draw it
-                val cx = mWidth / 2.0f
-                val cy = mHeight / 2.0f
-                var cr : Float
-                if (mWidth > mHeight) {
-                    cr = cy
-                }
-                else {
-                    cr = cx
-                }
-                canvas.drawArc(cx-cr,cy-cr, cx + cr,cy +cr,20f,140f,true, mPaint)
+                var r : Rect;
+                // above
+                r = Rect(0,0,mWidth.toInt(),mHeight.toInt());
+                canvas.drawRect(r, mPaint);
             }
         }
     }

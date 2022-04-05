@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
 
-
 class MainActivity : AppCompatActivity() {
     var mDrawableInitialized = false
     var mFusedLocationClient: FusedLocationProviderClient? = null
@@ -171,4 +170,6 @@ class MainActivity : AppCompatActivity() {
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
     }
+
+    external fun do_all()
 }

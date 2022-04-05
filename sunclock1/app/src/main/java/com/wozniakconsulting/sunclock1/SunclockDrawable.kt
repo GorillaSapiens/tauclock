@@ -10,8 +10,10 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
     private val mWidth: Int
     private val mHeight: Int
 
-    fun setLocation(location: Location) {
+    //private native void do_all(double, double,double);
 
+    fun setLocation(location: Location) {
+        //do_all(location.latitude, location.longitude, 0.0f);
     }
 
     override fun draw(canvas: Canvas) {

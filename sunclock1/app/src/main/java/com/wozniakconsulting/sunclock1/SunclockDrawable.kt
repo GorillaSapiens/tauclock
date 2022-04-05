@@ -2,12 +2,17 @@ package com.wozniakconsulting.sunclock1
 import android.graphics.*
 import android.graphics.Paint.Style
 import android.graphics.drawable.Drawable
+import android.location.Location
 
 
 class SunclockDrawable(width: Int, height: Int) : Drawable() {
     private val mPaint: Paint
     private val mWidth: Int
     private val mHeight: Int
+
+    fun setLocation(location: Location) {
+
+    }
 
     override fun draw(canvas: Canvas) {
         // Set the correct values in the Paint

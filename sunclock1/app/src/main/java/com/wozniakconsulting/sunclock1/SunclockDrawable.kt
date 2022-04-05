@@ -9,29 +9,44 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
     private val mPaint: Paint
     private val mWidth: Int
     private val mHeight: Int
+    private var mThing: IntArray
 
     //private native void do_all(double, double,double);
 
     fun setThing(something: IntArray) {
+        mThing = something;
     }
 
     override fun draw(canvas: Canvas) {
-        // Set the correct values in the Paint
-        mPaint.setARGB(255, 255, 0, 0)
-        mPaint.setStrokeWidth(2.0f)
-        mPaint.setStyle(Style.FILL)
+        synchronized(mThing) {
+            if (mThing.size > 0) {
+                val w = mThing[0];
+                val h = mThing[1];
 
-        // Draw it
-        val cx = mWidth / 2.0f
-        val cy = mHeight / 2.0f
-        var cr : Float
-        if (mWidth > mHeight) {
-            cr = cy
+                val x = (mWidth / 2.0f) - (w / 2.0f)
+                val y = (mHeight / 2.0f) - (h / 2.0f)
+
+                val image = mThing.slice(2 .. mThing.size)
+                canvas.drawBitmap(mThing, 2, w as Int, x as Int, y as Int, w as Int, h as Int, true, null)
+            } else {
+                // Set the correct values in the Paint
+                mPaint.setARGB(255, 255, 0, 0)
+                mPaint.setStrokeWidth(2.0f)
+                mPaint.setStyle(Style.FILL)
+
+                // Draw it
+                val cx = mWidth / 2.0f
+                val cy = mHeight / 2.0f
+                var cr : Float
+                if (mWidth > mHeight) {
+                    cr = cy
+                }
+                else {
+                    cr = cx
+                }
+                canvas.drawArc(cx-cr,cy-cr, cx + cr,cy +cr,20f,140f,true, mPaint)
+            }
         }
-        else {
-            cr = cx
-        }
-        canvas.drawArc(cx-cr,cy-cr, cx + cr,cy +cr,20f,140f,true, mPaint)
     }
 
     override fun getOpacity(): Int {
@@ -45,5 +60,6 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
         mPaint = Paint()
         mWidth = width
         mHeight = height
+        mThing = IntArray(0)
     }
 }

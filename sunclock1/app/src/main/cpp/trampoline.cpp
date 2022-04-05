@@ -8,8 +8,10 @@ extern "C" {
 #include "clock.h"
 }
 
-JNIEXPORT jintArray JNICALL Java_libnova_do_all(JNIEnv *env, jobject obj,
-                                           jdouble lat, jdouble lng, jdouble offset) {
+extern "C"
+JNIEXPORT jintArray JNICALL
+Java_com_wozniakconsulting_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz, jdouble lat,
+                                                          jdouble lng, jdouble offset) {
     Canvas *canvas = do_all(lat,lng,offset);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;

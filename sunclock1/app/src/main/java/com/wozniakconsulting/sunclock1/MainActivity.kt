@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity() {
                         if (mSunclockDrawable != null) {
                             var something = do_all(location.latitude, location.longitude, 0.0);
                             mSunclockDrawable?.setThing(something);
+
+                            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                            imageView.invalidate()
                         }
                     }
                 }
@@ -109,6 +112,10 @@ class MainActivity : AppCompatActivity() {
             if (mSunclockDrawable != null) {
                 var something = do_all(mLastLocation.latitude, mLastLocation.longitude, 0.0);
                 mSunclockDrawable?.setThing(something);
+
+                val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                imageView.invalidate()
+
             }
         }
     }

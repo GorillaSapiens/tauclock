@@ -26,8 +26,8 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
                 val x = (mWidth / 2.0f) - (w / 2.0f)
                 val y = (mHeight / 2.0f) - (h / 2.0f)
 
-                val image = mThing.slice(2 .. mThing.size)
-                canvas.drawBitmap(mThing, 2, w as Int, x as Int, y as Int, w as Int, h as Int, true, null)
+//                val image = mThing.slice(2 .. mThing.size)
+                canvas.drawBitmap(mThing, 2, w.toInt(), x.toInt(), y.toInt(), w.toInt(), h.toInt(), true, null)
             } else {
                 // Set the correct values in the Paint
                 mPaint.setARGB(255, 255, 0, 0)

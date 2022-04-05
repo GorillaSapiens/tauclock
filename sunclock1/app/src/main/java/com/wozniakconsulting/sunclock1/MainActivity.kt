@@ -201,10 +201,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-//      actionBar?.setTitle("Tau");
-//      supportActionBar?.setTitle("Tao");
-        actionBar?.hide();
-        supportActionBar?.hide();
+      actionBar?.setTitle("τau clock");
+      supportActionBar?.setTitle("τau clock");
+        //actionBar?.hide();
+        //supportActionBar?.hide();
 
 
 

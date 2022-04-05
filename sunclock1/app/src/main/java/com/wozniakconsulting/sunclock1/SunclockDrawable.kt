@@ -16,16 +16,15 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
         mPaint.setStyle(Style.FILL)
 
         // Draw it
+        val cx = mWidth / 2.0f as Float
+        val cy = mHeight / 2.0f as Float
         var cr : Float
         if (mWidth > mHeight) {
-            cr = mHeight / 2.0f
+            cr = cy
         }
         else {
-            cr = mWidth / 2.0f
+            cr = cx
         }
-        val cx = 500f as Float;
-        val cy = 500f as Float;
-        cr = 500f;
         canvas.drawArc(cx-cr,cy-cr, cx + cr,cy +cr,20f,140f,true, mPaint)
     }
 

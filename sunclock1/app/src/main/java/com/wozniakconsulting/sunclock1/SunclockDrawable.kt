@@ -16,8 +16,8 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
         mPaint.setStyle(Style.FILL)
 
         // Draw it
-        val cx = mWidth / 2.0f as Float
-        val cy = mHeight / 2.0f as Float
+        val cx = mWidth / 2.0f
+        val cy = mHeight / 2.0f
         var cr : Float
         if (mWidth > mHeight) {
             cr = cy

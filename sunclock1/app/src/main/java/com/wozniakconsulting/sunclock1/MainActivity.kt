@@ -20,6 +20,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
+import java.time.Duration
+import java.time.LocalDateTime
 
 class MainActivity : AppCompatActivity() {
     var mDrawableInitialized = false
@@ -27,6 +29,9 @@ class MainActivity : AppCompatActivity() {
     val PERMISSION_ID = 44
     var mSunclockDrawable: SunclockDrawable? = null
     var mHasFocus = false;
+    var mLastTime = LocalDateTime.now() - Duration.ofDays(1)
+    var mLastRequest = mLastTime
+    var mLastLocation : Location? = null
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler()
@@ -37,13 +42,28 @@ class MainActivity : AppCompatActivity() {
       }
     }
 
-    private val runnableCode: Runnable = object : Runnable {
+    private val runEverySecond: Runnable = object : Runnable {
         override fun run() {
             if (mHasFocus) {
-                requestNewLocationData()
 
-                val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-                imageView.invalidate()
+                val current = LocalDateTime.now();
+
+                if ((current - Duration.ofMinutes(20)) > mLastRequest) {
+                    requestNewLocationData()
+                    mLastRequest = current;
+                }
+
+                if ((current - Duration.ofMinutes(1)) > mLastTime || current.minute != mLastTime.minute) {
+                    if (mLastLocation != null) {
+                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0);
+                        mSunclockDrawable?.setThing(something);
+
+                        val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                        imageView.invalidate()
+                    }
+
+                    mLastTime = current;
+                }
             }
 
             mHandler.postDelayed(this, 1000)
@@ -62,7 +82,7 @@ class MainActivity : AppCompatActivity() {
 
                 getLastLocation()
 
-                mHandler.post(runnableCode);
+                mHandler.post(runEverySecond);
 
                 mDrawableInitialized = true
             }
@@ -129,14 +149,15 @@ class MainActivity : AppCompatActivity() {
 
     private val mLocationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            val mLastLocation: Location = locationResult.lastLocation
+            mLastLocation = locationResult.lastLocation
             if (mSunclockDrawable != null) {
-                var something = do_all(mLastLocation.latitude, mLastLocation.longitude, 0.0);
-                mSunclockDrawable?.setThing(something);
+                if (mLastLocation != null) {
+                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0);
+                    mSunclockDrawable?.setThing(something);
 
-                val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-                imageView.invalidate()
-
+                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                    imageView.invalidate()
+                }
             }
         }
     }
@@ -201,8 +222,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-      actionBar?.setTitle("τau clock");
-      supportActionBar?.setTitle("τau clock");
+        val manager = this.packageManager
+        val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
+
+         actionBar?.setTitle("τau clock v" + info.versionName);
+         supportActionBar?.setTitle("τau clock v" + info.versionName);
         //actionBar?.hide();
         //supportActionBar?.hide();
 

@@ -43,7 +43,8 @@
 #define ORIG
 
 #ifdef ORIG
-#define SIZE 1024
+//#define SIZE 1024
+int SIZE = 1024;
 #define ASTRO_FONT astro_32_bdf
 #define FONT_BOLD_BIG djsmb_50_bdf
 #define FONT_BOLD_MED djsmb_20_bdf
@@ -2140,12 +2141,14 @@ void initialize_all(void) {
 /// @param lng The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lng, double offset) {
+Canvas *do_all(double lat, double lng, double offset, int width) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
    double JD;
    double up;
+
+   SIZE = width;
 
    initialize_all();
 

@@ -55,10 +55,11 @@ class MainActivity : AppCompatActivity() {
 
                 if ((current - Duration.ofMinutes(1)) > mLastTime || current.minute != mLastTime.minute) {
                     if (mLastLocation != null) {
-                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0);
+                        val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+
+                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0, imageView.width);
                         mSunclockDrawable?.setThing(something);
 
-                        val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
                         imageView.invalidate()
                     }
 
@@ -106,10 +107,11 @@ class MainActivity : AppCompatActivity() {
                         requestNewLocationData()
                     } else {
                         if (mSunclockDrawable != null) {
-                            var something = do_all(location.latitude, location.longitude, 0.0);
+                            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+
+                            var something = do_all(location.latitude, location.longitude, 0.0, imageView.width);
                             mSunclockDrawable?.setThing(something);
 
-                            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
                             imageView.invalidate()
                         }
                     }
@@ -152,10 +154,11 @@ class MainActivity : AppCompatActivity() {
             mLastLocation = locationResult.lastLocation
             if (mSunclockDrawable != null) {
                 if (mLastLocation != null) {
-                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0);
+                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+
+                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0, imageView.width);
                     mSunclockDrawable?.setThing(something);
 
-                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
                     imageView.invalidate()
                 }
             }
@@ -236,5 +239,5 @@ class MainActivity : AppCompatActivity() {
         getLastLocation();
     }
 
-    external fun do_all(lat:Double, lng:Double, offset:Double) : IntArray
+    external fun do_all(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
 }

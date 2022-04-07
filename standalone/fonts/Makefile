@@ -24,18 +24,24 @@ clean:
 .part_a:
 	wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2
 	tar -xjvf deja*.tar.bz2
-	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_50.bdf
-	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_20.bdf
-	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_16.bdf
-	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_20.bdf
-	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_60.bdf
-	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
-	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
-	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
-	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_24.bdf
-	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_10.bdf
 	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_8.bdf
+	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_10.bdf
+	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_16.bdf
+	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_20.bdf
+	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_24.bdf
+	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
+	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
+	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_50.bdf
+	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_60.bdf
+	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_8.bdf
 	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_10.bdf
+	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_16.bdf
+	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_20.bdf
+	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_24.bdf
+	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_32.bdf
+	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
+	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_50.bdf
+	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_60.bdf
 	touch .part_a
 
 .part_b: png2h.pl

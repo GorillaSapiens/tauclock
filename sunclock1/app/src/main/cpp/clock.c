@@ -45,11 +45,11 @@
 #ifdef ORIG
 //#define SIZE 1024
 int SIZE = 1024;
-#define ASTRO_FONT astro_32_bdf
-#define FONT_BOLD_BIG djsmb_50_bdf
-#define FONT_BOLD_MED djsmb_20_bdf
-#define FONT_BOLD_SMALL djsmb_16_bdf
-#define FONT_ITALIC_MED djsmo_20_bdf
+uint8_t *ASTRO_FONT;
+uint8_t *FONT_BOLD_BIG;
+uint8_t *FONT_BOLD_MED;
+uint8_t *FONT_BOLD_SMALL;
+uint8_t *FONT_ITALIC_MED;
 #endif
 #ifdef ORIGx2
 #define SIZE 2048
@@ -2135,6 +2135,94 @@ void initialize_all(void) {
 	timedrawnspot = 0;
 }
 
+void set_font(uint8_t **target, uint8_t **choices, int desire, int width) {
+    int close = 0;
+    // want closest desire/1024 to height/width
+    int truth = desire * width / 1024;
+    int delta = abs(choices[0][1] - truth);
+
+    for (int i = 0; choices[i] != NULL; i++) {
+        int tmp = abs(choices[i][1] - truth);
+        if (tmp < delta) {
+            delta = tmp;
+            close = i;
+        }
+    }
+    *target = choices[close];
+}
+
+void set_astro_font(int width) {
+    uint8_t *choices[] = {
+            astro_16_bdf,
+            astro_20_bdf,
+            astro_24_bdf,
+            astro_32_bdf,
+            astro_50_bdf,
+            NULL
+    };
+    set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
+}
+
+void set_bold_big(int width) {
+    uint8_t *choices[] = {
+            djsmb_8_bdf,
+            djsmb_10_bdf,
+            djsmb_16_bdf,
+            djsmb_20_bdf,
+            djsmb_32_bdf,
+            djsmb_40_bdf,
+            djsmb_50_bdf,
+            djsmb_60_bdf,
+            NULL
+    };
+    set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
+}
+
+void set_bold_med(int width) {
+    uint8_t *choices[] = {
+            djsmb_8_bdf,
+            djsmb_10_bdf,
+            djsmb_16_bdf,
+            djsmb_20_bdf,
+            djsmb_32_bdf,
+            djsmb_40_bdf,
+            djsmb_50_bdf,
+            djsmb_60_bdf,
+            NULL
+    };
+    set_font(&FONT_BOLD_MED, choices, djsmb_20_bdf[1], width);
+}
+
+void set_bold_small(int width) {
+    uint8_t *choices[] = {
+            djsmb_8_bdf,
+            djsmb_10_bdf,
+            djsmb_16_bdf,
+            djsmb_20_bdf,
+            djsmb_32_bdf,
+            djsmb_40_bdf,
+            djsmb_50_bdf,
+            djsmb_60_bdf,
+            NULL
+    };
+    set_font(&FONT_BOLD_SMALL, choices, djsmb_16_bdf[1], width);
+}
+
+void set_italic_med(int width) {
+    uint8_t *choices[] = {
+            djsmo_8_bdf,
+            djsmo_10_bdf,
+            djsmo_16_bdf,
+            djsmo_20_bdf,
+            djsmo_32_bdf,
+            djsmo_40_bdf,
+            djsmo_50_bdf,
+            djsmo_60_bdf,
+            NULL
+    };
+    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2149,6 +2237,18 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    double up;
 
    SIZE = width;
+   set_astro_font(width);
+   set_bold_big(width);
+   set_bold_med(width);
+   set_bold_small(width);
+   set_italic_med(width);
+    /*
+ #define ASTRO_FONT astro_32_bdf
+ #define FONT_BOLD_BIG djsmb_50_bdf
+ #define FONT_BOLD_MED djsmb_20_bdf
+ #define FONT_BOLD_SMALL djsmb_16_bdf
+ #define FONT_ITALIC_MED djsmo_20_bdf
+  */
 
    initialize_all();
 

@@ -27,9 +27,15 @@
 #include "fonts/djsmb_10_bdf.h"
 #include "fonts/djsmb_8_bdf.h"
 
+#include "fonts/djsmo_60_bdf.h"
+#include "fonts/djsmo_50_bdf.h"
 #include "fonts/djsmo_40_bdf.h"
+#include "fonts/djsmo_32_bdf.h"
+#include "fonts/djsmo_24_bdf.h"
 #include "fonts/djsmo_20_bdf.h"
+#include "fonts/djsmo_16_bdf.h"
 #include "fonts/djsmo_10_bdf.h"
+#include "fonts/djsmo_8_bdf.h"
 
 #include "fonts/astro_50_bdf.h"
 #include "fonts/astro_32_bdf.h"

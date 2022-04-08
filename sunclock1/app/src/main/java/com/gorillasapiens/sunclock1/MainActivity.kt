@@ -1,4 +1,4 @@
-package com.wozniakconsulting.sunclock1
+package com.gorillasapiens.sunclock1
 
 //import android.R
 //import android.R
@@ -20,6 +20,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.*
+import com.wozniakconsulting.sunclock1.R
 import java.time.Duration
 import java.time.LocalDateTime
 

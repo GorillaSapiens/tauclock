@@ -1,4 +1,4 @@
-package com.wozniakconsulting.sunclock1
+package com.gorillasapiens.sunclock1
 import android.graphics.*
 import android.graphics.Paint.Style
 import android.graphics.drawable.Drawable

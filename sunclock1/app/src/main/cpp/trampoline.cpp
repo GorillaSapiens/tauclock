@@ -10,7 +10,7 @@ extern "C" {
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_wozniakconsulting_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz, jdouble lat,
+Java_com_gorillasapiens_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz, jdouble lat,
                                                           jdouble lng, jdouble offset,
                                                           jint width) {
     Canvas *canvas = do_all(lat, lng, offset, width);

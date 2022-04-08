@@ -228,8 +228,8 @@ class MainActivity : AppCompatActivity() {
         val manager = this.packageManager
         val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
 
-         actionBar?.setTitle("τau clock v" + info.versionName);
-         supportActionBar?.setTitle("τau clock v" + info.versionName);
+         actionBar?.setTitle("ταμ clock v" + info.versionName);
+         supportActionBar?.setTitle("ταμ clock v" + info.versionName);
         //actionBar?.hide();
         //supportActionBar?.hide();
 

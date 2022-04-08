@@ -2100,7 +2100,7 @@ void do_debug_info(Canvas * canvas, double JD) {
                         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 6,
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
                canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 
    // for debugging, put time zone info in the lower left
@@ -2126,7 +2126,7 @@ void do_debug_info(Canvas * canvas, double JD) {
                     COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    w = wh >> 16;
    h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 6, canvas->h - h / 2 - 3,
+   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3,
                COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 

@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
     var mLastLocation : Location? = null
 
     // Create the Handler object (on the main thread by default)
-    var mHandler = Handler()
+    var mHandler = Handler(Looper.getMainLooper())
 
     companion object {
       init {
@@ -58,7 +58,8 @@ class MainActivity : AppCompatActivity() {
                     if (mLastLocation != null) {
                         val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
-                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0, imageView.width);
+                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
+                            Math.min(imageView.width, imageView.height));
                         mSunclockDrawable?.setThing(something);
 
                         imageView.invalidate()
@@ -110,7 +111,8 @@ class MainActivity : AppCompatActivity() {
                         if (mSunclockDrawable != null) {
                             val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
-                            var something = do_all(location.latitude, location.longitude, 0.0, imageView.width);
+                            var something = do_all(location.latitude, location.longitude, 0.0,
+                                Math.min(imageView.width, imageView.height));
                             mSunclockDrawable?.setThing(something);
 
                             imageView.invalidate()
@@ -157,7 +159,8 @@ class MainActivity : AppCompatActivity() {
                 if (mLastLocation != null) {
                     val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
-                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0, imageView.width);
+                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
+                        Math.min(imageView.width, imageView.height));
                     mSunclockDrawable?.setThing(something);
 
                     imageView.invalidate()

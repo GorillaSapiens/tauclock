@@ -33,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     var mLastTime = LocalDateTime.now() - Duration.ofDays(1)
     var mLastRequest = mLastTime
     var mLastLocation : Location? = null
+    var mLastLastLocation : Location? = null
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -54,18 +55,26 @@ class MainActivity : AppCompatActivity() {
                     mLastRequest = current;
                 }
 
-                if ((current - Duration.ofMinutes(1)) > mLastTime || current.minute != mLastTime.minute) {
-                    if (mLastLocation != null) {
-                        val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
+                if (mLastLastLocation != mLastLocation ||
+                    (current - Duration.ofMinutes(1)) > mLastTime ||
+                    current.minute != mLastTime.minute) {
+                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
+                    if (mLastLocation != null) {
                         var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
                             Math.min(imageView.width, imageView.height));
                         mSunclockDrawable?.setThing(something);
-
-                        imageView.invalidate()
+                    }
+                    else {
+                        var something = do_all(-181.0,-181.0, 0.0,
+                            Math.min(imageView.width, imageView.height));
+                        mSunclockDrawable?.setThing(something);
                     }
 
-                    mLastTime = current;
+                    imageView.invalidate()
+
+                    mLastTime = current
+                    mLastLastLocation = mLastLocation
                 }
             }
 
@@ -84,8 +93,6 @@ class MainActivity : AppCompatActivity() {
                 imageView.invalidate()
 
                 getLastLocation()
-
-                mHandler.post(runEverySecond);
 
                 mDrawableInitialized = true
             }
@@ -107,16 +114,6 @@ class MainActivity : AppCompatActivity() {
                     val location = task.result
                     if (location == null) {
                         requestNewLocationData()
-                    } else {
-                        if (mSunclockDrawable != null) {
-                            val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-
-                            var something = do_all(location.latitude, location.longitude, 0.0,
-                                Math.min(imageView.width, imageView.height));
-                            mSunclockDrawable?.setThing(something);
-
-                            imageView.invalidate()
-                        }
                     }
                 }
             } else {
@@ -155,17 +152,6 @@ class MainActivity : AppCompatActivity() {
     private val mLocationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
             mLastLocation = locationResult.lastLocation
-            if (mSunclockDrawable != null) {
-                if (mLastLocation != null) {
-                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-
-                    var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
-                        Math.min(imageView.width, imageView.height));
-                    mSunclockDrawable?.setThing(something);
-
-                    imageView.invalidate()
-                }
-            }
         }
     }
 
@@ -237,10 +223,10 @@ class MainActivity : AppCompatActivity() {
         //actionBar?.hide();
         //supportActionBar?.hide();
 
-
-
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         getLastLocation();
+
+        mHandler.post(runEverySecond);
     }
 
     external fun do_all(lat:Double, lng:Double, offset:Double, width:Int) : IntArray

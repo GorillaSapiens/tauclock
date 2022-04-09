@@ -449,7 +449,12 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    }
    char *degree = "\u00B0";     // in utf8, degree symbol
 
-   sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
+   if (lat > 90.0 || lng > 180.0) {
+      sprintf(location, "INVALID_LOCATION");
+   }
+   else {
+      sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
+   }
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
                canvas->h / 2 + SCALE(48), COLOR_WHITE, COLOR_BLACK, location, 1,
                2);

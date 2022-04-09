@@ -23,5 +23,6 @@ Java_com_gorillasapiens_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz
         jint tmp = canvas->data[i];
         env->SetIntArrayRegion(ret, 2 + i, 1, &tmp);
     }
+    delete_canvas(canvas);
     return ret;
 }

@@ -528,7 +528,7 @@ do_moon_draw(Canvas * canvas,
 
    // from wolfram alpha
    // a circle passing through points (0,a), (0,-a), and (b,0)
-   int b = abs(lunar_phase - 90) * SCALE(40) / 90;
+   int b = abs((int)(lunar_phase - 90)) * SCALE(40) / 90;
    if (b == 0) {
       b++;
    }

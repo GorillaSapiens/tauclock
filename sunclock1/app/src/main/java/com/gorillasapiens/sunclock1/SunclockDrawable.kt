@@ -3,6 +3,7 @@ import android.graphics.*
 import android.graphics.Paint.Style
 import android.graphics.drawable.Drawable
 import android.location.Location
+import java.nio.IntBuffer
 
 
 class SunclockDrawable(width: Int, height: Int) : Drawable() {
@@ -26,8 +27,12 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
                 val x = (mWidth / 2.0f) - (w / 2.0f)
                 val y = (mHeight / 2.0f) - (h / 2.0f)
 
-//                val image = mThing.slice(2 .. mThing.size)
-                canvas.drawBitmap(mThing, 2, w.toInt(), x.toInt(), y.toInt(), w.toInt(), h.toInt(), true, null)
+                // You are using RGBA that's why Config is ARGB.8888
+                val bitmap = Bitmap.createBitmap(mThing.copyOfRange(2,mThing.size),w.toInt(), h.toInt(), Bitmap.Config.ARGB_8888);
+
+                canvas.drawBitmap(bitmap,null,Rect(x.toInt(),y.toInt(),x.toInt()+w.toInt(),y.toInt()+h.toInt()), null)
+
+                //canvas.drawBitmap(mThing, 2, w.toInt(), x.toInt(), y.toInt(), w.toInt(), h.toInt(), true, null)
 
                 mPaint.setARGB(255, 0, 0, 0)
                 mPaint.setStrokeWidth(2.0f)

@@ -2029,12 +2029,84 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 }
 
+#define ISDITHERCOLOR(x) (\
+   (x) == COLOR_YELLOW || \
+   (x) == COLOR_ORANGE || \
+   (x) == COLOR_LIGHTBLUE || \
+   (x) == COLOR_BLUE || \
+   (x) == COLOR_DARKBLUE \
+)
+
+#define DITHER 6
+
 /// @brief add some faded dithering to existing sun bands
 ///
 /// @param canvas The canvas to draw on
 void do_sun_dithering(Canvas * canvas) {
-   for (int i = 0; i < canvas->h; i += 8) {
-      for (int j = 0; j < canvas->w; j += 8) {
+   for (int y = 0; y < canvas->h; y += DITHER) {
+      for (int x = 0; x < canvas->w; x += DITHER) {
+         int count = 0;
+         int counts[5] = { 0,0,0,0,0 };
+         unsigned int array[(DITHER*DITHER)];
+         for (int j = 0; j < DITHER; j++) {
+            for (int i = 0; i < DITHER; i++) {
+               int c = array[j*DITHER+i] = peek_canvas(canvas, i+x, j+y);
+               switch(c) {
+                  case COLOR_YELLOW:
+                     count++;
+                     counts[0]++;
+                     break;
+                  case COLOR_ORANGE:
+                     count++;
+                     counts[1]++;
+                     break;
+                  case COLOR_LIGHTBLUE:
+                     count++;
+                     counts[2]++;
+                     break;
+                  case COLOR_BLUE:
+                     count++;
+                     counts[3]++;
+                     break;
+                  case COLOR_DARKBLUE:
+                     count++;
+                     counts[4]++;
+                     break;
+               }
+            }
+         }
+         if (count > 0) {
+            count = 0;
+            for (int k = 0; k < 5; k++) {
+               if (counts[k] != 0) {
+                  count++;
+               }
+            }
+            if (count > 0) {
+               unsigned int convolution[(DITHER*DITHER)];
+               for (int k = 0; k < (DITHER*DITHER); k++) {
+                  if (ISDITHERCOLOR(array[k])) {
+again:
+                     convolution[k] = rand() % (DITHER*DITHER);
+                     if (!ISDITHERCOLOR(array[convolution[k]])) {
+                        goto again;
+                     }
+                     for (int l = 0; l < k; l++) {
+                        if (convolution[l] == convolution[k]) {
+                           goto again;
+                        }
+                     }
+                  }
+                  else {
+                     convolution[k] = k;
+                  }
+               }
+               // now do the switching
+               for (int k = 0; k < (DITHER*DITHER); k++) {
+                  poke_canvas(canvas, x + k % DITHER, y + k / DITHER, array[convolution[k]]);
+               }
+            }
+         }
       }
    }
 }

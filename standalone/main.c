@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
       offset += atof(argv[4]);
    }
 
-   Canvas *canvas = do_all(atof(argv[1]), atof(argv[2]), offset);
+   Canvas *canvas = do_all(atof(argv[1]), atof(argv[2]), offset,1024);
 
    dump_canvas(canvas, "out.bin");
 

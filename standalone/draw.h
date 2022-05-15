@@ -27,9 +27,15 @@
 #include "fonts/djsmb_10_bdf.h"
 #include "fonts/djsmb_8_bdf.h"
 
+#include "fonts/djsmo_60_bdf.h"
+#include "fonts/djsmo_50_bdf.h"
 #include "fonts/djsmo_40_bdf.h"
+#include "fonts/djsmo_32_bdf.h"
+#include "fonts/djsmo_24_bdf.h"
 #include "fonts/djsmo_20_bdf.h"
+#include "fonts/djsmo_16_bdf.h"
 #include "fonts/djsmo_10_bdf.h"
+#include "fonts/djsmo_8_bdf.h"
 
 #include "fonts/astro_50_bdf.h"
 #include "fonts/astro_32_bdf.h"
@@ -41,7 +47,11 @@
 
 #define COLOR_NONE       0x00000000
 
+#ifdef STANDALONE
 #define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))
+#else
+#define RGB(r,g,b) (0xFF000000 | ((r) << 16) | ((g) << 8) | (b))
+#endif
 
 #define COLOR_BLACK      RGB(  0,   0,   0)
 #define COLOR_BLUE       RGB(  0,   0, 255)

@@ -2037,7 +2037,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    (x) == COLOR_DARKBLUE \
 )
 
-#define DITHER 6
+#define DITHER 5
 
 /// @brief add some faded dithering to existing sun bands
 ///

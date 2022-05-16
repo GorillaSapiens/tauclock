@@ -25,18 +25,33 @@
 
 #include <math.h>
 
+#ifdef STANDALONE
+
+#include <libnova/solar.h>
+#include <libnova/lunar.h>
+#include <libnova/mercury.h>
+#include <libnova/venus.h>
+#include <libnova/mars.h>
+#include <libnova/jupiter.h>
+#include <libnova/saturn.h>
+#include <libnova/julian_day.h>
+#include <libnova/rise_set.h>
+#include <libnova/transform.h>
+
+#else
+
 #include "solar.h"
 #include "lunar.h"
-
 #include "mercury.h"
 #include "venus.h"
 #include "mars.h"
 #include "jupiter.h"
 #include "saturn.h"
-
 #include "julian_day.h"
 #include "rise_set.h"
 #include "transform.h"
+
+#endif
 
 #include "draw.h"
 
@@ -2014,6 +2029,88 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 }
 
+#define ISDITHERCOLOR(x) (\
+   (x) == COLOR_YELLOW || \
+   (x) == COLOR_ORANGE || \
+   (x) == COLOR_LIGHTBLUE || \
+   (x) == COLOR_BLUE || \
+   (x) == COLOR_DARKBLUE \
+)
+
+#define DITHER 5
+
+/// @brief add some faded dithering to existing sun bands
+///
+/// @param canvas The canvas to draw on
+void do_sun_dithering(Canvas * canvas) {
+   for (int y = 0; y < canvas->h; y += DITHER) {
+      for (int x = 0; x < canvas->w; x += DITHER) {
+         int count = 0;
+         int counts[5] = { 0,0,0,0,0 };
+         unsigned int array[(DITHER*DITHER)];
+         for (int j = 0; j < DITHER; j++) {
+            for (int i = 0; i < DITHER; i++) {
+               int c = array[j*DITHER+i] = peek_canvas(canvas, i+x, j+y);
+               switch(c) {
+                  case COLOR_YELLOW:
+                     count++;
+                     counts[0]++;
+                     break;
+                  case COLOR_ORANGE:
+                     count++;
+                     counts[1]++;
+                     break;
+                  case COLOR_LIGHTBLUE:
+                     count++;
+                     counts[2]++;
+                     break;
+                  case COLOR_BLUE:
+                     count++;
+                     counts[3]++;
+                     break;
+                  case COLOR_DARKBLUE:
+                     count++;
+                     counts[4]++;
+                     break;
+               }
+            }
+         }
+         if (count > 0) {
+            count = 0;
+            for (int k = 0; k < 5; k++) {
+               if (counts[k] != 0) {
+                  count++;
+               }
+            }
+            if (count > 0) {
+               unsigned int convolution[(DITHER*DITHER)];
+               for (int k = 0; k < (DITHER*DITHER); k++) {
+                  if (ISDITHERCOLOR(array[k])) {
+again:
+                     convolution[k] = rand() % (DITHER*DITHER);
+                     if (!ISDITHERCOLOR(array[convolution[k]])) {
+                        goto again;
+                     }
+                     for (int l = 0; l < k; l++) {
+                        if (convolution[l] == convolution[k]) {
+                           goto again;
+                        }
+                     }
+                  }
+                  else {
+                     convolution[k] = k;
+                  }
+               }
+               // now do the switching
+               for (int k = 0; k < (DITHER*DITHER); k++) {
+                  poke_canvas(canvas, x + k % DITHER, y + k / DITHER, array[convolution[k]]);
+               }
+            }
+         }
+      }
+   }
+}
+
 /// @brief Get a Julian Date for the last New Moon
 ///
 /// @param now The current Julian Date
@@ -2102,11 +2199,11 @@ void do_debug_info(Canvas * canvas, double JD) {
    char buf[1024];
    sprintf(buf, "JD=%f", JD);
    int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                        COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
-               canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+         canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 
    // for debugging, put time zone info in the lower left
    time_t present;
@@ -2115,10 +2212,10 @@ void do_debug_info(Canvas * canvas, double JD) {
 
    if (tzname[0] != NULL && tzname[1] != NULL) {
       sprintf(buf, "%s%s%s/%s%s%s",
-              tm->tm_isdst ? "" : "[",
-              tzname[0],
-              tm->tm_isdst ? "" : "]",
-              tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
+            tm->tm_isdst ? "" : "[",
+            tzname[0],
+            tm->tm_isdst ? "" : "]",
+            tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
    }
    else if (tzname[0] != NULL) {
       sprintf(buf, "[%s]", tzname[0]);
@@ -2128,104 +2225,104 @@ void do_debug_info(Canvas * canvas, double JD) {
    }
 
    wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                    COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    w = wh >> 16;
    h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3,
-               COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 
 void initialize_all(void) {
-	event_spot = 0;
-	timedrawnspot = 0;
+   event_spot = 0;
+   timedrawnspot = 0;
 }
 
 void set_font(uint8_t **target, uint8_t **choices, int desire, int width) {
-    int close = 0;
-    // want closest desire/1024 to height/width
-    int truth = desire * width / 1024;
-    int delta = abs(choices[0][1] - truth);
+   int close = 0;
+   // want closest desire/1024 to height/width
+   int truth = desire * width / 1024;
+   int delta = abs(choices[0][1] - truth);
 
-    for (int i = 0; choices[i] != NULL; i++) {
-        int tmp = abs(choices[i][1] - truth);
-        if (tmp < delta) {
-            delta = tmp;
-            close = i;
-        }
-    }
-    *target = choices[close];
+   for (int i = 0; choices[i] != NULL; i++) {
+      int tmp = abs(choices[i][1] - truth);
+      if (tmp < delta) {
+         delta = tmp;
+         close = i;
+      }
+   }
+   *target = choices[close];
 }
 
 void set_astro_font(int width) {
-    uint8_t *choices[] = {
-            astro_16_bdf,
-            astro_20_bdf,
-            astro_24_bdf,
-            astro_32_bdf,
-            astro_50_bdf,
-            NULL
-    };
-    set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
+   uint8_t *choices[] = {
+      astro_16_bdf,
+      astro_20_bdf,
+      astro_24_bdf,
+      astro_32_bdf,
+      astro_50_bdf,
+      NULL
+   };
+   set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
 }
 
 void set_bold_big(int width) {
-    uint8_t *choices[] = {
-            djsmb_8_bdf,
-            djsmb_10_bdf,
-            djsmb_16_bdf,
-            djsmb_20_bdf,
-            djsmb_32_bdf,
-            djsmb_40_bdf,
-            djsmb_50_bdf,
-            djsmb_60_bdf,
-            NULL
-    };
-    set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
+   uint8_t *choices[] = {
+      djsmb_8_bdf,
+      djsmb_10_bdf,
+      djsmb_16_bdf,
+      djsmb_20_bdf,
+      djsmb_32_bdf,
+      djsmb_40_bdf,
+      djsmb_50_bdf,
+      djsmb_60_bdf,
+      NULL
+   };
+   set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
 }
 
 void set_bold_med(int width) {
-    uint8_t *choices[] = {
-            djsmb_8_bdf,
-            djsmb_10_bdf,
-            djsmb_16_bdf,
-            djsmb_20_bdf,
-            djsmb_32_bdf,
-            djsmb_40_bdf,
-            djsmb_50_bdf,
-            djsmb_60_bdf,
-            NULL
-    };
-    set_font(&FONT_BOLD_MED, choices, djsmb_20_bdf[1], width);
+   uint8_t *choices[] = {
+      djsmb_8_bdf,
+      djsmb_10_bdf,
+      djsmb_16_bdf,
+      djsmb_20_bdf,
+      djsmb_32_bdf,
+      djsmb_40_bdf,
+      djsmb_50_bdf,
+      djsmb_60_bdf,
+      NULL
+   };
+   set_font(&FONT_BOLD_MED, choices, djsmb_20_bdf[1], width);
 }
 
 void set_bold_small(int width) {
-    uint8_t *choices[] = {
-            djsmb_8_bdf,
-            djsmb_10_bdf,
-            djsmb_16_bdf,
-            djsmb_20_bdf,
-            djsmb_32_bdf,
-            djsmb_40_bdf,
-            djsmb_50_bdf,
-            djsmb_60_bdf,
-            NULL
-    };
-    set_font(&FONT_BOLD_SMALL, choices, djsmb_16_bdf[1], width);
+   uint8_t *choices[] = {
+      djsmb_8_bdf,
+      djsmb_10_bdf,
+      djsmb_16_bdf,
+      djsmb_20_bdf,
+      djsmb_32_bdf,
+      djsmb_40_bdf,
+      djsmb_50_bdf,
+      djsmb_60_bdf,
+      NULL
+   };
+   set_font(&FONT_BOLD_SMALL, choices, djsmb_16_bdf[1], width);
 }
 
 void set_italic_med(int width) {
-    uint8_t *choices[] = {
-            djsmo_8_bdf,
-            djsmo_10_bdf,
-            djsmo_16_bdf,
-            djsmo_20_bdf,
-            djsmo_32_bdf,
-            djsmo_40_bdf,
-            djsmo_50_bdf,
-            djsmo_60_bdf,
-            NULL
-    };
-    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
+   uint8_t *choices[] = {
+      djsmo_8_bdf,
+      djsmo_10_bdf,
+      djsmo_16_bdf,
+      djsmo_20_bdf,
+      djsmo_32_bdf,
+      djsmo_40_bdf,
+      djsmo_50_bdf,
+      djsmo_60_bdf,
+      NULL
+   };
+   set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
 /// @brief Do all of the things
@@ -2247,13 +2344,13 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    set_bold_med(width);
    set_bold_small(width);
    set_italic_med(width);
-    /*
- #define ASTRO_FONT astro_32_bdf
- #define FONT_BOLD_BIG djsmb_50_bdf
- #define FONT_BOLD_MED djsmb_20_bdf
- #define FONT_BOLD_SMALL djsmb_16_bdf
- #define FONT_ITALIC_MED djsmo_20_bdf
-  */
+   /*
+#define ASTRO_FONT astro_32_bdf
+#define FONT_BOLD_BIG djsmb_50_bdf
+#define FONT_BOLD_MED djsmb_20_bdf
+#define FONT_BOLD_SMALL djsmb_16_bdf
+#define FONT_ITALIC_MED djsmo_20_bdf
+    */
 
    initialize_all();
 
@@ -2295,10 +2392,11 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    // draw the moon
    double moon_angle = get_moon_angle(JD, lunar_new);
    do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
-                moon_angle);
+         moon_angle);
 
    // colored bands for the sun
    do_sun_bands(canvas, up, JD);
+   do_sun_dithering(canvas);
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);

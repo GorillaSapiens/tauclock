@@ -60,6 +60,10 @@ class MainActivity : AppCompatActivity() {
                     current.minute != mLastTime.minute) {
                     val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
+                    if (mLastLocation == null) {
+                        mLastLocation = mLastLastLocation;
+                    }
+
                     if (mLastLocation != null) {
                         var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
                             Math.min(imageView.width, imageView.height));

@@ -47,8 +47,11 @@
 
 #define COLOR_NONE       0x00000000
 
-//#define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))
+#ifdef STANDALONE
+#define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))
+#else
 #define RGB(r,g,b) (0xFF000000 | ((r) << 16) | ((g) << 8) | (b))
+#endif
 
 #define COLOR_BLACK      RGB(  0,   0,   0)
 #define COLOR_BLUE       RGB(  0,   0, 255)

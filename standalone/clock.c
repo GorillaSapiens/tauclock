@@ -464,7 +464,7 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    }
    char *degree = "\u00B0";     // in utf8, degree symbol
 
-   if (lat > 90.0 || lng > 180.0) {
+   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
       sprintf(location, "INVALID_LOCATION");
    }
    else {
@@ -2037,7 +2037,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    (x) == COLOR_DARKBLUE \
 )
 
-#define DITHER 5
+#define DITHER 3
 
 /// @brief add some faded dithering to existing sun bands
 ///
@@ -2386,17 +2386,39 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
 
    int mid = canvas->w / 2;
 
+   int goodloc = 1;
+   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
+      goodloc = 0;
+
+      time_t present;
+      ln_get_timet_from_julian(JD, &present);
+      struct tm *tm;
+      tm = localtime(&present);
+      int local_hour = tm->tm_hour;
+      tm = gmtime(&present);
+      int gmt_hour = tm->tm_hour;
+
+      up += ((24+gmt_hour-local_hour) % 24)/24.0;
+   }
+
    // colored bands for planets
-   do_planet_bands(canvas, JD, up);
+   if (goodloc) {
+      do_planet_bands(canvas, JD, up);
+   }
 
    // draw the moon
-   double moon_angle = get_moon_angle(JD, lunar_new);
-   do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
+   double moon_angle = 0.0;
+   if (goodloc) {
+      moon_angle = get_moon_angle(JD, lunar_new);
+      do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
          moon_angle);
+   }
 
    // colored bands for the sun
-   do_sun_bands(canvas, up, JD);
-   do_sun_dithering(canvas);
+   if (goodloc) {
+      do_sun_bands(canvas, up, JD);
+      do_sun_dithering(canvas);
+   }
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
@@ -2415,7 +2437,9 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    // do_zodiac(canvas, JD);
 
    // colored band for the moon
-   do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);
+   if (goodloc) {
+      do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);
+   }
 
    // information in the center
    do_now_time(canvas, JD);

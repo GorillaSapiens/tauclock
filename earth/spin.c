@@ -17,34 +17,60 @@ Point points[] = {
 
 int page[256][256];
 
+typedef struct quat {
+   double w;
+   double i;
+   double j;
+   double k;
+} quat;
+
+quat mult(quat a, quat b) {
+   quat ret;
+
+// z1 = [a bi cj dk]
+// z2 = [e fi gj hk]
+//
+// z1 * z2=    a*e - b*f - c*g - d*h +
+//          i (b*e + a*f + c*h - d*g) +
+//          j (a*g - b*h + c*e + d*f) +
+//          k (a*h + b*g - c*f + d*e)
+
+   ret.w = a.w * b.w - a.i * b.i - a.j * b.j - a.k * b.k;
+   ret.i = a.i * b.w + a.w * b.i + a.j * b.k - a.k * b.j;
+   ret.j = a.w * b.j - a.i * b.k + a.j * b.w + a.k * b.i;
+   ret.k = a.w * b.k + a.i * b.j - a.j * b.i + a.k * b.w;
+
+   return ret;
+}
+
+quat rotate(quat point, quat rot) {
+   quat inv = { rot.w, -rot.i, -rot.j, -rot.k };
+
+   quat ret =  mult(mult(rot, point),inv);
+
+   return ret;
+}
+
 int main(int argc, char **argv) {
    memset(page, 0, sizeof(page));
 
-   double pitch = atof(argv[1]);
-   double roll = atof(argv[2]);
-   double yaw = atof(argv[3]);
+   // coordinates are wonky...
+   double xspin = -atof(argv[2]) * M_PI / 180.0;
+   double yspin = -atof(argv[1]) * M_PI / 180.0;
+   double zspin = atof(argv[3]) * M_PI / 180.0;
 
-   // from https://stackoverflow.com/questions/34050929/3d-point-rotation-algorithm
-   double cosa = cos(yaw);
-   double sina = sin(yaw);
+   double coshalfx = cos(xspin/2.0);
+   double sinhalfx = sin(xspin/2.0);
 
-   double cosb = cos(pitch);
-   double sinb = sin(pitch);
+   double coshalfy = cos(yspin/2.0);
+   double sinhalfy = sin(yspin/2.0);
 
-   double cosc = cos(roll);
-   double sinc = sin(roll);
+   double coshalfz = cos(zspin/2.0);
+   double sinhalfz = sin(zspin/2.0);
 
-   double Axx = cosa*cosb;
-   double Axy = cosa*sinb*sinc - sina*cosc;
-   double Axz = cosa*sinb*cosc + sina*sinc;
-
-   double Ayx = sina*cosb;
-   double Ayy = sina*sinb*sinc + cosa*cosc;
-   double Ayz = sina*sinb*cosc - cosa*sinc;
-
-   double Azx = -sinb;
-   double Azy = cosb*sinc;
-   double Azz = cosb*cosc;
+   quat qx = { coshalfx, sinhalfx, 0, 0 };
+   quat qy = { coshalfy, 0, sinhalfy, 0 };
+   quat qz = { coshalfz, 0, 0, sinhalfz };
 
    for (int i = 0; points[i].xyz != 0; i++) {
       int xyz = points[i].xyz;
@@ -58,15 +84,15 @@ int main(int argc, char **argv) {
       int z = (xyz) & 0xFF;
       if (z & 0x80) z |= ~0xFF;
 
-      // from https://stackoverflow.com/questions/34050929/3d-point-rotation-algorithm
+      quat qp = { 0, x, y, z };
 
-      double px = x;
-      double py = y;
-      double pz = z;
+      qp = rotate(qp, qz);
+      qp = rotate(qp, qy);
+      qp = rotate(qp, qx);
 
-      x = Axx*px + Axy*py + Axz*pz;
-      y = Ayx*px + Ayy*py + Ayz*pz;
-      z = Azx*px + Azy*py + Azz*pz;
+      x = qp.i;
+      y = qp.j;
+      z = qp.k;
 
       if (z >= 0) {
          page[y+128][x+128] = points[i].rgb;
@@ -81,6 +107,11 @@ int main(int argc, char **argv) {
             }
          }
       }
+   }
+
+   for (int y = 0; y < 256; y++) {
+      page[y][256/2] ^= 0xffffff;
+      page[256/2][y] ^= 0xffffff;
    }
 
    for (int y = 0; y < 256; y++) {

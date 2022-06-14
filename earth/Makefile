@@ -1,4 +1,5 @@
 all:
+	convert world.png world.xpm
 	gcc precompute.c -lm -o b.out
 	./b.out > precomputed.h
 	echo "{0,0}" >> precomputed.h

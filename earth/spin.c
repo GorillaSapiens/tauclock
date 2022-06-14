@@ -55,8 +55,8 @@ int main(int argc, char **argv) {
    memset(page, 0, sizeof(page));
 
    // coordinates are wonky...
-   double xspin = -atof(argv[2]) * M_PI / 180.0;
-   double yspin = -atof(argv[1]) * M_PI / 180.0;
+   double xspin = -atof(argv[1]) * M_PI / 180.0;
+   double yspin = -atof(argv[2]) * M_PI / 180.0;
    double zspin = atof(argv[3]) * M_PI / 180.0;
 
    double coshalfx = cos(xspin/2.0);
@@ -86,23 +86,49 @@ int main(int argc, char **argv) {
 
       quat qp = { 0, x, y, z };
 
-      qp = rotate(qp, qz);
       qp = rotate(qp, qy);
       qp = rotate(qp, qx);
+      qp = rotate(qp, qz);
 
-      x = qp.i;
-      y = qp.j;
-      z = qp.k;
+      x = round(qp.i);
+      y = round(qp.j);
+      z = round(qp.k);
 
       if (z >= 0) {
          page[y+128][x+128] = points[i].rgb;
+      }
+   }
 
-         if (y+128 >= 1 && x+128 >= 1 && y+128 < 255 && x+128 < 255) {
-            for (int dy = -1; dy < 2; dy++) {
-               for (int dx = -1; dx < 2; dx++) {
-                  if (page[y+128+dy][x+128+dx] == 0) {
-                     page[y+128+dy][x+128+dx] = points[i].rgb;
+   for (int y = 1; y < 255; y++) {
+      for (int x = 1; x < 255; x++) {
+         int d = sqrt((y-128)*(y-128)+(x-128)*(x-128));
+         if (d < 128) {
+            int n = 0;
+            int sr = 0;
+            int sg = 0;
+            int sb = 0;
+            if (page[y][x] == 0) {
+               for (int dy = -1; dy < 2; dy++) {
+                  for (int dx = -1; dx < 2; dx++) {
+                     if (page[y+dy][x+dx] != 0) {
+                        int c = page[y+dy][x+dx];
+                        int r = c >> 16;
+                        int g = (c >> 8) & 0xff;
+                        int b = c & 0xff;
+
+                        n++;
+                        sr += r;
+                        sg += g;
+                        sb += b;
+                     }
                   }
+               }
+               if (n != 0) {
+                  sr /= n;
+                  sg /= n;
+                  sb /= n;
+                  int c = (sr << 16) | (sg << 8) | (sb);
+                  page[y][x] = c;
                }
             }
          }

@@ -146,9 +146,10 @@ int main(int argc, char **argv) {
          unsigned char g = (page[y][x] >> 8) & 0xFF;
          unsigned char b = (page[y][x]) & 0xFF;
 
-         write(1, &r, 1);
-         write(1, &g, 1);
-         write(1, &b, 1);
+         int unused;
+         unused = write(1, &r, 1);
+         unused = write(1, &g, 1);
+         unused = write(1, &b, 1);
       }
    }
 }

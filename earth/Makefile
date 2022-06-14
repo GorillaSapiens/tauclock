@@ -4,7 +4,7 @@ all:
 	gcc precompute.c -lm -o b.out
 	./b.out > precomputed.h
 	echo "{0,0}" >> precomputed.h
-	gcc spin.c -lm
+	gcc -Ofast spin.c -lm
 	./a.out 0 0 0 > zero.raw
 	convert -size 256x256 -depth 8 RGB:zero.raw -scale 1024x1024 zero.png
 	./a.out 90 0 0 > x.raw

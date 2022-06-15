@@ -97,7 +97,7 @@ for ($y = 0; $y < $rows; $y++) {
       $c = $sygil{$sygil};
       printf(" 0x%02x", $c);
       $x++;
-      if ($#line >= 1) {
+      if ($#line >= 0) {
          print ",";
          if ($x % 8 == 0) {
             print "\n     ";

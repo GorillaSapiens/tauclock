@@ -18,8 +18,8 @@ for ($i = 0; $i < 360; $i++) {
    $b = sprintf("%03d", $i % 360);
    $c = sprintf("%03d", ($i + 1) % 360);
 
-#   `convert -size 256x256 -depth 8 RGB:$a.raw RGB:$b.raw RGB:$c.raw -evaluate-sequence mean $b.png`;
-   `convert -size 256x256 -depth 8 RGB:$b.raw $b.png`;
+#   `convert -size 512x512 -depth 8 RGB:$a.raw RGB:$b.raw RGB:$c.raw -evaluate-sequence mean $b.png`;
+   `convert -size 512x512 -depth 8 RGB:$b.raw $b.png`;
 }
 
 `convert -delay 5 -loop 0 *.png spin.gif`;

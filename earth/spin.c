@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <math.h>
 
-#define RADIUS 127
+#define SIZE 512
+#define SIZE2 (SIZE/2)
+#define RADIUS (SIZE2 - 1)
 
 typedef struct Point {
    int xyz;
@@ -15,7 +17,7 @@ Point points[] = {
 #include "precomputed.h"
 };
 
-int page[256][256];
+int page[SIZE][SIZE];
 
 typedef struct quat {
    double w;
@@ -75,44 +77,50 @@ int main(int argc, char **argv) {
    for (int i = 0; points[i].xyz != 0; i++) {
       int xyz = points[i].xyz;
 
-      int x = xyz >> 16;
-      if (x & 0x80) x |= ~0xFF;
+      int x = xyz >> 18;
+      if (x & 0x100) x |= ~0x1FF;
 
-      int y = (xyz >> 8) & 0xFF;
-      if (y & 0x80) y |= ~0xFF;
+      int y = (xyz >> 9) & 0x1FF;
+      if (y & 0x100) y |= ~0x1FF;
 
-      int z = (xyz) & 0xFF;
-      if (z & 0x80) z |= ~0xFF;
+      int z = (xyz) & 0x1FF;
+      if (z & 0x100) z |= ~0x1FF;
 
       quat qp = { 0, x, y, z };
 
-      qp = rotate(qp, qy);
-      qp = rotate(qp, qx);
-      qp = rotate(qp, qz);
+      if (yspin != 0.0) {
+         qp = rotate(qp, qy);
+      }
+      if (xspin != 0.0) {
+         qp = rotate(qp, qx);
+      }
+      if (zspin != 0.0) {
+         qp = rotate(qp, qz);
+      }
 
       x = round(qp.i);
       y = round(qp.j);
       z = round(qp.k);
 
       if (z >= 0) {
-         page[y+128][x+128] = points[i].rgb;
+         page[y+SIZE2][x+SIZE2] = points[i].rgb;
       }
    }
 
-   for (int y = 1; y < 255; y++) {
+   for (int y = 1; y < (SIZE-1); y++) {
 
-      int yy = y - 128;
+      int yy = y - SIZE2;
       // 127 = sqrt(yy*yy+xx*xx)
       // 127*127 - yy*yy = xx*xx
       int xx;
       if (yy != 0) {
-         xx = sqrt(127*127 - yy*yy);
+         xx = sqrt((SIZE2-1)*(SIZE2-1) - yy*yy);
       }
       else {
-         xx = 127;
+         xx = (SIZE2-1);
       }
 
-      for (int x = 128-xx; x < 128+xx; x++) {
+      for (int x = SIZE2-xx; x < SIZE2+xx; x++) {
          int n = 0;
          int sr = 0;
          int sg = 0;
@@ -144,13 +152,13 @@ int main(int argc, char **argv) {
       }
    }
 
-   for (int y = 0; y < 256; y++) {
-      page[y][256/2] ^= 0xffffff;
-      page[256/2][y] ^= 0xffffff;
+   for (int y = 0; y < SIZE; y++) {
+      page[y][SIZE/2] ^= 0xffffff;
+      page[SIZE/2][y] ^= 0xffffff;
    }
 
-   for (int y = 0; y < 256; y++) {
-      for (int x = 0; x < 256; x++) {
+   for (int y = 0; y < SIZE; y++) {
+      for (int x = 0; x < SIZE; x++) {
          unsigned char r = page[y][x] >> 16;
          unsigned char g = (page[y][x] >> 8) & 0xFF;
          unsigned char b = (page[y][x]) & 0xFF;

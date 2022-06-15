@@ -5,7 +5,7 @@
 
 #include "world.xpm"
 
-#define RADIUS 127
+#define RADIUS (256-1)
 #define BINS 4096
 
 struct Node;
@@ -27,6 +27,13 @@ void addnode(int x, int y, int z, int c) {
       if (tmp->x == x && tmp->y == y && tmp->z == z) {
          return;
       }
+#ifdef MANHATTAN
+      if (abs(tmp->x - x) + abs(tmp->y - y) + abs(tmp->z - z) < 3) {
+         if (tmp->c == c) {
+            return;
+         }
+      }
+#endif
       tmp = tmp->next;
    }
 
@@ -77,11 +84,11 @@ void main(void) {
 
    for (int bin = 0; bin < BINS; bin++) {
       for (Node *tmp = heads[bin]; tmp; tmp = tmp->next) {
-         int x = tmp->x & 0xFF;
-         int y = tmp->y & 0xFF;
-         int z = tmp->z & 0xFF;
-         printf("{ 0x%06x, 0x%06x },\n",
-               (x << 16) | (y << 8) | z, tmp->c);
+         int x = tmp->x & 0x1FF;
+         int y = tmp->y & 0x1FF;
+         int z = tmp->z & 0x1FF;
+         printf("{ 0x%08x, 0x%06x },\n",
+               (x << 18) | (y << 9) | z, tmp->c);
       }
    }
 }

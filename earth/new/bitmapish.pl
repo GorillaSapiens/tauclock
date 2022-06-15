@@ -29,8 +29,8 @@ for ($i = 0; $i <= $#cont; $i++) {
 # parse parameters
 
 $params = $cont[$marker1 + 1];
-$params =~ s/[\x0a\x0d]//g;
-$params =~ s/[\"\,]//g;
+$params =~ s/[\x0a\x0d,]*$//g;
+$params =~ s/[\"]//g;
 ($columns, $rows, $colors, $chars) = split / /, $params;
 
 print "int columns = $columns;\n";
@@ -44,8 +44,8 @@ print "//int chars = $chars;\n";
 print "int palette[$colors] = {\n  ";
 for ($i = 0; $i < $colors; $i++) {
    $line = $cont[$marker1 + 2 + $i];
-   $line =~ s/[\x0a\x0d]//g;
-   $line =~ s/[\",]//g;
+   $line =~ s/[\x0a\x0d,]*$//g;
+   $line =~ s/[\"]//g;
    if (!($line =~ / c \#/)) {
       die "BAD COLOR $line\n";
    }

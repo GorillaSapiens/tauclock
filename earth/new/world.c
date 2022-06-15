@@ -119,5 +119,15 @@ int main (int argc, char **argv) {
       }
    }
 
+   for (int i = 0; i < size; i++) {
+      image[3*radius*size + 3*i] ^= 0xff;
+      image[3*radius*size + 3*i + 1] ^= 0xff;
+      image[3*radius*size + 3*i + 2] ^= 0xff;
+
+      image[3*i*size + 3*radius] ^= 0xff;
+      image[3*i*size + 3*radius + 1] ^= 0xff;
+      image[3*i*size + 3*radius + 2] ^= 0xff;
+   }
+
    write(1, image, 3 * size * size);
 }

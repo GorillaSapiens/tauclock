@@ -43,8 +43,8 @@ void addnode(int x, int y, int z, int c) {
 void main(void) {
    memset(heads, 0, sizeof(heads));
    // 2048 1023 84 1
-   int cols, rows, colors;
-   sscanf (world[0], "%d %d %d", &cols, &rows, &colors);
+   int cols, rows, colors, cpp;
+   sscanf (world[0], "%d %d %d %d", &cols, &rows, &colors, &cpp);
    for (int x = 0; x < cols; x++) {
       for (int y = 0; y < rows; y++) {
          double lat = -(((double) y - ((double) rows / 2.0)) /
@@ -52,10 +52,19 @@ void main(void) {
          double lon = (((double) x - ((double) cols / 2.0)) /
                ((double)cols/2.0)) * M_PI;
 
-         char c = world[1+colors+y][x];
+         short c = world[1+colors+y][x*cpp];
+         if (cpp == 2) {
+            c <<= 8;
+            c |= world[1+colors+y][x*cpp + 1];
+         }
          for (int i = 0; i < colors; i++) {
-            if (world[1+i][0] == c) {
-               int rgb = strtol(world[1+i]+5, NULL, 16);
+            short cc = world[1+i][0];
+            if (cpp == 2) {
+               cc <<= 8;
+               cc |= world[1+i][1];
+            }
+            if (cc == c) {
+               int rgb = strtol(world[1+i]+5+(cpp-1), NULL, 16);
                int z = RADIUS * cos(lat) * cos(lon);
                int x = RADIUS * cos(lat) * sin(lon);
                int y = -RADIUS * sin(lat);

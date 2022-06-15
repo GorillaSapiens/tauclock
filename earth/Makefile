@@ -1,5 +1,5 @@
 all:
-	convert world.png world.xpm
+	convert world_topo_bathy_200407.jpg world.xpm
 	sed -i "s/c white/c #FFFFFF/g" world.xpm
 	gcc precompute.c -lm -o b.out
 	./b.out > precomputed.h

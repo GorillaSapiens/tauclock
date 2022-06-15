@@ -105,13 +105,16 @@ int main (int argc, char **argv) {
             int by = round((180.0 - (lat + 90.0)) * ((double) rows) / 180.0);
             int bx = round((lon + 180.0) * ((double) columns) / 360.0);
 
-            if (bx >= 0 && bx < columns && by >= 0 && by < rows) {
-               int c = palette[bitmap[by][bx]];
+            if (bx < 0) bx = 0;
+            if (by < 0) by = 0;
+            if (bx >= columns) bx = columns - 1;
+            if (by >= rows) by = rows - 1;
 
-               image[3*y*size + 3*x] = c >> 16;
-               image[3*y*size + 3*x + 1] = (c >> 8) & 0xff;
-               image[3*y*size + 3*x + 2] = c & 0xff;
-            }
+            int c = palette[bitmap[by][bx]];
+
+            image[3*y*size + 3*x] = c >> 16;
+            image[3*y*size + 3*x + 1] = (c >> 8) & 0xff;
+            image[3*y*size + 3*x + 2] = c & 0xff;
          }
       }
    }

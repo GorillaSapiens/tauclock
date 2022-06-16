@@ -39,6 +39,28 @@ print "int colors = $colors;\n";
 print "//int chars = $chars;\n";
 
 #=================
+# process /usr/share/X11/rgb.txt
+
+open FILE, "/usr/share/X11/rgb.txt";
+while (<FILE>) {
+   s/[\x0a\x0d]//g;
+   if (!(/^\!/)) {
+      s/\t/ /g;
+      s/[ ]+/ /g;
+      s/^[ ]+//g;
+      @all = split / /;
+      $r = shift @all;
+      $g = shift @all;
+      $b = shift @all;
+      $name = join(" ", @all);
+      $v = ($r << 16) | ($g << 8) | $b;
+      $v = sprintf("%06x", $v);
+      $rgb_txt{$name} = $v;
+   }
+}
+close FILE;
+
+#=================
 # print palette
 
 print "int palette[$colors] = {\n  ";
@@ -46,8 +68,12 @@ for ($i = 0; $i < $colors; $i++) {
    $line = $cont[$marker1 + 2 + $i];
    $line =~ s/[\x0a\x0d,]*$//g;
    $line =~ s/[\"]//g;
+
    if (!($line =~ / c \#/)) {
-      die "BAD COLOR $line\n";
+      $name = $line;
+      $name =~ s/^.* c //g;
+      $v = $rgb_txt{$name};
+      $line =~ s/ c $name/ c #$v/g;
    }
 
    @line = split //, $line;

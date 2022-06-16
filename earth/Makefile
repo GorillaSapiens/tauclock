@@ -1,5 +1,9 @@
 all:
-	convert world*.jpg world.xpm
+	./grid.pl
+	convert -colorspace RGB -depth 8 outlines.png -morphology erode disk:5 -channel RGB -negate thickoutlines.png
+	composite thickoutlines.png grid.png  world2.png
+	composite world2.png world_top_bathy_bigger.png world.png
+	convert world.png world.xpm
 	./bitmapish.pl < world.xpm > world.h
 	gcc -g world.c -lm
 	./a.out 512 0 0 0 > zero.raw

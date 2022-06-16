@@ -119,12 +119,12 @@ int main (int argc, char **argv) {
       }
    }
 
-   for (int i = 0; i < size; i++) {
+   for (int i = radius - 10; i < radius + 10; i++) {
       image[3*radius*size + 3*i] ^= 0xff;
       image[3*radius*size + 3*i + 1] ^= 0xff;
       image[3*radius*size + 3*i + 2] ^= 0xff;
 
-      image[3*i*size + 3*radius] ^= 0xff;
+      image[3*i*size + 3*radius] = 0xff;
       image[3*i*size + 3*radius + 1] ^= 0xff;
       image[3*i*size + 3*radius + 2] ^= 0xff;
    }

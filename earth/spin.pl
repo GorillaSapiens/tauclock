@@ -3,23 +3,11 @@
 $oii = "000";
 
 for ($i = 0; $i < 360; $i++) {
-   $j = $i - 180;
+   $j = 360 - ($i - 180);
    print "$j\n";
    $ii = sprintf("%03d", $i);
    print `time ./a.out 512 0 $j 0 > /tmp/spin_$ii.raw`;
    $oii = $ii;
 }
 
-for ($i = 0; $i < 360; $i++) {
-   $j = $i - 180;
-   print "$j\n";
-
-   $a = sprintf("%03d", ($i - 1 + 360) % 360);
-   $b = sprintf("%03d", $i % 360);
-   $c = sprintf("%03d", ($i + 1) % 360);
-
-#   `convert -size 512x512 -depth 8 RGB:$a.raw RGB:$b.raw RGB:$c.raw -evaluate-sequence mean $b.png`;
-   `convert -size 512x512 -depth 8 RGB:/tmp/spin_$b.raw /tmp/spin_$b.png`;
-}
-
-`convert -delay 5 -loop 0 /tmp/spin_*.png spin.gif`;
+`convert -delay 5 -loop 0 -size 512x512 -depth 8 RGB:/tmp/spin_*.raw spin.gif`;

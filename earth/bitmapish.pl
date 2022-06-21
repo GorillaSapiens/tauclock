@@ -72,7 +72,12 @@ for ($i = 0; $i < $colors; $i++) {
    if (!($line =~ / c \#/)) {
       $name = $line;
       $name =~ s/^.* c //g;
-      $v = $rgb_txt{$name};
+      if (defined($rgb_txt{$name})) {
+         $v = $rgb_txt{$name};
+      }
+      else {
+         die "Unknown color $name\n";
+      }
       $line =~ s/ c $name/ c #$v/g;
    }
 

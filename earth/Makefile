@@ -18,3 +18,10 @@ all:
 	convert -size 512x512 -depth 8 RGB:buenos.raw -scale 1024x1024 buenos.png
 	./a.out 512 34 -81 0 > columbia.raw
 	convert -size 512x512 -depth 8 RGB:columbia.raw -scale 1024x1024 columbia.png
+
+small:
+	convert world_top_bathy_bigger.png world.xpm
+	./bitmapish.pl < world.xpm > world.h
+	gcc -g world.c -lm
+	./a.out 64 34 -81 0 > csmall.raw
+	convert -size 64x64 -depth 8 RGB:csmall.raw csmall.png

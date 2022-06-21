@@ -68,8 +68,8 @@ int main (int argc, char **argv) {
 
          // compute z based on x and y
 
-         double xx = x - radius;
-         double yy = y - radius;
+         double xx = (x - radius) + 0.5;
+         double yy = (y - radius) + 0.5;
          double zz = (radius*radius) - (xx * xx) - (yy * yy);
 
          if (zz >= 0.0) {
@@ -119,7 +119,12 @@ int main (int argc, char **argv) {
       }
    }
 
-   for (int i = radius - 10; i < radius + 10; i++) {
+   int margin = radius / 25;
+   if (margin < 4) {
+      margin = 4;
+   }
+
+   for (int i = radius - margin; i < radius + margin + 1; i++) {
       image[3*radius*size + 3*i] ^= 0xff;
       image[3*radius*size + 3*i + 1] ^= 0xff;
       image[3*radius*size + 3*i + 2] ^= 0xff;

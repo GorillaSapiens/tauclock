@@ -61,6 +61,10 @@ while (<FILE>) {
 close FILE;
 
 #=================
+# kludge the "None" color
+$rgb_txt{"None"} = "ff000000";
+
+#=================
 # print palette
 
 print "int palette[$colors] = {\n  ";
@@ -89,6 +93,14 @@ for ($i = 0; $i < $colors; $i++) {
    $sygil{$sygil} = $i;
 
    $line =~ s/^.* c \#//g;
+
+   if (length($line) == 4*3) {
+      # srsly who needs that many colors?
+      $line =~ s/(..)..(..)..(..)../"$1$2$3"/ge;
+   }
+
+   $line = uc($line);
+
    print " 0x$line";
    if ($i != $colors - 1) {
       print ",";

@@ -25,3 +25,10 @@ small:
 	gcc -g world.c -lm
 	./a.out 64 34 -81 0 > csmall.raw
 	convert -size 64x64 -depth 8 RGB:csmall.raw csmall.png
+
+moon:
+	convert moon.tif -scale 2560x1280\! moon.xpm
+	./bitmapish.pl < moon.xpm > world.h
+	gcc -g world.c -lm
+	./a.out 512 0 0 0 > moon.raw
+	convert -size 512x512 -depth 8 RGB:moon.raw -scale 1024x1024 moon.png

@@ -253,7 +253,7 @@ void remove_newlines(char *p) {
    }
 }
 
-/// @brief Draw stars on COLOR_DARKBLUE areas
+/// @brief Draw stars on COLOR_NIGHT areas
 ///
 /// This is dead code.  The intent was to draw fanciful stars
 /// on the darkness portion of the clock.  It's unused, as it
@@ -269,21 +269,21 @@ void do_stars(Canvas * canvas) {
 
       for (int jx = -dx; jx <= dx; jx++) {
          conditional_poke_canvas(canvas, x + jx, y, COLOR_WHITE,
-                                 COLOR_DARKBLUE);
+                                 COLOR_NIGHT);
       }
       for (int jy = -dy; jy <= dy; jy++) {
          conditional_poke_canvas(canvas, x, y + jy, COLOR_WHITE,
-                                 COLOR_DARKBLUE);
+                                 COLOR_NIGHT);
       }
       if (rand() % 2) {
          conditional_poke_canvas(canvas, x + 1, y + 1,
-                                 COLOR_WHITE, COLOR_DARKBLUE);
+                                 COLOR_WHITE, COLOR_NIGHT);
          conditional_poke_canvas(canvas, x - 1, y + 1,
-                                 COLOR_WHITE, COLOR_DARKBLUE);
+                                 COLOR_WHITE, COLOR_NIGHT);
          conditional_poke_canvas(canvas, x + 1, y - 1,
-                                 COLOR_WHITE, COLOR_DARKBLUE);
+                                 COLOR_WHITE, COLOR_NIGHT);
          conditional_poke_canvas(canvas, x - 1, y - 1,
-                                 COLOR_WHITE, COLOR_DARKBLUE);
+                                 COLOR_WHITE, COLOR_NIGHT);
       }
    }
 }
@@ -1535,7 +1535,7 @@ void do_weather(Canvas * canvas) {
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE / 2 / 2 + SCALE(64),
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1543,28 +1543,28 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE / 2 / 2, COLOR_BLACK,
-                  COLOR_YELLOW, buffer, 1, 1);
+                  COLOR_DAY, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - SCALE(104), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + SCALE(128), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE * 3 / 4 + SCALE(64),
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1572,21 +1572,21 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE * 3 / 4, COLOR_WHITE,
-                  COLOR_DARKBLUE, buffer, 1, 1);
+                  COLOR_NIGHT, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - 104, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + 128, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
 
       fclose(f);
    }
@@ -1797,9 +1797,9 @@ void replayTimeDrawnMemory(Canvas * canvas) {
 void do_sun_bands(Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
-   unsigned int color = COLOR_DARKBLUE;
+   unsigned int color = COLOR_NIGHT;
    unsigned int fore = COLOR_WHITE;
-   unsigned int back = COLOR_DARKBLUE;
+   unsigned int back = COLOR_NIGHT;
 
    unsigned int transit_fore = COLOR_GREEN;
    unsigned int transit_back = COLOR_RED;
@@ -1838,19 +1838,19 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   stop_angle += 360.0;
                }
                switch (color) {
-                  case COLOR_YELLOW:
+                  case COLOR_DAY:
                      daylight += stop_angle - start_angle;
                      break;
-                  case COLOR_ORANGE:
+                  case COLOR_CIVIL:
                      civil += stop_angle - start_angle;
                      break;
-                  case COLOR_LIGHTBLUE:
+                  case COLOR_NAUTICAL:
                      nautical += stop_angle - start_angle;
                      break;
-                  case COLOR_BLUE:
+                  case COLOR_ASTRONOMICAL:
                      astronomical += stop_angle - start_angle;
                      break;
-                  case COLOR_DARKBLUE:
+                  case COLOR_NIGHT:
                      darkness += stop_angle - start_angle;
                      break;
                }
@@ -1882,19 +1882,19 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
          if (events[i].type == EVENT_UP || events[i].type == EVENT_RISE) {
             switch (events[i].category) {
                case CAT_ASTRONOMICAL:
-                  color = back = COLOR_BLUE;
+                  color = back = COLOR_ASTRONOMICAL;
                   fore = COLOR_WHITE;
                   break;
                case CAT_NAUTICAL:
-                  color = back = COLOR_LIGHTBLUE;
+                  color = back = COLOR_NAUTICAL;
                   fore = COLOR_WHITE;
                   break;
                case CAT_CIVIL:
-                  color = back = COLOR_ORANGE;
+                  color = back = COLOR_CIVIL;
                   fore = COLOR_BLACK;
                   break;
                case CAT_SOLAR:
-                  color = back = COLOR_YELLOW;
+                  color = back = COLOR_DAY;
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
@@ -1912,22 +1912,22 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
             switch (events[i].category) {
                case CAT_ASTRONOMICAL:
                   back = color;
-                  color = COLOR_DARKBLUE;
+                  color = COLOR_NIGHT;
                   fore = COLOR_WHITE;
                   break;
                case CAT_NAUTICAL:
                   back = color;
-                  color = COLOR_BLUE;
+                  color = COLOR_ASTRONOMICAL;
                   fore = COLOR_WHITE;
                   break;
                case CAT_CIVIL:
                   back = color;
-                  color = COLOR_LIGHTBLUE;
+                  color = COLOR_NAUTICAL;
                   fore = COLOR_BLACK;
                   break;
                case CAT_SOLAR:
                   back = color;
-                  color = COLOR_ORANGE;
+                  color = COLOR_CIVIL;
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
@@ -1956,19 +1956,19 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
       stop_angle += 360.0;
    }
    switch (color) {
-      case COLOR_YELLOW:
+      case COLOR_DAY:
          daylight += stop_angle - start_angle;
          break;
-      case COLOR_ORANGE:
+      case COLOR_CIVIL:
          civil += stop_angle - start_angle;
          break;
-      case COLOR_LIGHTBLUE:
+      case COLOR_NAUTICAL:
          nautical += stop_angle - start_angle;
          break;
-      case COLOR_BLUE:
+      case COLOR_ASTRONOMICAL:
          astronomical += stop_angle - start_angle;
          break;
-      case COLOR_DARKBLUE:
+      case COLOR_NIGHT:
          darkness += stop_angle - start_angle;
          break;
    }
@@ -1986,55 +1986,55 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    if (daylight > one_minute) {
       accum_helper(canvas, daylight, "daylight", 270.0, COLOR_BLACK,
-                   COLOR_YELLOW);
+                   COLOR_DAY);
    }
    else if (civil > one_minute) {
-      accum_helper(canvas, civil, "civil", 270.0, COLOR_BLACK, COLOR_ORANGE);
+      accum_helper(canvas, civil, "civil", 270.0, COLOR_BLACK, COLOR_CIVIL);
    }
    else if (nautical > one_minute) {
       accum_helper(canvas, nautical, "nautical", 270.0, COLOR_WHITE,
-                   COLOR_LIGHTBLUE);
+                   COLOR_NAUTICAL);
    }
    else if (astronomical > one_minute) {
       accum_helper(canvas, astronomical, "astronomical", 270.0,
-                   COLOR_WHITE, COLOR_BLUE);
+                   COLOR_WHITE, COLOR_ASTRONOMICAL);
    }
    else if (darkness > one_minute) {
       accum_helper(canvas, darkness, "darkness", 270.0, COLOR_WHITE,
-                   COLOR_DARKBLUE);
+                   COLOR_NIGHT);
    }
 
    if (darkness > one_minute) {
       if (astronomical > one_minute) {
          accum_helper(canvas, darkness, "darkness", 90.0,
-                      COLOR_WHITE, COLOR_DARKBLUE);
+                      COLOR_WHITE, COLOR_NIGHT);
       }
    }
    else if (astronomical > one_minute) {
       if (nautical > one_minute) {
          accum_helper(canvas, astronomical, "astronomical", 90.0,
-                      COLOR_WHITE, COLOR_BLUE);
+                      COLOR_WHITE, COLOR_ASTRONOMICAL);
       }
    }
    else if (nautical > one_minute) {
       if (civil > one_minute) {
          accum_helper(canvas, nautical, "nautical", 90.0,
-                      COLOR_WHITE, COLOR_LIGHTBLUE);
+                      COLOR_WHITE, COLOR_NAUTICAL);
       }
    }
    else if (civil > one_minute) {
       if (daylight > one_minute) {
-         accum_helper(canvas, civil, "civil", 90.0, COLOR_BLACK, COLOR_ORANGE);
+         accum_helper(canvas, civil, "civil", 90.0, COLOR_BLACK, COLOR_CIVIL);
       }
    }
 }
 
 #define ISDITHERCOLOR(x) (\
-   (x) == COLOR_YELLOW || \
-   (x) == COLOR_ORANGE || \
-   (x) == COLOR_LIGHTBLUE || \
-   (x) == COLOR_BLUE || \
-   (x) == COLOR_DARKBLUE \
+   (x) == COLOR_DAY || \
+   (x) == COLOR_CIVIL || \
+   (x) == COLOR_NAUTICAL || \
+   (x) == COLOR_ASTRONOMICAL || \
+   (x) == COLOR_NIGHT \
 )
 
 #define DITHER 3
@@ -2052,23 +2052,23 @@ void do_sun_dithering(Canvas * canvas) {
             for (int i = 0; i < DITHER; i++) {
                int c = array[j*DITHER+i] = peek_canvas(canvas, i+x, j+y);
                switch(c) {
-                  case COLOR_YELLOW:
+                  case COLOR_DAY:
                      count++;
                      counts[0]++;
                      break;
-                  case COLOR_ORANGE:
+                  case COLOR_CIVIL:
                      count++;
                      counts[1]++;
                      break;
-                  case COLOR_LIGHTBLUE:
+                  case COLOR_NAUTICAL:
                      count++;
                      counts[2]++;
                      break;
-                  case COLOR_BLUE:
+                  case COLOR_ASTRONOMICAL:
                      count++;
                      counts[3]++;
                      break;
-                  case COLOR_DARKBLUE:
+                  case COLOR_NIGHT:
                      count++;
                      counts[4]++;
                      break;

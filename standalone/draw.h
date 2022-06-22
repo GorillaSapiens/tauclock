@@ -70,6 +70,12 @@
 #define COLOR_WHITE      RGB(255, 255, 255)
 #define COLOR_YELLOW     RGB(255, 255,   0)
 
+#define COLOR_DAY           COLOR_YELLOW
+#define COLOR_CIVIL         COLOR_ORANGE
+#define COLOR_NAUTICAL      COLOR_LIGHTBLUE
+#define COLOR_ASTRONOMICAL  COLOR_BLUE
+#define COLOR_NIGHT         COLOR_DARKBLUE
+
 /// @brief A struct defining an area to draw on.
 typedef struct Canvas {
    int w;                       ///< The width of the Canvas

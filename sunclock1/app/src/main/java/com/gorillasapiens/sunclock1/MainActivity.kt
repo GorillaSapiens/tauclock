@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     var mLastLastLocation : Location? = null
     var mImageView : ImageView? = null
 
-    var mOtlDown : Boolean = true
+    var mOtlDown : Boolean = false
     var mOtlX : Float = 0.0f
     var mOtlY : Float = 0.0f
     var mOtlLat : Double = 0.0
@@ -284,5 +284,5 @@ class MainActivity : AppCompatActivity() {
     }
 
     external fun do_all(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
-    external fun do_earth(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
+    external fun do_globe(lat:Double, lng:Double, width:Int) : IntArray
 }

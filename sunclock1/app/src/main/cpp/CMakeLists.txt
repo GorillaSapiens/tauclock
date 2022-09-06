@@ -32,7 +32,7 @@ add_library( # Sets the name of the library.
         earth.c               neptune.c            saturn.c
         elliptic_motion.c     nutation.c           sidereal_time.c
 
-        clock.c draw.c trampoline.cpp
+        clock.c draw.c globe.c trampoline.cpp
         )
 
 # Searches for a specified prebuilt library and stores the path as a

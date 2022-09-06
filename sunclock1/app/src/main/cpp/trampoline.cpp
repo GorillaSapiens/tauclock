@@ -6,6 +6,8 @@
 
 extern "C" {
 #include "clock.h"
+#include "draw.h"
+#include "globe.h"
 }
 
 extern "C"
@@ -29,10 +31,10 @@ Java_com_gorillasapiens_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-MainActivity.do_globe(JNIEnv *env, jobject thiz, jdouble lat,
+Java_com_gorillasapiens_sunclock1_MainActivity_do_1globe(JNIEnv *env, jobject thiz, jdouble lat,
                                                        jdouble lng,
                                                        jint width) {
-    Canvas *canvas = do_globe(lat, lng, offset, width);
+    Canvas *canvas = do_globe(lat, lng, width);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;
     jint h = canvas->h;

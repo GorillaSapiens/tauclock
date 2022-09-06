@@ -72,7 +72,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon) {
    int w = wh >> 16;
    int h = wh & 0xffff;
 
-   text_canvas(canvas, FONT_BOLD_BIG, w/2+10, h/2+10,
+   text_canvas(canvas, FONT_BOLD_BIG, w/2+10, (h/2+10),
                COLOR_WHITE, COLOR_BLACK, location, 1, 2);
 
    wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
@@ -80,7 +80,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon) {
    w = wh >> 16;
    h = wh & 0xffff;
 
-   text_canvas(canvas, FONT_BOLD_BIG, width - (w/2+10), h/2+10,
+   text_canvas(canvas, FONT_BOLD_BIG, width - (w/2+10), (h/2+10),
                COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
 }
 

@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            mHandler.postDelayed(this, 100)
+            mHandler.postDelayed(this, 50)
         }
     }
 

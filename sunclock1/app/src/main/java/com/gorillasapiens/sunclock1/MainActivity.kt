@@ -39,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     var mImageView : ImageView? = null
 
     var mOtlDown : Boolean = false
+    var mOtlChanged : Boolean = false
     var mOtlX : Float = 0.0f
     var mOtlY : Float = 0.0f
     var mOtlLat : Double = 0.0
@@ -56,7 +57,7 @@ class MainActivity : AppCompatActivity() {
     private fun updateDrawing() {
 
         if (mOtlDown) {
-            if (mLastLocation != mLastLastLocation) {
+            if (mOtlChanged || mLastLocation != mLastLastLocation) {
                 var something = do_globe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
@@ -64,6 +65,7 @@ class MainActivity : AppCompatActivity() {
                 mSunclockDrawable?.setThing(something);
 
                 mLastLastLocation = mLastLocation;
+                mOtlChanged = false;
             }
         }
         else {
@@ -104,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            mHandler.postDelayed(this, 1000)
+            mHandler.postDelayed(this, 100)
         }
     }
 
@@ -244,9 +246,12 @@ class MainActivity : AppCompatActivity() {
 
     fun otl(view: View, motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-            mLastLocation = Location("test")
-            mLastLocation?.latitude = 30.0
-            mLastLocation?.longitude = -80.0
+
+            if (mLastLocation == null) {
+                mLastLocation = Location("manual")
+                mLastLocation?.latitude = 0.0
+                mLastLocation?.longitude = 0.0
+            }
 
             mOtlX = motionEvent.x
             mOtlY = motionEvent.y
@@ -258,10 +263,11 @@ class MainActivity : AppCompatActivity() {
             dcy *= dcy
             var dc = sqrt(dcx+dcy)
 
-            if (dc < width/5.0) {
+            if (dc < width/6.0) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
                 mOtlDown = true
+                mOtlChanged = true
                 updateDrawing()
             }
         }
@@ -270,13 +276,13 @@ class MainActivity : AppCompatActivity() {
             updateDrawing()
         }
         else if (mOtlDown && motionEvent.action ==MotionEvent.ACTION_MOVE) {
-            var proposedLocation = Location("test");
+            var proposedLocation = Location("manual");
             var deltax = motionEvent.x - mOtlX;
             var deltay = motionEvent.y - mOtlY;
             var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-            proposedLocation.latitude = mOtlLat + 90.0 * deltay / (width * 2.0)
-            proposedLocation.longitude = mOtlLon - 180.0 * deltax / (width * 2.0)
+            proposedLocation.latitude = mOtlLat + 90.0 * deltay / (width)
+            proposedLocation.longitude = mOtlLon - 90.0 * deltax / (width)
 
             if (proposedLocation.latitude > 90.0) {
                 proposedLocation.latitude = 90.0

@@ -263,7 +263,7 @@ class MainActivity : AppCompatActivity() {
             dcy *= dcy
             var dc = sqrt(dcx+dcy)
 
-            if (dc < width/6.0) {
+            if (dc < width / 2.0) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
                 mOtlDown = true

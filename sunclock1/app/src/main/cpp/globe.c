@@ -40,13 +40,57 @@ quat rotate(quat point, quat rot) {
    return ret;
 }
 
+extern uint8_t *FONT_BOLD_BIG;
+
+void do_text(Canvas *canvas, int width, double lat, double lon) {
+   char location[128];
+   char location2[128];
+
+   char NS = 'N';
+   if (lat < 0.0) {
+      lat = -lat;
+      NS = 'S';
+   }
+
+   char EW = 'E';
+   if (lon < 0.0) {
+      lon = -lon;
+      EW = 'W';
+   }
+   char *degree = "\u00B0";     // in utf8, degree symbol
+
+   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
+      sprintf(location , "INVALID");
+      sprintf(location2, "LOCATION");
+   }
+   else {
+      sprintf(location, "%0.4f%s%c", lat, degree, NS);
+      sprintf(location2, "%0.4f%s%c", lon, degree, EW);
+   }
+   int wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
+               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
+   int w = wh >> 16;
+   int h = wh & 0xffff;
+
+   text_canvas(canvas, FONT_BOLD_BIG, w/2+10, h/2+10,
+               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
+
+   wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
+               COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
+   w = wh >> 16;
+   h = wh & 0xffff;
+
+   text_canvas(canvas, FONT_BOLD_BIG, width - (w/2+10), h/2+10,
+               COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
+}
+
 /// @brief Do globe things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
-/// @param lng The observer's Longitude in degrees, West is negative
+/// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_globe(double lat, double lng, int width) {
+Canvas *do_globe(double lat, double lon, int width) {
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
@@ -55,7 +99,7 @@ Canvas *do_globe(double lat, double lng, int width) {
    int radius = size / 2;
 
    double xspin = -lat * M_PI / 180.0;
-   double yspin = -lng * M_PI / 180.0;
+   double yspin = -lon * M_PI / 180.0;
    double zspin = 0.0 * M_PI / 180.0;
 
    double coshalfx = cos(xspin/2.0);
@@ -134,6 +178,8 @@ Canvas *do_globe(double lat, double lng, int width) {
       poke_canvas(canvas, radius, i, peek_canvas(canvas, radius, i) ^ 0xffffff);
       poke_canvas(canvas, i, radius, peek_canvas(canvas, i, radius) ^ 0xffffff);
    }
+
+   do_text(canvas, width, lat, lon);
 
    return canvas;
 }

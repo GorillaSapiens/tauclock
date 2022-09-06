@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
 import android.widget.Toast
@@ -26,7 +27,7 @@ import java.time.LocalDateTime
 
 class MainActivity : AppCompatActivity() {
     var mDrawableInitialized = false
-    var mFusedLocationClient: FusedLocationProviderClient? = null
+    //var mFusedLocationClient: FusedLocationProviderClient? = null
     val PERMISSION_ID = 44
     var mSunclockDrawable: SunclockDrawable? = null
     var mHasFocus = false;
@@ -34,6 +35,13 @@ class MainActivity : AppCompatActivity() {
     var mLastRequest = mLastTime
     var mLastLocation : Location? = null
     var mLastLastLocation : Location? = null
+    var mImageView : ImageView? = null
+
+    var mOtlDown : Boolean = true
+    var mOtlX : Float = 0.0f
+    var mOtlY : Float = 0.0f
+    var mOtlLat : Double = 0.0
+    var mOtlLon : Double = 0.0
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -44,7 +52,28 @@ class MainActivity : AppCompatActivity() {
       }
     }
 
-    private val runEverySecond: Runnable = object : Runnable {
+    private fun updateDrawing() {
+
+        if (mOtlDown) {
+            var something = do_globe(
+                mLastLocation?.latitude ?: -181.0,
+                mLastLocation?.longitude ?: -181.0,
+                Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
+            mSunclockDrawable?.setThing(something);
+        }
+        else {
+            var something = do_all(
+                mLastLocation?.latitude ?: -181.0,
+                mLastLocation?.longitude ?: -181.0,
+                0.0,
+                Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
+            mSunclockDrawable?.setThing(something);
+        }
+
+        mImageView?.invalidate()
+    }
+
+    private val runVeryOften: Runnable = object : Runnable {
         override fun run() {
             if (mHasFocus) {
 
@@ -58,24 +87,12 @@ class MainActivity : AppCompatActivity() {
                 if (mLastLastLocation != mLastLocation ||
                     (current - Duration.ofMinutes(1)) > mLastTime ||
                     current.minute != mLastTime.minute) {
-                    val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
 
                     if (mLastLocation == null) {
                         mLastLocation = mLastLastLocation;
                     }
 
-                    if (mLastLocation != null) {
-                        var something = do_all(mLastLocation!!.latitude, mLastLocation!!.longitude, 0.0,
-                            Math.min(imageView.width, imageView.height));
-                        mSunclockDrawable?.setThing(something);
-                    }
-                    else {
-                        var something = do_all(-181.0,-181.0, 0.0,
-                            Math.min(imageView.width, imageView.height));
-                        mSunclockDrawable?.setThing(something);
-                    }
-
-                    imageView.invalidate()
+                    updateDrawing()
 
                     mLastTime = current
                     mLastLastLocation = mLastLocation
@@ -90,11 +107,12 @@ class MainActivity : AppCompatActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             if (!mDrawableInitialized) {
-                //val layObj: LinearLayout = findViewById<View>(R.id.parentLay) as LinearLayout
-                val imageView: ImageView = findViewById<View>(R.id.imageView) as ImageView
-                mSunclockDrawable = SunclockDrawable(imageView.width, imageView.height)
-                imageView.setImageDrawable(mSunclockDrawable)
-                imageView.invalidate()
+                mSunclockDrawable = SunclockDrawable(
+                    mImageView?.width ?: 1024,
+                    mImageView?.height ?: 1024)
+
+                mImageView?.setImageDrawable(mSunclockDrawable)
+                mImageView?.invalidate()
 
                 getLastLocation()
 
@@ -114,12 +132,15 @@ class MainActivity : AppCompatActivity() {
                 // location from
                 // FusedLocationClient
                 // object
+
+                /*
                 mFusedLocationClient!!.lastLocation.addOnCompleteListener { task ->
                     val location = task.result
                     if (location == null) {
                         requestNewLocationData()
                     }
                 }
+                */
             } else {
                 Toast.makeText(this, "Please turn on" + " your location...", Toast.LENGTH_LONG)
                     .show()
@@ -145,12 +166,13 @@ class MainActivity : AppCompatActivity() {
 
         // setting LocationRequest
         // on FusedLocationClient
+        /*
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         mFusedLocationClient?.requestLocationUpdates(
             mLocationRequest,
             mLocationCallback,
             Looper.myLooper()
-        )
+        )*/
     }
 
     private val mLocationCallback: LocationCallback = object : LocationCallback() {
@@ -215,6 +237,28 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun otl(view: View, motionEvent: MotionEvent) {
+        if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+            mLastLocation = Location("test")
+            mLastLocation?.latitude = 30.0
+            mLastLocation?.longitude = -80.0
+
+            mOtlX = motionEvent.x
+            mOtlY = motionEvent.y
+            mOtlLat = mLastLocation?.latitude ?: 0.0
+            mOtlLon = mLastLocation?.longitude ?: 0.0
+            mOtlDown = true
+            updateDrawing()
+        }
+        else if (motionEvent.action == MotionEvent.ACTION_UP){
+
+        }
+        else if (motionEvent.action ==MotionEvent.ACTION_MOVE) {
+            mOtlDown = false
+            updateDrawing()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -224,14 +268,21 @@ class MainActivity : AppCompatActivity() {
 
          actionBar?.setTitle("ταμ clock v" + info.versionName);
          supportActionBar?.setTitle("ταμ clock v" + info.versionName);
-        //actionBar?.hide();
-        //supportActionBar?.hide();
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        getLastLocation();
+         //actionBar?.hide();
+         //supportActionBar?.hide();
 
-        mHandler.post(runEverySecond);
+        //mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        //getLastLocation();
+        mImageView = findViewById<View>(R.id.imageView) as ImageView
+        mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
+            this.otl(view, motionEvent)
+            return@OnTouchListener true
+        })
+
+        mHandler.post(runVeryOften);
     }
 
     external fun do_all(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
+    external fun do_earth(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
 }

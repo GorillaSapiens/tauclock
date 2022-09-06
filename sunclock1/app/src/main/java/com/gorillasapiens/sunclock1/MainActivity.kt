@@ -24,6 +24,7 @@ import com.google.android.gms.location.*
 import com.wozniakconsulting.sunclock1.R
 import java.time.Duration
 import java.time.LocalDateTime
+import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity() {
     var mDrawableInitialized = false
@@ -249,16 +250,26 @@ class MainActivity : AppCompatActivity() {
 
             mOtlX = motionEvent.x
             mOtlY = motionEvent.y
-            mOtlLat = mLastLocation?.latitude ?: 0.0
-            mOtlLon = mLastLocation?.longitude ?: 0.0
-            mOtlDown = true
-            updateDrawing()
+            var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+            var dcx = motionEvent.x - (mImageView?.width ?: 1024) / 2.0
+            var dcy = motionEvent.y - (mImageView?.height ?: 1024) / 2.0
+
+            dcx *= dcx
+            dcy *= dcy
+            var dc = sqrt(dcx+dcy)
+
+            if (dc < width/5.0) {
+                mOtlLat = mLastLocation?.latitude ?: 0.0
+                mOtlLon = mLastLocation?.longitude ?: 0.0
+                mOtlDown = true
+                updateDrawing()
+            }
         }
         else if (motionEvent.action == MotionEvent.ACTION_UP){
             mOtlDown = false
             updateDrawing()
         }
-        else if (motionEvent.action ==MotionEvent.ACTION_MOVE) {
+        else if (mOtlDown && motionEvent.action ==MotionEvent.ACTION_MOVE) {
             var proposedLocation = Location("test");
             var deltax = motionEvent.x - mOtlX;
             var deltay = motionEvent.y - mOtlY;

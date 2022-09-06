@@ -55,11 +55,15 @@ class MainActivity : AppCompatActivity() {
     private fun updateDrawing() {
 
         if (mOtlDown) {
-            var something = do_globe(
-                mLastLocation?.latitude ?: -181.0,
-                mLastLocation?.longitude ?: -181.0,
-                Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
-            mSunclockDrawable?.setThing(something);
+            if (mLastLocation != mLastLastLocation) {
+                var something = do_globe(
+                    mLastLocation?.latitude ?: -181.0,
+                    mLastLocation?.longitude ?: -181.0,
+                    Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
+                mSunclockDrawable?.setThing(something);
+
+                mLastLastLocation = mLastLocation;
+            }
         }
         else {
             var something = do_all(
@@ -251,11 +255,31 @@ class MainActivity : AppCompatActivity() {
             updateDrawing()
         }
         else if (motionEvent.action == MotionEvent.ACTION_UP){
-
-        }
-        else if (motionEvent.action ==MotionEvent.ACTION_MOVE) {
             mOtlDown = false
             updateDrawing()
+        }
+        else if (motionEvent.action ==MotionEvent.ACTION_MOVE) {
+            var proposedLocation = Location("test");
+            var deltax = motionEvent.x - mOtlX;
+            var deltay = motionEvent.y - mOtlY;
+            var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+            proposedLocation.latitude = mOtlLat + 90.0 * deltay / (width * 2.0)
+            proposedLocation.longitude = mOtlLon - 180.0 * deltax / (width * 2.0)
+
+            if (proposedLocation.latitude > 90.0) {
+                proposedLocation.latitude = 90.0
+            }
+            if (proposedLocation.latitude < -90.0) {
+                proposedLocation.latitude = -90.0
+            }
+            while (proposedLocation.longitude < -180.0) {
+                proposedLocation.longitude += 360.0;
+            }
+            while (proposedLocation.longitude > 180.0) {
+                proposedLocation.longitude -= 360.0;
+            }
+            mLastLocation = proposedLocation;
         }
     }
 

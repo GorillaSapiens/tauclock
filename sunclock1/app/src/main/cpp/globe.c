@@ -178,8 +178,8 @@ Canvas *do_globe(double lat, double lon, int width) {
                     5, COLOR_MAGENTA,
                     0.0, 360.0);
 
-   line_canvas(canvas,radius-radius/10,radius-radius/10,radius+radius/10,radius+radius/10,COLOR_MAGENTA);
-   line_canvas(canvas,radius-radius/10,radius+radius/10,radius+radius/10,radius-radius/10,COLOR_MAGENTA);
+   line_canvas(canvas,radius-radius/14,radius-radius/14,radius+radius/14,radius+radius/14,COLOR_MAGENTA);
+   line_canvas(canvas,radius-radius/14,radius+radius/14,radius+radius/14,radius-radius/14,COLOR_MAGENTA);
 
    do_text(canvas, width, lat, lon);
 

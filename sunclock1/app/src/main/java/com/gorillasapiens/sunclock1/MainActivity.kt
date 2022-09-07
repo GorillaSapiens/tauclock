@@ -69,7 +69,8 @@ class MainActivity : AppCompatActivity() {
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
                     Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
-                mSunclockDrawable?.setThing(something);
+                mSunclockDrawable?.setThing(something)
+                mImageView?.invalidate()
 
                 mLastLastLocation = mLastLocation;
                 mOtlChanged = false;
@@ -83,6 +84,7 @@ class MainActivity : AppCompatActivity() {
                 Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                 mProvider ?: "<null>")
             mSunclockDrawable?.setThing(something)
+            mImageView?.invalidate()
         }
 
         mImageView?.invalidate()
@@ -243,6 +245,10 @@ class MainActivity : AppCompatActivity() {
         n %= allProviders.size;
         mProvider = allProviders[n]
 
+        var something = arrayOf<Int>().toIntArray()
+        mSunclockDrawable?.setThing(something)
+        mImageView?.invalidate()
+
         renewLocation()
     }
 
@@ -321,6 +327,10 @@ class MainActivity : AppCompatActivity() {
         if (mProvider == null) {
             mProvider = "manual"
         }
+
+        var something = arrayOf<Int>().toIntArray()
+        mSunclockDrawable?.setThing(something)
+        mImageView?.invalidate()
 
         renewLocation()
     }

@@ -174,10 +174,12 @@ Canvas *do_globe(double lat, double lon, int width) {
       margin = 4;
    }
 
-   for (int i = radius - margin; i < radius + margin + 1; i++) {
-      poke_canvas(canvas, radius, i, peek_canvas(canvas, radius, i) ^ 0xffffff);
-      poke_canvas(canvas, i, radius, peek_canvas(canvas, i, radius) ^ 0xffffff);
-   }
+   arc_canvas(canvas, radius, radius, radius/10,
+                    5, COLOR_MAGENTA,
+                    0.0, 360.0);
+
+   line_canvas(canvas,radius-radius/10,radius-radius/10,radius+radius/10,radius+radius/10,COLOR_MAGENTA);
+   line_canvas(canvas,radius-radius/10,radius+radius/10,radius+radius/10,radius-radius/10,COLOR_MAGENTA);
 
    do_text(canvas, width, lat, lon);
 

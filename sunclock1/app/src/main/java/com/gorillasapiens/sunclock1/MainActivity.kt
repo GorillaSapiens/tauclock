@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Criteria
 import android.location.Location
 import android.location.LocationManager
 import android.os.Bundle
@@ -20,7 +21,11 @@ import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.google.android.gms.location.*
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getMainExecutor
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
 import com.wozniakconsulting.sunclock1.R
 import java.time.Duration
 import java.time.LocalDateTime
@@ -45,6 +50,9 @@ class MainActivity : AppCompatActivity() {
     var mOtlLat : Double = 0.0
     var mOtlLon : Double = 0.0
 
+    var mLocationManager : LocationManager? = null
+    var mProvider : String? = null
+
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
 
@@ -55,7 +63,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateDrawing() {
-
         if (mOtlDown) {
             if (mOtlChanged || mLastLocation != mLastLastLocation) {
                 var something = do_globe(
@@ -73,7 +80,8 @@ class MainActivity : AppCompatActivity() {
                 mLastLocation?.latitude ?: -181.0,
                 mLastLocation?.longitude ?: -181.0,
                 0.0,
-                Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
+                Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                mProvider ?: "<null>")
             mSunclockDrawable?.setThing(something);
         }
 
@@ -83,11 +91,10 @@ class MainActivity : AppCompatActivity() {
     private val runVeryOften: Runnable = object : Runnable {
         override fun run() {
             if (mHasFocus) {
-
                 val current = LocalDateTime.now();
 
                 if ((current - Duration.ofMinutes(20)) > mLastRequest) {
-                    requestNewLocationData()
+                    renewLocation()
                     mLastRequest = current;
                 }
 
@@ -103,6 +110,10 @@ class MainActivity : AppCompatActivity() {
 
                     mLastTime = current
                     mLastLastLocation = mLastLocation
+                }
+
+                if (mLastRequest + Duration.ofMinutes(5) < LocalDateTime.now()) {
+                    renewLocation()
                 }
             }
 
@@ -160,31 +171,32 @@ class MainActivity : AppCompatActivity() {
             requestPermissions()
         }
     }
-    @SuppressLint("MissingPermission")
-    private fun requestNewLocationData() {
 
-        // Initializing LocationRequest
-        // object with appropriate methods
-        val mLocationRequest = LocationRequest()
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        mLocationRequest.setInterval(5)
-        mLocationRequest.setFastestInterval(0)
-        mLocationRequest.setNumUpdates(1)
-
-        // setting LocationRequest
-        // on FusedLocationClient
-        /*
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        mFusedLocationClient?.requestLocationUpdates(
-            mLocationRequest,
-            mLocationCallback,
-            Looper.myLooper()
-        )*/
-    }
-
-    private val mLocationCallback: LocationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            mLastLocation = locationResult.lastLocation
+    private fun renewLocation() {
+        mLastRequest = LocalDateTime.now()
+        if (mProvider != "manual") {
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            mLocationManager!!.getCurrentLocation(mProvider ?: "gps", null, ContextCompat.getMainExecutor(this),
+                { location ->
+                    if (mProvider != "manual") {
+                        mLastLocation = location
+                    }; })
         }
     }
 
@@ -244,6 +256,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun chooseNewProvider() {
+        var allProviders = mLocationManager!!.getAllProviders()
+        allProviders.add("manual")
+        var n = 0
+        for (s in allProviders) {
+            if (s == mProvider) {
+                break;
+            }
+            n++;
+        }
+        n++;
+        n %= allProviders.size;
+        mProvider = allProviders[n]
+
+        renewLocation()
+    }
+
     fun otl(view: View, motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_DOWN) {
 
@@ -269,6 +298,17 @@ class MainActivity : AppCompatActivity() {
                 mOtlDown = true
                 mOtlChanged = true
                 updateDrawing()
+            }
+            else {
+                dcx = motionEvent.x - 0.0;
+                dcx *= dcx;
+                dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 - width / 2.0)
+                dcy *= dcy
+                dc = sqrt(dcx+dcy)
+                if (dc < width / 10) {
+                    chooseNewProvider()
+                    updateDrawing()
+                }
             }
         }
         else if (motionEvent.action == MotionEvent.ACTION_UP){
@@ -313,17 +353,24 @@ class MainActivity : AppCompatActivity() {
          //actionBar?.hide();
          //supportActionBar?.hide();
 
-        //mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        //getLastLocation();
         mImageView = findViewById<View>(R.id.imageView) as ImageView
         mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
             this.otl(view, motionEvent)
             return@OnTouchListener true
         })
 
+        mLocationManager = this.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager?
+
+        var allProviders = mLocationManager!!.getAllProviders()
+        allProviders.add("manual")
+        val criteria = Criteria()
+        mProvider = mLocationManager!!.getBestProvider(criteria,false)
+
+        renewLocation()
+
         mHandler.post(runVeryOften);
     }
 
-    external fun do_all(lat:Double, lng:Double, offset:Double, width:Int) : IntArray
+    external fun do_all(lat:Double, lng:Double, offset:Double, width:Int, provider:String) : IntArray
     external fun do_globe(lat:Double, lng:Double, width:Int) : IntArray
 }

@@ -2232,6 +2232,22 @@ void do_debug_info(Canvas * canvas, double JD) {
          COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
 }
 
+/// @brief Draw provider information
+///
+/// upper left
+///
+/// @param canvas The Canvas to draw on
+/// @param provider The current location provider
+/// @return void
+void do_provider_info(Canvas * canvas, const char *provider) {
+   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+                        COLOR_MAGENTA, COLOR_BLACK, provider, 1, 3);
+   int w = wh >> 16;
+   int h = wh & 0xFFFF;
+   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
+               h / 2 + 20, COLOR_MAGENTA, COLOR_BLACK, provider, 1, 3);
+}
+
 void initialize_all(void) {
    event_spot = 0;
    timedrawnspot = 0;
@@ -2331,7 +2347,7 @@ void set_italic_med(int width) {
 /// @param lng The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lng, double offset, int width) {
+Canvas *do_all(double lat, double lng, double offset, int width, const char *provider) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
@@ -2453,6 +2469,8 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    //do_weather(canvas);
 
    do_debug_info(canvas, JD);
+
+   do_provider_info(canvas, provider);
 
    return canvas;
 }

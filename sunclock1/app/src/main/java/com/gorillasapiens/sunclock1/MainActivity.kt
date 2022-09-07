@@ -132,44 +132,12 @@ class MainActivity : AppCompatActivity() {
                 mImageView?.setImageDrawable(mSunclockDrawable)
                 mImageView?.invalidate()
 
-                getLastLocation()
+                renewLocation()
 
                 mDrawableInitialized = true
             }
         }
         mHasFocus = hasFocus;
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
-        // check if permissions are given
-        if (checkPermissions()) {
-            // check if location is enabled
-            if (isLocationEnabled()) {
-                // getting last
-                // location from
-                // FusedLocationClient
-                // object
-
-                /*
-                mFusedLocationClient!!.lastLocation.addOnCompleteListener { task ->
-                    val location = task.result
-                    if (location == null) {
-                        requestNewLocationData()
-                    }
-                }
-                */
-            } else {
-                Toast.makeText(this, "Please turn on" + " your location...", Toast.LENGTH_LONG)
-                    .show()
-                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                startActivity(intent)
-            }
-        } else {
-            // if permissions aren't available,
-            // request for permissions
-            requestPermissions()
-        }
     }
 
     private fun renewLocation() {
@@ -190,6 +158,7 @@ class MainActivity : AppCompatActivity() {
                 //                                          int[] grantResults)
                 // to handle the case where the user grants the permission. See the documentation
                 // for ActivityCompat#requestPermissions for more details.
+                requestPermissions()
                 return
             }
             mLocationManager!!.getCurrentLocation(mProvider ?: "gps", null, ContextCompat.getMainExecutor(this),
@@ -244,7 +213,8 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_ID) {
             if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getLastLocation()
+                chooseBestProvider()
+                renewLocation()
             }
         }
     }
@@ -252,7 +222,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         if (checkPermissions()) {
-            getLastLocation()
+            renewLocation()
         }
     }
 
@@ -292,7 +262,7 @@ class MainActivity : AppCompatActivity() {
             dcy *= dcy
             var dc = sqrt(dcx+dcy)
 
-            if (dc < width / 2.0) {
+            if (mProvider == "manual" && dc < width / 2.0) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
                 mOtlDown = true
@@ -340,6 +310,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun chooseBestProvider() {
+        var allProviders = mLocationManager!!.getAllProviders()
+        allProviders.add("manual")
+        val criteria = Criteria()
+        mProvider = mLocationManager!!.getBestProvider(criteria,false)
+        if (mProvider == null) {
+            mProvider = "manual"
+        }
+
+        renewLocation()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -361,12 +343,7 @@ class MainActivity : AppCompatActivity() {
 
         mLocationManager = this.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager?
 
-        var allProviders = mLocationManager!!.getAllProviders()
-        allProviders.add("manual")
-        val criteria = Criteria()
-        mProvider = mLocationManager!!.getBestProvider(criteria,false)
-
-        renewLocation()
+        chooseBestProvider()
 
         mHandler.post(runVeryOften);
     }

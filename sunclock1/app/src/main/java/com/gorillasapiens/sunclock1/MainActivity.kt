@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
                 0.0,
                 Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                 mProvider ?: "<null>")
-            mSunclockDrawable?.setThing(something);
+            mSunclockDrawable?.setThing(something)
         }
 
         mImageView?.invalidate()

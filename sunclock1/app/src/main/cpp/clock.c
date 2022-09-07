@@ -723,6 +723,10 @@ do_planet_band(Canvas * canvas, double up, double now,
                unsigned int color, double radius, EventCategory category,
                int mode) {
    double up_angle = frac(up) * 360.0;
+   int need_character = mode & 2; // draw characters at ticks
+
+   char sym[2] = { 0, 0 };
+   sym[0] = 'C' + (category - CAT_MERCURY);
 
    double last = now - .5;
    int is_up = -1;
@@ -782,15 +786,13 @@ do_planet_band(Canvas * canvas, double up, double now,
                      double x, y;
                      double angle =
                         frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                     char sym[2] = { 0, 0 };
-
-                     sym[0] = 'C' + (category - CAT_MERCURY);
 
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     if (mode & 2) {
+                     if (need_character) {
                         text_canvas(canvas, ASTRO_FONT, x, y, color,
                                     COLOR_BLACK, sym, 1, 1);
+                        need_character = 0;
                      }
                   }
                   // fallthrough
@@ -806,14 +808,29 @@ do_planet_band(Canvas * canvas, double up, double now,
                      x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
                      y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
 
+                     double x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
+                     double y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
+
                      if (mode & 2) {
                         line_canvas(canvas, x1, y1, x2, y2, color);
+                     }
+                     if (need_character) {
+                        text_canvas(canvas, ASTRO_FONT, x, y, color,
+                                    COLOR_BLACK, sym, 1, 1);
+                        need_character = 0;
                      }
                   }
                   break;
             }
          }
       }
+   }
+   if (need_character && is_up) {
+      // shazbat!
+      double x = (canvas->w / 2) + (radius+15) * cos(DEG2RAD((int)(category-CAT_MERCURY) * (360/5)));
+      double y = (canvas->h / 2) + (radius+15) * sin(DEG2RAD((int)(category-CAT_MERCURY) * (360/5)));
+      text_canvas(canvas, ASTRO_FONT, x, y, color,
+                  COLOR_BLACK, sym, 1, 1);
    }
 }
 

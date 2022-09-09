@@ -152,6 +152,12 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
    "lunar", "mercury", "venus", "mars", "jupiter", "saturn"
 };
 
+#define COLOR_MERCURY   COLOR_GRAY
+#define COLOR_VENUS     COLOR_WHITE
+#define COLOR_MARS      COLOR_RED
+#define COLOR_JUPITER   COLOR_ORANGE
+#define COLOR_SATURN    COLOR_LIGHTBLUE // RGB(0xea, 0xd6, 0xb8)
+
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "down", "rise", "transit", "set", "up" };
 
@@ -2182,26 +2188,26 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 1);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 1);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 1);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 1);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 1);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
 
    r -= SCALE(80);
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 2);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 2);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 2);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 2);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 2);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 2);
 }
 
 /// @brief Draw debugging information

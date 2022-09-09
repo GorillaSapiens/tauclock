@@ -90,7 +90,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon) {
 /// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_globe(double lat, double lon, int width) {
+Canvas *do_globe(double lat, double lon, double spin, int width) {
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
@@ -100,7 +100,7 @@ Canvas *do_globe(double lat, double lon, int width) {
 
    double xspin = -lat * M_PI / 180.0;
    double yspin = -lon * M_PI / 180.0;
-   double zspin = 0.0 * M_PI / 180.0;
+   double zspin = -spin * M_PI / 180.0; // TODO FIX is the sign right?
 
    double coshalfx = cos(xspin/2.0);
    double sinhalfx = sin(xspin/2.0);
@@ -124,7 +124,7 @@ Canvas *do_globe(double lat, double lon, int width) {
          double yy = (y - radius) + 0.5;
          double zz = (radius*radius) - (xx * xx) - (yy * yy);
 
-         if (zz >= 0.0) {
+         if (zz >= 0.0) {  // if it's less than zero, this bit of the screen is off the globe
             zz = -sqrt(zz); // negative, because right handed
 
             quat qp = { 0, xx, yy, zz };
@@ -164,7 +164,7 @@ Canvas *do_globe(double lat, double lon, int width) {
 
             int c = palette[bitmap[by][bx]] | 0xff000000;
 
-	    poke_canvas(canvas, x, y, c);
+	        poke_canvas(canvas, x, y, c);
          }
       }
    }

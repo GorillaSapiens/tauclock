@@ -19,6 +19,6 @@
 
 #include "draw.h"
 
-Canvas *do_all(double lat, double lng, double offset, int width, const char *provider);
+Canvas *do_all(double lat, double lon, double offset, int width, const char *provider);
 
 #endif

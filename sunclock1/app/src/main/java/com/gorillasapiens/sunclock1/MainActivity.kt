@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
                 var something = do_globe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
+                    0.0,
                     Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024));
                 mSunclockDrawable?.setThing(something)
                 mImageView?.invalidate()
@@ -410,6 +411,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    external fun do_all(lat:Double, lng:Double, offset:Double, width:Int, provider:String) : IntArray
-    external fun do_globe(lat:Double, lng:Double, width:Int) : IntArray
+    external fun do_all(lat:Double, lon:Double, offset:Double, width:Int, provider:String) : IntArray
+    external fun do_globe(lat:Double, lon:Double, spin:Double, width:Int) : IntArray
 }

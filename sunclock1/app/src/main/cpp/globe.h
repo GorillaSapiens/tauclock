@@ -3,6 +3,6 @@
 
 #include "draw.h"
 
-Canvas *do_globe(double lat, double lng, int width);
+Canvas *do_globe(double lat, double lon, double spin, int width);
 
 #endif

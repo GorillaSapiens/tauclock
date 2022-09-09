@@ -462,19 +462,19 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
       NS = 'S';
    }
 
-   double lng = observer->lng;
+   double lon = observer->lng;
    char EW = 'E';
-   if (lng < 0.0) {
-      lng = -lng;
+   if (lon < 0.0) {
+       lon = -lon;
       EW = 'W';
    }
    char *degree = "\u00B0";     // in utf8, degree symbol
 
-   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
+   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
       sprintf(location, "INVALID_LOCATION");
    }
    else {
-      sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
+      sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree, EW);
    }
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
                canvas->h / 2 + SCALE(48), COLOR_WHITE, COLOR_BLACK, location, 1,
@@ -2367,10 +2367,10 @@ void set_italic_med(int width) {
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
-/// @param lng The observer's Longitude in degrees, West is negative
+/// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lng, double offset, int width, const char *provider) {
+Canvas *do_all(double lat, double lon, double offset, int width, const char *provider) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
@@ -2395,7 +2395,7 @@ Canvas *do_all(double lat, double lng, double offset, int width, const char *pro
 
    // observer's location
    observer.lat = lat;          // degrees, North is positive
-   observer.lng = lng;          // degrees, East is positive
+   observer.lng = lon;          // degrees, East is positive
 
    // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
@@ -2426,7 +2426,7 @@ Canvas *do_all(double lat, double lng, double offset, int width, const char *pro
    int mid = canvas->w / 2;
 
    int goodloc = 1;
-   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
+   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
       goodloc = 0;
 
       time_t present;

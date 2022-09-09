@@ -4,32 +4,28 @@ package com.gorillasapiens.sunclock1
 //import android.R
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Criteria
 import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.provider.Settings
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getMainExecutor
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.wozniakconsulting.sunclock1.R
+//import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.sqrt
+
 
 class MainActivity : AppCompatActivity() {
     var mDrawableInitialized = false
@@ -42,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     var mLastLocation : Location? = null
     var mLastLastLocation : Location? = null
     var mImageView : ImageView? = null
+    var mNeedUpdate : Boolean = true
 
     var mOtlDown : Boolean = false
     var mOtlChanged : Boolean = false
@@ -51,7 +48,10 @@ class MainActivity : AppCompatActivity() {
     var mOtlLon : Double = 0.0
 
     var mLocationManager : LocationManager? = null
-    var mProvider : String? = null
+    var mProviderName : String? = null
+    var mNeedDisable : Boolean = false
+
+    //var engine: TimeZoneEngine = TimeZoneEngine.initialize()
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -63,6 +63,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateDrawing() {
+        if (!mDrawableInitialized) {
+            return
+        }
+
         if (mOtlDown) {
             if (mOtlChanged || mLastLocation != mLastLastLocation) {
                 var something = do_globe(
@@ -82,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                 mLastLocation?.longitude ?: -181.0,
                 0.0,
                 Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                mProvider ?: "<null>")
+                mProviderName ?: "<null>")
             mSunclockDrawable?.setThing(something)
             mImageView?.invalidate()
         }
@@ -94,11 +98,6 @@ class MainActivity : AppCompatActivity() {
         override fun run() {
             if (mHasFocus) {
                 val current = LocalDateTime.now();
-
-                if ((current - Duration.ofMinutes(20)) > mLastRequest) {
-                    renewLocation()
-                    mLastRequest = current;
-                }
 
                 if (mLastLastLocation != mLastLocation ||
                     (current - Duration.ofMinutes(1)) > mLastTime ||
@@ -112,10 +111,6 @@ class MainActivity : AppCompatActivity() {
 
                     mLastTime = current
                     mLastLastLocation = mLastLocation
-                }
-
-                if (mLastRequest + Duration.ofMinutes(5) < LocalDateTime.now()) {
-                    renewLocation()
                 }
             }
 
@@ -134,15 +129,13 @@ class MainActivity : AppCompatActivity() {
                 mImageView?.setImageDrawable(mSunclockDrawable)
                 mImageView?.invalidate()
 
-                renewLocation()
-
                 mDrawableInitialized = true
             }
         }
         mHasFocus = hasFocus;
     }
 
-    private fun renewLocation() {
+    private fun _renewLocation() {
         mLastRequest = LocalDateTime.now()
         if (ActivityCompat.checkSelfPermission(
                 this,
@@ -162,15 +155,20 @@ class MainActivity : AppCompatActivity() {
             requestPermissions()
             return
         }
-        if (mProvider != "manual") {
-            mLocationManager!!.getCurrentLocation(mProvider ?: "gps",
-                null,
-                ContextCompat.getMainExecutor(this),
-                { location ->
-                    if (mProvider != "manual") {
-                        mLastLocation = location
-                    };
-                })
+        if (mProviderName != "manual") {
+            try {
+                mLocationManager!!.getCurrentLocation(mProviderName ?: "gps",
+                    null,
+                    ContextCompat.getMainExecutor(this),
+                    { location ->
+                        if (mProviderName != "manual") {
+                            mLastLocation = location
+                        };
+                    })
+            }
+            catch (e: Exception) {
+                Log.d("EXCEPTION", e.toString())
+            }
         }
     }
 
@@ -218,49 +216,60 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_ID) {
             if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                chooseBestProvider()
-                renewLocation()
+                selectBestProvider()
+                startProvider()
             }
         }
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val manager = this.packageManager
+        val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
+
+        actionBar?.setTitle("ταμ clock v" + info.versionName);
+        supportActionBar?.setTitle("ταμ clock v" + info.versionName);
+
+        //actionBar?.hide();
+        //supportActionBar?.hide();
+
+        mImageView = findViewById<View>(R.id.imageView) as ImageView
+        mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
+            this.otl(view, motionEvent)
+            return@OnTouchListener true
+        })
+
+        mLocationManager = this.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager?
+
+        selectBestProvider()
+
+        mHandler.post(runVeryOften);
+    }
+
+    override fun onStart() {
+        super.onStart();
+        if (!checkPermissions()) {
+            requestPermissions()
+        }
+    }
     override fun onResume() {
         super.onResume()
         if (checkPermissions()) {
-            renewLocation()
+            startProvider()
         }
     }
 
-    fun chooseNewProvider() {
-        var allProviders = mLocationManager!!.getAllProviders()
-        allProviders.add("manual")
-        var n = 0
-        for (s in allProviders) {
-            if (s == mProvider) {
-                break;
-            }
-            n++;
+    override fun onPause() {
+        super.onPause()
+        if (checkPermissions()) {
+            stopProvider()
         }
-        n++;
-        n %= allProviders.size;
-        mProvider = allProviders[n]
-
-        var something = arrayOf<Int>().toIntArray()
-        mSunclockDrawable?.setThing(something)
-        mImageView?.invalidate()
-
-        renewLocation()
     }
 
-    fun otl(view: View, motionEvent: MotionEvent) {
+    private fun otl(view: View, motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-
-            if (mLastLocation == null) {
-                mLastLocation = Location("manual")
-                mLastLocation?.latitude = 0.0
-                mLastLocation?.longitude = 0.0
-            }
-
             mOtlX = motionEvent.x
             mOtlY = motionEvent.y
             var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
@@ -271,7 +280,7 @@ class MainActivity : AppCompatActivity() {
             dcy *= dcy
             var dc = sqrt(dcx+dcy)
 
-            if (mProvider == "manual" && dc < width / 2.0) {
+            if (mProviderName == "manual" && dc < width / 2.0) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
                 mOtlDown = true
@@ -319,46 +328,86 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun chooseBestProvider() {
+    class MyLocationListener(mainactivity: MainActivity) : LocationListener {
+        var context = mainactivity
+
+        override fun onLocationChanged(location: Location) {
+            context.mLastLocation = location
+            context.mNeedUpdate = true
+        }
+
+        override fun onFlushComplete(requestCode: Int) {
+        }
+
+        override fun onProviderDisabled(provider: String) {
+            var location = Location(context.mProviderName)
+            location.latitude = 91.0
+            location.longitude = 361.0
+            context.mLastLocation = location
+            context.mNeedUpdate = true
+        }
+
+        override fun onProviderEnabled(provider: String) {
+        }
+
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
+        }
+    }
+    private val mLocationListener = MyLocationListener(this@MainActivity)
+
+    private fun startProvider() {
+        mNeedDisable = false;
+        if (mProviderName != null && mProviderName != "manual") {
+            if (!(mLocationManager?.isProviderEnabled(mProviderName ?: "gps") ?: true)) {
+                //val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                //startActivity(settingsIntent)
+            }
+
+            if (checkPermissions()) {
+                mLocationManager?.requestLocationUpdates(
+                    mProviderName ?: "gps",
+                    10000,          // 10-second interval.
+                    10.0f,             // 10 meters.
+                    mLocationListener
+                );
+            }
+        }
+    }
+
+    private fun stopProvider() {
+        if (mProviderName != null && mProviderName != "manual") {
+            mLocationManager?.removeUpdates(mLocationListener);
+        }
+    }
+
+    private fun chooseNewProvider() {
+        stopProvider();
+
+        var allProviders = mLocationManager!!.getProviders(true)
+        allProviders.add("manual")
+        var n = 0
+        for (s in allProviders) {
+            if (s == mProviderName) {
+                break;
+            }
+            n++;
+        }
+        n++;
+        n %= allProviders.size;
+        mProviderName = allProviders[n]
+
+        startProvider()
+        mNeedUpdate = true
+    }
+
+    private fun selectBestProvider() {
         var allProviders = mLocationManager!!.getAllProviders()
         allProviders.add("manual")
         val criteria = Criteria()
-        mProvider = mLocationManager!!.getBestProvider(criteria,false)
-        if (mProvider == null) {
-            mProvider = "manual"
+        mProviderName = mLocationManager!!.getBestProvider(criteria,false)
+        if (mProviderName == null) {
+            mProviderName = "manual"
         }
-
-        var something = arrayOf<Int>().toIntArray()
-        mSunclockDrawable?.setThing(something)
-        mImageView?.invalidate()
-
-        renewLocation()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val manager = this.packageManager
-        val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
-
-         actionBar?.setTitle("ταμ clock v" + info.versionName);
-         supportActionBar?.setTitle("ταμ clock v" + info.versionName);
-
-         //actionBar?.hide();
-         //supportActionBar?.hide();
-
-        mImageView = findViewById<View>(R.id.imageView) as ImageView
-        mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
-            this.otl(view, motionEvent)
-            return@OnTouchListener true
-        })
-
-        mLocationManager = this.getSystemService(android.content.Context.LOCATION_SERVICE) as LocationManager?
-
-        chooseBestProvider()
-
-        mHandler.post(runVeryOften);
     }
 
     external fun do_all(lat:Double, lng:Double, offset:Double, width:Int, provider:String) : IntArray

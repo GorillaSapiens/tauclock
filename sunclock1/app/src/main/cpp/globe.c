@@ -175,6 +175,9 @@ Canvas *do_globe(double lat, double lon, int width) {
    }
 
    arc_canvas(canvas, radius, radius, radius/10,
+              20, COLOR_BLACK,
+              0.0, 360.0);
+   arc_canvas(canvas, radius, radius, radius/10,
                     5, COLOR_MAGENTA,
                     0.0, 360.0);
 

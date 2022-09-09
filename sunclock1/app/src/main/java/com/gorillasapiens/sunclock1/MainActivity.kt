@@ -269,35 +269,64 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isCloseToCenter(motionEvent: MotionEvent) : Boolean {
+        var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+        var dcx = motionEvent.x - (mImageView?.width ?: 1024) / 2.0
+        var dcy = motionEvent.y - (mImageView?.height ?: 1024) / 2.0
+
+        dcx *= dcx
+        dcy *= dcy
+        var dc = sqrt(dcx+dcy)
+
+        return (dc < (width / 2))
+    }
+
+    private fun isCloseToProvider(motionEvent: MotionEvent) : Boolean {
+        var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+        var dcx = motionEvent.x
+        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 - width / 2.0)
+
+        dcx *= dcx
+        dcy *= dcy
+        var dc = sqrt(dcx+dcy)
+
+        return (dc < (width / 5))
+    }
+
+    private fun isCloseToTimeZone(motionEvent: MotionEvent) : Boolean {
+        var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+        var dcx = motionEvent.x
+        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 + width / 2.0)
+
+        dcx *= dcx
+        dcy *= dcy
+        var dc = sqrt(dcx+dcy)
+
+        return (dc < (width / 5))
+    }
+
     private fun otl(view: View, motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_DOWN) {
             mOtlX = motionEvent.x
             mOtlY = motionEvent.y
-            var width = Math.min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-            var dcx = motionEvent.x - (mImageView?.width ?: 1024) / 2.0
-            var dcy = motionEvent.y - (mImageView?.height ?: 1024) / 2.0
 
-            dcx *= dcx
-            dcy *= dcy
-            var dc = sqrt(dcx+dcy)
-
-            if (mProviderName == "manual" && dc < width / 2.0) {
+            if (mProviderName == "manual" && isCloseToCenter(motionEvent)) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
                 mOtlDown = true
                 mOtlChanged = true
                 updateDrawing()
             }
-            else {
-                dcx = motionEvent.x - 0.0;
-                dcx *= dcx;
-                dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 - width / 2.0)
-                dcy *= dcy
-                dc = sqrt(dcx+dcy)
-                if (dc < width / 10) {
-                    chooseNewProvider()
-                    updateDrawing()
-                }
+            else if (isCloseToProvider(motionEvent)){
+                chooseNewProvider()
+                updateDrawing()
+            }
+            else if (isCloseToTimeZone(motionEvent)){
+                chooseNewProvider()
+                updateDrawing()
             }
         }
         else if (motionEvent.action == MotionEvent.ACTION_UP){

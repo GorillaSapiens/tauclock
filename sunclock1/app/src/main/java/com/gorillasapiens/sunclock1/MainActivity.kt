@@ -317,6 +317,10 @@ class MainActivity : AppCompatActivity() {
                     mOtlDown = false
                     updateDrawing()
                 }
+                MotionEvent.ACTION_POINTER_UP -> {
+                    mOtlDown = false
+                    updateDrawing()
+                }
                 MotionEvent.ACTION_MOVE -> {
                     val proposedLocation = Location("manual")
 

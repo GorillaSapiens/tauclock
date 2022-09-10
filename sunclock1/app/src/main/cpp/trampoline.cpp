@@ -12,9 +12,9 @@ extern "C" {
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_gorillasapiens_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz, jdouble lat,
-                                                       jdouble lon, jdouble offset,
-                                                       jint width, jstring provider) {
+Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env, jobject thiz, jdouble lat,
+                                                     jdouble lon, jdouble offset,
+                                                     jint width, jstring provider) {
     jboolean garbage = false;
     const char *str = env->GetStringUTFChars(provider, &garbage);
     Canvas *canvas = do_all(lat, lon, offset, width, str);
@@ -34,7 +34,7 @@ Java_com_gorillasapiens_sunclock1_MainActivity_do_1all(JNIEnv *env, jobject thiz
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_gorillasapiens_sunclock1_MainActivity_do_1globe(JNIEnv *env, jobject thiz, jdouble lat,
+Java_com_gorillasapiens_sunclock1_MainActivity_doGlobe(JNIEnv *env, jobject thiz, jdouble lat,
                                                        jdouble lon,
                                                        jdouble spin,
                                                        jint width) {

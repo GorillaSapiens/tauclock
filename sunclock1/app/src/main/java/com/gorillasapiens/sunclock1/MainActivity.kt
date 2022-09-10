@@ -14,6 +14,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -264,7 +265,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun otl(motionEvent: MotionEvent) {
-        if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+        val action = motionEvent.getAction() and MotionEvent.ACTION_MASK
+
+        if (action == MotionEvent.ACTION_DOWN) {
             if (isCloseToProvider(motionEvent)){
                 chooseNewProvider()
                 updateDrawing()
@@ -277,7 +280,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         if (mProviderName == "manual") {
-            if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+            if (action == MotionEvent.ACTION_DOWN) {
                 if (isCloseToCenter(motionEvent)) {
                     mOtlX = motionEvent.x
                     mOtlY = motionEvent.y
@@ -301,18 +304,24 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            if (motionEvent.action == MotionEvent.ACTION_POINTER_DOWN) {
+            if (action == MotionEvent.ACTION_POINTER_DOWN) {
                 val x0 = motionEvent.getX(0)
                 val y0 = motionEvent.getY(0)
                 val x1 = motionEvent.getX(1)
                 val y1 = motionEvent.getY(1)
                 mOtlSpinBase = atan2(y1 - y0, x1 - x0)
+
+                Log.d("base", x0.toString() + " " +
+                        y0.toString() + " " +
+                        x1.toString() + " " +
+                        y1.toString() + " " +
+                        mOtlSpinBase.toString())
             }
-            else if (motionEvent.action == MotionEvent.ACTION_UP){
+            else if (action == MotionEvent.ACTION_UP){
                 mOtlDown = false
                 updateDrawing()
             }
-            else if (motionEvent.action == MotionEvent.ACTION_MOVE) {
+            else if (action == MotionEvent.ACTION_MOVE) {
                 val proposedLocation = Location("manual")
 
                 if (motionEvent.pointerCount > 1) {
@@ -325,6 +334,12 @@ class MainActivity : AppCompatActivity() {
                     proposedLocation.latitude = mOtlLat
                     proposedLocation.longitude = mOtlLon
                     proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
+
+                    Log.d("spin", x0.toString() + " " +
+                            y0.toString() + " " +
+                            x1.toString() + " " +
+                            y1.toString() + " " +
+                            spin.toString())
                 }
                 else {
                     val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)

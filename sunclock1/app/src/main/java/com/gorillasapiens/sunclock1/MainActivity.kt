@@ -14,7 +14,6 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -29,7 +28,7 @@ import kotlin.math.*
 class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
     private val mPermissionID = 44
-    private var mSunclockDrawable: SunclockDrawable? = null
+    private var mSunClockDrawable: SunclockDrawable? = null
     var mHasFocus = false
     var mLastTime = (LocalDateTime.now() - Duration.ofDays(1))!!
     var mLastLocation : Location? = null
@@ -74,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                     mLastLocation?.altitude ?: 0.0,
                     min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
                 )
-                mSunclockDrawable?.setThing(something)
+                mSunClockDrawable?.setThing(something)
                 mImageView?.invalidate()
 
                 mLastLastLocation = mLastLocation
@@ -88,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                 0.0,
                 min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                 mProviderName ?: "<null>")
-            mSunclockDrawable?.setThing(something)
+            mSunClockDrawable?.setThing(something)
             mImageView?.invalidate()
         }
 
@@ -123,11 +122,11 @@ class MainActivity : AppCompatActivity() {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
             if (!mDrawableInitialized) {
-                mSunclockDrawable = SunclockDrawable(
+                mSunClockDrawable = SunclockDrawable(
                     mImageView?.width ?: 1024,
                     mImageView?.height ?: 1024)
 
-                mImageView?.setImageDrawable(mSunclockDrawable)
+                mImageView?.setImageDrawable(mSunClockDrawable)
                 mImageView?.invalidate()
 
                 mDrawableInitialized = true
@@ -265,7 +264,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun otl(motionEvent: MotionEvent) {
-        val action = motionEvent.getAction() and MotionEvent.ACTION_MASK
+        val action = motionEvent.action and MotionEvent.ACTION_MASK
 
         if (action == MotionEvent.ACTION_DOWN) {
             if (isCloseToProvider(motionEvent)){
@@ -287,11 +286,10 @@ class MainActivity : AppCompatActivity() {
 
                     mOtlLat = mLastLocation?.latitude ?: 0.0
                     mOtlLon = mLastLocation?.longitude ?: 0.0
-                    if (mLastLocation?.provider == "manual") {
-                        mOtlSpin = mLastLocation!!.altitude
-                    }
-                    else {
-                        mOtlSpin = 0.0
+                    mOtlSpin = if (mLastLocation?.provider == "manual") {
+                        mLastLocation!!.altitude
+                    } else {
+                        0.0
                     }
                     mOtlDown = true
                     mOtlChanged = true
@@ -304,71 +302,72 @@ class MainActivity : AppCompatActivity() {
                 return
             }
 
-            if (action == MotionEvent.ACTION_POINTER_DOWN) {
-                val x0 = motionEvent.getX(0)
-                val y0 = motionEvent.getY(0)
-                val x1 = motionEvent.getX(1)
-                val y1 = motionEvent.getY(1)
-                mOtlSpinBase = atan2(y1 - y0, x1 - x0)
-            }
-            else if (action == MotionEvent.ACTION_UP){
-                mOtlDown = false
-                updateDrawing()
-            }
-            else if (action == MotionEvent.ACTION_MOVE) {
-                val proposedLocation = Location("manual")
-
-                if (motionEvent.pointerCount > 1) {
+            when (action) {
+                MotionEvent.ACTION_POINTER_DOWN -> {
                     val x0 = motionEvent.getX(0)
                     val y0 = motionEvent.getY(0)
                     val x1 = motionEvent.getX(1)
                     val y1 = motionEvent.getY(1)
-                    val spin = atan2(y1 - y0, x1 - x0)
-
-                    proposedLocation.latitude = mOtlLat
-                    proposedLocation.longitude = mOtlLon
-                    proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
+                    mOtlSpinBase = atan2(y1 - y0, x1 - x0)
                 }
-                else {
-                    val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)
-                    val deltax = motionEvent.x - mOtlX
-                    val deltay = motionEvent.y - mOtlY
-
-                    proposedLocation.latitude = mOtlLat +  90.0 * (deltay * cos(mOtlSpin * PI / 180.0) - deltax * sin(mOtlSpin * PI / 180.0)) / width
-                    proposedLocation.longitude = mOtlLon + 90.0 * (deltay * sin(mOtlSpin * PI / 180.0) - deltax * cos(mOtlSpin * PI / 180.0)) / (width)
-                    proposedLocation.altitude = mOtlSpin
-
-                    if (proposedLocation.latitude > 90.0) {
-                        proposedLocation.latitude = 90.0 - (proposedLocation.latitude - 90.0)
-                        proposedLocation.longitude += 180.0
-                        proposedLocation.altitude += 180.0
-                    }
-                    if (proposedLocation.latitude < -90.0) {
-                        proposedLocation.latitude = -90.0 - (proposedLocation.latitude + 90.0)
-                        proposedLocation.longitude += 180.0
-                        proposedLocation.altitude += 180.0
-                    }
-                    while (proposedLocation.longitude < -180.0) {
-                        proposedLocation.longitude += 360.0
-                    }
-                    while (proposedLocation.longitude > 180.0) {
-                        proposedLocation.longitude -= 360.0
-                    }
-                    while (proposedLocation.altitude < -180.0) {
-                        proposedLocation.altitude += 360.0
-                    }
-                    while (proposedLocation.altitude > 180.0) {
-                        proposedLocation.altitude -= 360.0
-                    }
+                MotionEvent.ACTION_UP -> {
+                    mOtlDown = false
+                    updateDrawing()
                 }
-                mLastLocation = proposedLocation
-                updateDrawing()
+                MotionEvent.ACTION_MOVE -> {
+                    val proposedLocation = Location("manual")
+
+                    if (motionEvent.pointerCount > 1) {
+                        val x0 = motionEvent.getX(0)
+                        val y0 = motionEvent.getY(0)
+                        val x1 = motionEvent.getX(1)
+                        val y1 = motionEvent.getY(1)
+                        val spin = atan2(y1 - y0, x1 - x0)
+
+                        proposedLocation.latitude = mOtlLat
+                        proposedLocation.longitude = mOtlLon
+                        proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
+                    } else {
+                        val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)
+                        val deltaX = motionEvent.x - mOtlX
+                        val deltaY = motionEvent.y - mOtlY
+
+                        proposedLocation.latitude = mOtlLat +  90.0 * (deltaY * cos(mOtlSpin * PI / 180.0) - deltaX * sin(mOtlSpin * PI / 180.0)) / width
+                        proposedLocation.longitude = mOtlLon + 90.0 * (deltaY * sin(mOtlSpin * PI / 180.0) - deltaX * cos(mOtlSpin * PI / 180.0)) / (width)
+                        proposedLocation.altitude = mOtlSpin
+
+                        if (proposedLocation.latitude > 90.0) {
+                            proposedLocation.latitude = 90.0 - (proposedLocation.latitude - 90.0)
+                            proposedLocation.longitude += 180.0
+                            proposedLocation.altitude += 180.0
+                        }
+                        if (proposedLocation.latitude < -90.0) {
+                            proposedLocation.latitude = -90.0 - (proposedLocation.latitude + 90.0)
+                            proposedLocation.longitude += 180.0
+                            proposedLocation.altitude += 180.0
+                        }
+                        while (proposedLocation.longitude < -180.0) {
+                            proposedLocation.longitude += 360.0
+                        }
+                        while (proposedLocation.longitude > 180.0) {
+                            proposedLocation.longitude -= 360.0
+                        }
+                        while (proposedLocation.altitude < -180.0) {
+                            proposedLocation.altitude += 360.0
+                        }
+                        while (proposedLocation.altitude > 180.0) {
+                            proposedLocation.altitude -= 360.0
+                        }
+                    }
+                    mLastLocation = proposedLocation
+                    updateDrawing()
+                }
             }
         }
     }
 
-    class MyLocationListener(mainactivity: MainActivity) : LocationListener {
-        private var context = mainactivity
+    class MyLocationListener(mainActivity: MainActivity) : LocationListener {
+        private var context = mainActivity
 
         override fun onLocationChanged(location: Location) {
             context.mLastLocation = location

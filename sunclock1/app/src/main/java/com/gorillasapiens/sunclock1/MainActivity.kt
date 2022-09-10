@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity() {
 
         if (mOtlDown) {
             if (mOtlChanged || mLastLocation != mLastLastLocation) {
+                if (mProviderName != "manual") {
+                    mLastLocation?.altitude = 0.0
+                }
                 val something = doGlobe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
@@ -327,13 +330,22 @@ class MainActivity : AppCompatActivity() {
                         proposedLocation.latitude = mOtlLat
                         proposedLocation.longitude = mOtlLon
                         proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
+
+                        while (proposedLocation.altitude < -180.0) {
+                            proposedLocation.altitude += 360.0
+                        }
+                        while (proposedLocation.altitude > 180.0) {
+                            proposedLocation.altitude -= 360.0
+                        }
+
                     } else {
                         val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)
                         val deltaX = motionEvent.x - mOtlX
                         val deltaY = motionEvent.y - mOtlY
 
-                        proposedLocation.latitude = mOtlLat +  90.0 * (deltaY * cos(mOtlSpin * PI / 180.0) - deltaX * sin(mOtlSpin * PI / 180.0)) / width
-                        proposedLocation.longitude = mOtlLon + 90.0 * (deltaY * sin(mOtlSpin * PI / 180.0) - deltaX * cos(mOtlSpin * PI / 180.0)) / (width)
+                        // TODO FIX the signs in the next 2 lines seem off.  it works as desired, but why?
+                        proposedLocation.latitude = mOtlLat +  90.0 * (-deltaX * sin(mOtlSpin * PI / 180.0) + deltaY * cos(mOtlSpin * PI / 180.0)) / width
+                        proposedLocation.longitude = mOtlLon + 90.0 * (-deltaY * sin(mOtlSpin * PI / 180.0) - deltaX * cos(mOtlSpin * PI / 180.0)) / (width)
                         proposedLocation.altitude = mOtlSpin
 
                         if (proposedLocation.latitude > 90.0) {

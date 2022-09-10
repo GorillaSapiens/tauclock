@@ -22,8 +22,7 @@ import androidx.core.app.ActivityCompat
 import com.wozniakconsulting.sunclock1.R
 import java.time.Duration
 import java.time.LocalDateTime
-import kotlin.math.min
-import kotlin.math.sqrt
+import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -41,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private var mOtlChanged : Boolean = false
     private var mOtlX : Float = 0.0f
     private var mOtlY : Float = 0.0f
+    private var mOtlSpinBase: Float = 0.0f
     private var mOtlLat : Double = 0.0
     private var mOtlLon : Double = 0.0
     private var mOtlSpin : Double = 0.0
@@ -265,69 +265,102 @@ class MainActivity : AppCompatActivity() {
 
     private fun otl(motionEvent: MotionEvent) {
         if (motionEvent.action == MotionEvent.ACTION_DOWN) {
-            mOtlX = motionEvent.x
-            mOtlY = motionEvent.y
-
-            if (mProviderName == "manual" && isCloseToCenter(motionEvent)) {
-                mOtlLat = mLastLocation?.latitude ?: 0.0
-                mOtlLon = mLastLocation?.longitude ?: 0.0
-                if (mLastLocation?.provider == "manual") {
-                    mOtlSpin = mLastLocation!!.altitude
-                }
-                else {
-                    mOtlSpin = 0.0
-                }
-                mOtlDown = true
-                mOtlChanged = true
-                updateDrawing()
-            }
-            else if (isCloseToProvider(motionEvent)){
+            if (isCloseToProvider(motionEvent)){
                 chooseNewProvider()
                 updateDrawing()
+                return
             }
             else if (isCloseToTimeZone(motionEvent)){
                 chooseNewProvider()
                 updateDrawing()
+                return
             }
         }
-        else if (motionEvent.action == MotionEvent.ACTION_UP){
-            mOtlDown = false
-            updateDrawing()
-        }
-        else if (mOtlDown && motionEvent.action == MotionEvent.ACTION_MOVE) {
-            val proposedLocation = Location("manual")
-            val deltax = motionEvent.x - mOtlX
-            val deltay = motionEvent.y - mOtlY
-            val width = (mImageView?.width ?: 1024).coerceAtMost(mImageView?.height ?: 1024)
+        if (mProviderName == "manual") {
+            if (motionEvent.action == MotionEvent.ACTION_DOWN) {
+                if (isCloseToCenter(motionEvent)) {
+                    mOtlX = motionEvent.x
+                    mOtlY = motionEvent.y
 
-            proposedLocation.latitude = mOtlLat + 90.0 * deltay / (width)
-            proposedLocation.longitude = mOtlLon - 90.0 * deltax / (width)
-            proposedLocation.altitude = mOtlSpin
+                    mOtlLat = mLastLocation?.latitude ?: 0.0
+                    mOtlLon = mLastLocation?.longitude ?: 0.0
+                    if (mLastLocation?.provider == "manual") {
+                        mOtlSpin = mLastLocation!!.altitude
+                    }
+                    else {
+                        mOtlSpin = 0.0
+                    }
+                    mOtlDown = true
+                    mOtlChanged = true
+                    updateDrawing()
+                    return
+                }
+            }
 
-            if (proposedLocation.latitude > 90.0) {
-                proposedLocation.latitude = 90.0 - (proposedLocation.latitude - 90.0)
-                proposedLocation.longitude += 180.0
-                proposedLocation.altitude += 180.0
+            if (!mOtlDown) {
+                return
             }
-            if (proposedLocation.latitude < -90.0) {
-                proposedLocation.latitude = -90.0 - (proposedLocation.latitude + 90.0)
-                proposedLocation.longitude += 180.0
-                proposedLocation.altitude += 180.0
+
+            if (motionEvent.action == MotionEvent.ACTION_POINTER_DOWN) {
+                val x0 = motionEvent.getX(0)
+                val y0 = motionEvent.getY(0)
+                val x1 = motionEvent.getX(1)
+                val y1 = motionEvent.getY(1)
+                mOtlSpinBase = atan2(y1 - y0, x1 - x0)
             }
-            while (proposedLocation.longitude < -180.0) {
-                proposedLocation.longitude += 360.0
+            else if (motionEvent.action == MotionEvent.ACTION_UP){
+                mOtlDown = false
+                updateDrawing()
             }
-            while (proposedLocation.longitude > 180.0) {
-                proposedLocation.longitude -= 360.0
+            else if (motionEvent.action == MotionEvent.ACTION_MOVE) {
+                val proposedLocation = Location("manual")
+
+                if (motionEvent.pointerCount > 1) {
+                    val x0 = motionEvent.getX(0)
+                    val y0 = motionEvent.getY(0)
+                    val x1 = motionEvent.getX(1)
+                    val y1 = motionEvent.getY(1)
+                    val spin = atan2(y1 - y0, x1 - x0)
+
+                    proposedLocation.latitude = mOtlLat
+                    proposedLocation.longitude = mOtlLon
+                    proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
+                }
+                else {
+                    val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)
+                    val deltax = motionEvent.x - mOtlX
+                    val deltay = motionEvent.y - mOtlY
+
+                    proposedLocation.latitude = mOtlLat +  90.0 * (deltay * cos(mOtlSpin * PI / 180.0) - deltax * sin(mOtlSpin * PI / 180.0)) / width
+                    proposedLocation.longitude = mOtlLon + 90.0 * (deltay * sin(mOtlSpin * PI / 180.0) - deltax * cos(mOtlSpin * PI / 180.0)) / (width)
+                    proposedLocation.altitude = mOtlSpin
+
+                    if (proposedLocation.latitude > 90.0) {
+                        proposedLocation.latitude = 90.0 - (proposedLocation.latitude - 90.0)
+                        proposedLocation.longitude += 180.0
+                        proposedLocation.altitude += 180.0
+                    }
+                    if (proposedLocation.latitude < -90.0) {
+                        proposedLocation.latitude = -90.0 - (proposedLocation.latitude + 90.0)
+                        proposedLocation.longitude += 180.0
+                        proposedLocation.altitude += 180.0
+                    }
+                    while (proposedLocation.longitude < -180.0) {
+                        proposedLocation.longitude += 360.0
+                    }
+                    while (proposedLocation.longitude > 180.0) {
+                        proposedLocation.longitude -= 360.0
+                    }
+                    while (proposedLocation.altitude < -180.0) {
+                        proposedLocation.altitude += 360.0
+                    }
+                    while (proposedLocation.altitude > 180.0) {
+                        proposedLocation.altitude -= 360.0
+                    }
+                }
+                mLastLocation = proposedLocation
+                updateDrawing()
             }
-            while (proposedLocation.altitude < -180.0) {
-                proposedLocation.altitude += 360.0
-            }
-            while (proposedLocation.altitude > 180.0) {
-                proposedLocation.altitude -= 360.0
-            }
-            mLastLocation = proposedLocation
-            updateDrawing()
         }
     }
 

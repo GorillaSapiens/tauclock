@@ -310,12 +310,6 @@ class MainActivity : AppCompatActivity() {
                 val x1 = motionEvent.getX(1)
                 val y1 = motionEvent.getY(1)
                 mOtlSpinBase = atan2(y1 - y0, x1 - x0)
-
-                Log.d("base", x0.toString() + " " +
-                        y0.toString() + " " +
-                        x1.toString() + " " +
-                        y1.toString() + " " +
-                        mOtlSpinBase.toString())
             }
             else if (action == MotionEvent.ACTION_UP){
                 mOtlDown = false
@@ -334,12 +328,6 @@ class MainActivity : AppCompatActivity() {
                     proposedLocation.latitude = mOtlLat
                     proposedLocation.longitude = mOtlLon
                     proposedLocation.altitude = mOtlSpin + (spin - mOtlSpinBase) * 180.0 / PI
-
-                    Log.d("spin", x0.toString() + " " +
-                            y0.toString() + " " +
-                            x1.toString() + " " +
-                            y1.toString() + " " +
-                            spin.toString())
                 }
                 else {
                     val width = min(mImageView?.width ?: 1024,mImageView?.height ?: 1024)

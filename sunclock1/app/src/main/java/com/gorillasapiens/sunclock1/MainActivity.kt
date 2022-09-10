@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private var mOtlY : Float = 0.0f
     private var mOtlLat : Double = 0.0
     private var mOtlLon : Double = 0.0
+    private var mOtlSpin : Double = 0.0
 
     private var mLocationManager : LocationManager? = null
     var mProviderName : String? = null
@@ -69,7 +70,7 @@ class MainActivity : AppCompatActivity() {
                 val something = doGlobe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
-                    0.0,
+                    mLastLocation?.altitude ?: 0.0,
                     min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
                 )
                 mSunclockDrawable?.setThing(something)
@@ -270,6 +271,12 @@ class MainActivity : AppCompatActivity() {
             if (mProviderName == "manual" && isCloseToCenter(motionEvent)) {
                 mOtlLat = mLastLocation?.latitude ?: 0.0
                 mOtlLon = mLastLocation?.longitude ?: 0.0
+                if (mLastLocation?.provider == "manual") {
+                    mOtlSpin = mLastLocation!!.altitude
+                }
+                else {
+                    mOtlSpin = 0.0
+                }
                 mOtlDown = true
                 mOtlChanged = true
                 updateDrawing()
@@ -287,7 +294,7 @@ class MainActivity : AppCompatActivity() {
             mOtlDown = false
             updateDrawing()
         }
-        else if (mOtlDown && motionEvent.action ==MotionEvent.ACTION_MOVE) {
+        else if (mOtlDown && motionEvent.action == MotionEvent.ACTION_MOVE) {
             val proposedLocation = Location("manual")
             val deltax = motionEvent.x - mOtlX
             val deltay = motionEvent.y - mOtlY
@@ -295,12 +302,17 @@ class MainActivity : AppCompatActivity() {
 
             proposedLocation.latitude = mOtlLat + 90.0 * deltay / (width)
             proposedLocation.longitude = mOtlLon - 90.0 * deltax / (width)
+            proposedLocation.altitude = mOtlSpin
 
             if (proposedLocation.latitude > 90.0) {
-                proposedLocation.latitude = 90.0
+                proposedLocation.latitude = 90.0 - (proposedLocation.latitude - 90.0)
+                proposedLocation.longitude += 180.0
+                proposedLocation.altitude += 180.0
             }
             if (proposedLocation.latitude < -90.0) {
-                proposedLocation.latitude = -90.0
+                proposedLocation.latitude = -90.0 - (proposedLocation.latitude + 90.0)
+                proposedLocation.longitude += 180.0
+                proposedLocation.altitude += 180.0
             }
             while (proposedLocation.longitude < -180.0) {
                 proposedLocation.longitude += 360.0
@@ -308,7 +320,14 @@ class MainActivity : AppCompatActivity() {
             while (proposedLocation.longitude > 180.0) {
                 proposedLocation.longitude -= 360.0
             }
+            while (proposedLocation.altitude < -180.0) {
+                proposedLocation.altitude += 360.0
+            }
+            while (proposedLocation.altitude > 180.0) {
+                proposedLocation.altitude -= 360.0
+            }
             mLastLocation = proposedLocation
+            updateDrawing()
         }
     }
 

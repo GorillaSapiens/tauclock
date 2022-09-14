@@ -14,11 +14,15 @@ extern "C"
 JNIEXPORT jintArray JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env, jobject thiz, jdouble lat,
                                                      jdouble lon, jdouble offset,
-                                                     jint width, jstring provider) {
+                                                     jint width, jstring provider,
+                                                     jstring tz) {
     jboolean garbage = false;
-    const char *str = env->GetStringUTFChars(provider, &garbage);
-    Canvas *canvas = do_all(lat, lon, offset, width, str);
-    env->ReleaseStringUTFChars(provider, str);
+    const char *ccProvider = env->GetStringUTFChars(provider, &garbage);
+    garbage = false;
+    const char *ccTz = env->GetStringUTFChars(tz, &garbage);
+    Canvas *canvas = do_all(lat, lon, offset, width, ccProvider, ccTz);
+    env->ReleaseStringUTFChars(tz, ccTz);
+    env->ReleaseStringUTFChars(provider, ccProvider);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;
     jint h = canvas->h;

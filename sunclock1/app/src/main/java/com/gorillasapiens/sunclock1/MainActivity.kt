@@ -1,9 +1,5 @@
 package com.gorillasapiens.sunclock1
 
-//import android.R
-//import android.R
-
-//import net.iakovlev.timeshape.TimeZoneEngine
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -54,7 +50,9 @@ class MainActivity : AppCompatActivity() {
     var mProviderName : String = "best"
     var mRealProviderName : String = "gps"
 
-    //var engine: TimeZoneEngine = TimeZoneEngine.initialize()
+    var mTimeZoneProvider : String = "system"
+    var mManualTimeZone : String = TimeZone.getDefault().toString()
+    var mLocationTimeZone : String = TimeZone.getDefault().toString()
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -101,12 +99,20 @@ class MainActivity : AppCompatActivity() {
             if (mRealProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
                 displayProvider += " [DISABLED!]"
             }
+            var tzname : String = ""
+            if (mTimeZoneProvider == "location") {
+                val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
+                tzname = zoneId?.get()?.toString() ?: ""
+            }
+            else if (mTimeZoneProvider == "manual") {
+                tzname = mManualTimeZone
+            }
             val something = doAll(
                 mLastLocation?.latitude ?: -181.0,
                 mLastLocation?.longitude ?: -181.0,
                 0.0,
                 min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                displayProvider
+                displayProvider, tzname
             )
             mSunClockDrawable?.setThing(something)
             mImageView?.invalidate()
@@ -307,7 +313,22 @@ class MainActivity : AppCompatActivity() {
                 return
             }
             else if (isCloseToTimeZone(motionEvent)) {
-                chooseNewProvider()
+                when (mTimeZoneProvider) {
+                    "system" -> {
+                        mTimeZoneProvider = "location"
+//                        val tzName = engine.query(mLastLocation?.latitude ?: 0.0,
+//                            mLastLocation?.longitude ?: 0.0).get().toString()
+//                        val timeZone =
+//                            TimeZone.getTimeZone(tzName)
+//                        TimeZone.setDefault(timeZone)
+                    }
+                    "location" -> {
+                        mTimeZoneProvider = "manual"
+                    }
+                    "manual" -> {
+                        mTimeZoneProvider = "system"
+                    }
+                }
                 updateDrawing()
                 return
             }
@@ -486,7 +507,7 @@ class MainActivity : AppCompatActivity() {
     private fun chooseNewProvider() {
         stopProvider()
 
-        val allProviders = mLocationManager!!.getProviders(true)
+        val allProviders = mLocationManager!!.getProviders(false)
         allProviders.add(0, "best")
         allProviders.add("manual")
         var n = 0
@@ -504,6 +525,6 @@ class MainActivity : AppCompatActivity() {
         mNeedUpdate = true
     }
 
-    private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String) : IntArray
+    private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
 }

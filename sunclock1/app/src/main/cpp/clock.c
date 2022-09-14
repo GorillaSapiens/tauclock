@@ -2369,10 +2369,20 @@ void set_italic_med(int width) {
 /// @param lat The observer's Latitude in degrees, South is negative
 /// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
+/// @param provider Name of the location provider to be displayed
+/// @param tz Name of timezone to be used
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lon, double offset, int width, const char *provider) {
+Canvas *do_all(double lat, double lon, double offset, int width, const char *provider, const char *tz) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
+
+   if (tz == NULL || tz[0] == 0) {
+      unsetenv("TZ");
+   }
+   else {
+      setenv("TZ", tz, 1);
+   }
+   tzset();
 
    double JD;
    double up;

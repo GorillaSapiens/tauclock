@@ -8,9 +8,9 @@
 
     <string name="timezone_category_title">Time</string>
     <string name="timezone_title">Timezone Provider</string>
-    <string name="manual_timezone_title">Manual GMT Offset</string>
+    <string name="manual_timezone_title">Manual Timezone</string>
 
     <string name="date_category_title">Date</string>
     <string name="date_title">Date Provider</string>
-    <string name="manual_date_title">Manual Date Offset</string>
+    <string name="manual_date_title">Manual Date</string>
 </resources>

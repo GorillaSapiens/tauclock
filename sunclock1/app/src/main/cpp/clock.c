@@ -2233,7 +2233,7 @@ void do_debug_info(Canvas * canvas, double JD) {
    ln_get_timet_from_julian(JD, &present);
    struct tm *tm = localtime(&present);
 
-   if (tzname[0] != NULL && tzname[1] != NULL) {
+   if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
       sprintf(buf, "%s%s%s/%s%s%s",
             tm->tm_isdst ? "" : "[",
             tzname[0],
@@ -2253,6 +2253,17 @@ void do_debug_info(Canvas * canvas, double JD) {
    h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3,
          COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+
+   const char *tz = getenv("TZ");
+   if (tz != NULL) {
+      int up = h + 6;
+      wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+            COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+      w = wh >> 16;
+      h = wh & 0xFFFF;
+      text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3 - up,
+            COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   }
 }
 
 /// @brief Draw provider information

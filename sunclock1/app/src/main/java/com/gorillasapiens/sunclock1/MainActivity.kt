@@ -3,6 +3,7 @@ package com.gorillasapiens.sunclock1
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Criteria
 import android.location.Location
@@ -16,11 +17,14 @@ import android.view.View
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.preference.PreferenceManager
 import com.wozniakconsulting.sunclock1.R
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import kotlin.math.*
 
 
@@ -47,12 +51,14 @@ class MainActivity : AppCompatActivity() {
     var engine: TimeZoneEngine = TimeZoneEngine.initialize()
 
     private var mLocationManager : LocationManager? = null
-    var mProviderName : String = "best"
+    var mProviderName: String = "best"
     var mRealProviderName : String = "gps"
 
     var mTimeZoneProvider : String = "system"
-    var mManualTimeZone : String = TimeZone.getDefault().toString()
-    var mLocationTimeZone : String = TimeZone.getDefault().toString()
+    var mManualTimeZone : String = "Etc/GMT"
+
+    var mDate : String = "today"
+    var mManualDate : String = "0"
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -203,6 +209,65 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun importSettings() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+
+        var tmp = sharedPreferences.getString("provider", "")
+        if (tmp != null && tmp.length > 0) {
+            mProviderName = tmp;
+        }
+        if (mProviderName == "manual") {
+            tmp = sharedPreferences.getString("manual_location", "");
+            if (tmp != null && tmp.length > 0) {
+                val pattern : Pattern = Pattern.compile("^([^,]+),(.+)$")
+                val matcher : Matcher = pattern.matcher(tmp)
+                val isMatch = matcher.matches()
+
+                if (isMatch) {
+                    try {
+                        mLastLocation = Location("manual")
+                        mLastLocation?.latitude = matcher.group(1).toDouble()
+                        mLastLocation?.longitude = matcher.group(2).toDouble()
+                        mLastLocation?.altitude = 0.0
+                    }
+                    catch (e: Exception) {
+                        // ignore it
+                    }
+                }
+            }
+        }
+
+        tmp = sharedPreferences.getString("timezone", "")
+        if (tmp != null && tmp.length > 0) {
+            mTimeZoneProvider = tmp;
+        }
+        tmp = sharedPreferences.getString("manual_timezone", "")
+        if (tmp != null && tmp.length > 0) {
+            mManualTimeZone = tmp;
+        }
+
+        tmp = sharedPreferences.getString("date", "")
+        if (tmp != null && tmp.length > 0) {
+            mDate = tmp;
+        }
+        tmp = sharedPreferences.getString("mannual_date", "")
+        if (tmp != null && tmp.length > 0) {
+            mManualDate = tmp;
+        }
+    }
+
+    private fun exportSettings() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+
+        editor.putString("provider", mProviderName)
+        editor.putString("manual_location", "") // TODO FIX
+        editor.putString("timezone", mTimeZoneProvider)
+        editor.putString("manual_timezone", mManualTimeZone)
+        editor.putString("date", mDate)
+        editor.putString("manual_date", mManualDate)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -225,8 +290,6 @@ class MainActivity : AppCompatActivity() {
         })
 
         mLocationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager?
-        mProviderName = "best" // TODO FIX get from settings!
-        startProvider()
 
         mHandler.post(runVeryOften)
     }
@@ -239,6 +302,9 @@ class MainActivity : AppCompatActivity() {
     }
     override fun onResume() {
         super.onResume()
+
+        importSettings()
+
         if (checkPermissions()) {
             startProvider()
         }
@@ -246,6 +312,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+
+        exportSettings()
+
         if (checkPermissions()) {
             stopProvider()
         }

@@ -1,0 +1,60 @@
+<PreferenceScreen xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory android:title="@string/location_category_title">
+
+        <ListPreference
+            android:defaultValue="best"
+            android:entries="@array/provider_values"
+            android:entryValues="@array/provider_values"
+            android:key="provider"
+            android:title="@string/provider_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="0.0000,0.0000"
+            android:key="manual_location"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/manual_location_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/timezone_category_title">
+        <ListPreference
+            android:defaultValue="system"
+            android:entries="@array/timezone_values"
+            android:entryValues="@array/timezone_values"
+            android:key="timezone"
+            android:title="@string/timezone_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:defaultValue="+0"
+            android:key="manual_timezone"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/manual_timezone_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/date_category_title">
+
+        <ListPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="today"
+            android:entries="@array/date_values"
+            android:entryValues="@array/date_values"
+            android:key="date"
+            android:title="@string/date_title"
+            app:useSimpleSummaryProvider="true" />
+        <EditTextPreference
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:defaultValue="+0"
+            android:key="manual_date"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/manual_date_title"
+            app:useSimpleSummaryProvider="true" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

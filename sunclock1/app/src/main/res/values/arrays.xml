@@ -1,0 +1,21 @@
+<resources>
+    <string-array name="provider_values">
+        <item>best</item>
+        <item>fused</item>
+        <item>gps</item>
+        <item>network</item>
+        <item>passive</item>
+        <item>manual</item>
+    </string-array>
+
+    <string-array name="timezone_values">
+        <item>system</item>
+        <item>location</item>
+        <item>manual</item>
+    </string-array>
+
+    <string-array name="date_values">
+        <item>today</item>
+        <item>manual</item>
+    </string-array>
+</resources>

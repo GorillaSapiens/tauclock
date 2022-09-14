@@ -62,6 +62,7 @@ class SunclockDrawable(width: Int, height: Int) : Drawable() {
         }
     }
 
+    @Deprecated("Deprecated in Java")
     override fun getOpacity(): Int {
         return PixelFormat.OPAQUE
     }

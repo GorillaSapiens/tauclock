@@ -6,6 +6,7 @@ package com.gorillasapiens.sunclock1
 //import net.iakovlev.timeshape.TimeZoneEngine
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Criteria
 import android.location.Location
@@ -23,10 +24,9 @@ import com.wozniakconsulting.sunclock1.R
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
-import kotlin.math.*
-import java.time.ZoneId
-import java.time.format.TextStyle
 import java.util.*
+import kotlin.math.*
+
 
 class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
@@ -274,6 +274,19 @@ class MainActivity : AppCompatActivity() {
         return (dc < (width / 5))
     }
 
+    private fun isCloseToSettings(motionEvent: MotionEvent) : Boolean {
+        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+        var dcx = motionEvent.x- ((mImageView?.width ?: 1024) / 2.0 + width / 2.0)
+        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 + width / 2.0)
+
+        dcx *= dcx
+        dcy *= dcy
+        val dc = sqrt(dcx+dcy)
+
+        return (dc < (width / 5))
+    }
+
     private fun otl(motionEvent: MotionEvent) {
         val action = motionEvent.action and MotionEvent.ACTION_MASK
 
@@ -283,9 +296,14 @@ class MainActivity : AppCompatActivity() {
                 updateDrawing()
                 return
             }
-            else if (isCloseToTimeZone(motionEvent)){
+            else if (isCloseToTimeZone(motionEvent)) {
                 chooseNewProvider()
                 updateDrawing()
+                return
+            }
+            else if (isCloseToSettings(motionEvent)) {
+                val switchActivityIntent = Intent(this, SettingsActivity::class.java)
+                startActivity(switchActivityIntent)
                 return
             }
         }

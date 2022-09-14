@@ -51,8 +51,8 @@ class MainActivity : AppCompatActivity() {
     var engine: TimeZoneEngine = TimeZoneEngine.initialize()
 
     private var mLocationManager : LocationManager? = null
-    var mProviderName : String? = null
-    private var mNeedDisable : Boolean = false
+    var mProviderName : String = "best"
+    var mRealProviderName : String = "gps"
 
     //var engine: TimeZoneEngine = TimeZoneEngine.initialize()
 
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
 
         if (mOtlDown) {
             if (mOtlChanged || mLastLocation != mLastLastLocation) {
-                if (mProviderName != "manual") {
+                if (mRealProviderName != "manual") {
                     mLastLocation?.altitude = 0.0
                 }
                 val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
@@ -92,12 +92,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
         else {
+            var displayProvider = mProviderName
+            if (displayProvider == "best") {
+                displayProvider += " ("
+                displayProvider += mRealProviderName;
+                displayProvider += ")"
+            }
+            if (mRealProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
+                displayProvider += " [DISABLED!]"
+            }
             val something = doAll(
                 mLastLocation?.latitude ?: -181.0,
                 mLastLocation?.longitude ?: -181.0,
                 0.0,
                 min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                mProviderName ?: "<null>")
+                displayProvider
+            )
             mSunClockDrawable?.setThing(something)
             mImageView?.invalidate()
         }
@@ -181,7 +191,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == mPermissionID) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                selectBestProvider()
+                mProviderName = "best" // TODO FIX get from settings!
                 startProvider()
             }
         }
@@ -209,8 +219,8 @@ class MainActivity : AppCompatActivity() {
         })
 
         mLocationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager?
-
-        selectBestProvider()
+        mProviderName = "best" // TODO FIX get from settings!
+        startProvider()
 
         mHandler.post(runVeryOften)
     }
@@ -307,7 +317,7 @@ class MainActivity : AppCompatActivity() {
                 return
             }
         }
-        if (mProviderName == "manual") {
+        if (mRealProviderName == "manual") {
             if (action == MotionEvent.ACTION_DOWN) {
                 if (isCloseToCenter(motionEvent)) {
                     mOtlX = motionEvent.x
@@ -437,9 +447,12 @@ class MainActivity : AppCompatActivity() {
     private val mLocationListener = MyLocationListener(this@MainActivity)
 
     private fun startProvider() {
-        mNeedDisable = false
-        if (mProviderName != null && mProviderName != "manual") {
-
+        mRealProviderName = mProviderName
+        if (mProviderName == "best") {
+            val criteria = Criteria()
+            mRealProviderName = mLocationManager?.getBestProvider(criteria,true) ?: "manual"
+        }
+        if (mRealProviderName != "manual") {
             /*
             if (!(mLocationManager?.isProviderEnabled(mProviderName ?: "gps") ?: true)) {
                 //val settingsIntent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
@@ -451,7 +464,7 @@ class MainActivity : AppCompatActivity() {
             if (checkPermissions()) {
                 try {
                     mLocationManager?.requestLocationUpdates(
-                        mProviderName ?: "gps",
+                        mRealProviderName,
                         10000,          // 10-second interval.
                         10.0f,             // 10 meters.
                         mLocationListener
@@ -474,6 +487,7 @@ class MainActivity : AppCompatActivity() {
         stopProvider()
 
         val allProviders = mLocationManager!!.getProviders(true)
+        allProviders.add(0, "best")
         allProviders.add("manual")
         var n = 0
         for (s in allProviders) {
@@ -488,16 +502,6 @@ class MainActivity : AppCompatActivity() {
 
         startProvider()
         mNeedUpdate = true
-    }
-
-    private fun selectBestProvider() {
-        val allProviders = mLocationManager!!.allProviders
-        allProviders.add("manual")
-        val criteria = Criteria()
-        mProviderName = mLocationManager!!.getBestProvider(criteria,false)
-        if (mProviderName == null) {
-            mProviderName = "manual"
-        }
     }
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String) : IntArray

@@ -37,8 +37,12 @@ JNIEXPORT jintArray JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doGlobe(JNIEnv *env, jobject thiz, jdouble lat,
                                                        jdouble lon,
                                                        jdouble spin,
-                                                       jint width) {
-    Canvas *canvas = do_globe(lat, lon, spin, width);
+                                                       jint width,
+                                                       jstring tzname) {
+    jboolean garbage = false;
+    const char *str = env->GetStringUTFChars(tzname, &garbage);
+    Canvas *canvas = do_globe(lat, lon, spin, width, str);
+    env->ReleaseStringUTFChars(tzname, str);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;
     jint h = canvas->h;

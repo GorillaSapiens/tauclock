@@ -42,7 +42,7 @@ quat rotate(quat point, quat rot) {
 
 extern uint8_t *FONT_BOLD_BIG;
 
-void do_text(Canvas *canvas, int width, double lat, double lon) {
+void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzname) {
    char location[128];
    char location2[128];
 
@@ -82,6 +82,14 @@ void do_text(Canvas *canvas, int width, double lat, double lon) {
 
    text_canvas(canvas, FONT_BOLD_BIG, width - (w/2+10), (h/2+10),
                COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
+
+    wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
+                     COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
+    w = wh >> 16;
+    h = wh & 0xffff;
+
+    text_canvas(canvas, FONT_BOLD_BIG, (w/2+10), width - (h/2+10),
+                COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
 }
 
 /// @brief Do globe things
@@ -90,7 +98,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon) {
 /// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_globe(double lat, double lon, double spin, int width) {
+Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzname) {
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
@@ -184,7 +192,7 @@ Canvas *do_globe(double lat, double lon, double spin, int width) {
    line_canvas(canvas,radius-radius/14,radius-radius/14,radius+radius/14,radius+radius/14,COLOR_MAGENTA);
    line_canvas(canvas,radius-radius/14,radius+radius/14,radius+radius/14,radius-radius/14,COLOR_MAGENTA);
 
-   do_text(canvas, width, lat, lon);
+   do_text(canvas, width, lat, lon, tzname);
 
    return canvas;
 }

@@ -54,11 +54,11 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-//    implementation('net.iakovlev:timeshape:2021c.13') {
-//       // Exclude standard compression library
-//       exclude group: 'com.github.luben', module: 'zstd-jni'
-//    }
-//    // Import aar for native component compilation
-//    implementation 'com.github.luben:zstd-jni:1.5.2-3@aar'
+    implementation('net.iakovlev:timeshape:2021c.13') {
+       // Exclude standard compression library
+       exclude group: 'com.github.luben', module: 'zstd-jni'
+    }
+    // Import aar for native component compilation
+    implementation 'com.github.luben:zstd-jni:1.5.2-3@aar'
 }
 

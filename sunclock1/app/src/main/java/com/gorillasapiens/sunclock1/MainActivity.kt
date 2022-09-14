@@ -20,10 +20,13 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.wozniakconsulting.sunclock1.R
+import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.*
-
+import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
@@ -44,6 +47,8 @@ class MainActivity : AppCompatActivity() {
     private var mOtlLat : Double = 0.0
     private var mOtlLon : Double = 0.0
     private var mOtlSpin : Double = 0.0
+
+    var engine: TimeZoneEngine = TimeZoneEngine.initialize()
 
     private var mLocationManager : LocationManager? = null
     var mProviderName : String? = null
@@ -70,11 +75,14 @@ class MainActivity : AppCompatActivity() {
                 if (mProviderName != "manual") {
                     mLastLocation?.altitude = 0.0
                 }
+                val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
+                val tzname: String = zoneId?.get()?.toString() ?: "<null>"
                 val something = doGlobe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
                     mLastLocation?.altitude ?: 0.0,
-                    min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+                    min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                    tzname
                 )
                 mSunClockDrawable?.setThing(something)
                 mImageView?.invalidate()
@@ -475,5 +483,5 @@ class MainActivity : AppCompatActivity() {
     }
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String) : IntArray
-    private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int) : IntArray
+    private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
 }

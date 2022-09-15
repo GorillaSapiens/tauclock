@@ -795,11 +795,9 @@ do_planet_band(Canvas * canvas, double up, double now,
 
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     if (need_character) {
-                        text_canvas(canvas, ASTRO_FONT, x, y, color,
-                                    COLOR_BLACK, sym, 1, 1);
-                        need_character = 0;
-                     }
+                     text_canvas(canvas, ASTRO_FONT, x, y, color,
+                                 COLOR_BLACK, sym, 1, 1);
+                     need_character = 0;
                   }
                   // fallthrough
                case EVENT_TRANSIT:
@@ -820,7 +818,7 @@ do_planet_band(Canvas * canvas, double up, double now,
                      if (mode & 2) {
                         line_canvas(canvas, x1, y1, x2, y2, color);
                      }
-                     if (need_character) {
+                     if (events[i].type == EVENT_SET) {
                         text_canvas(canvas, ASTRO_FONT, x, y, color,
                                     COLOR_BLACK, sym, 1, 1);
                         need_character = 0;

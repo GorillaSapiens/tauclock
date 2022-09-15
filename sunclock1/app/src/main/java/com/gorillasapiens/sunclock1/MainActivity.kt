@@ -22,6 +22,7 @@ import com.wozniakconsulting.sunclock1.R
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
+import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.math.*
@@ -78,8 +79,17 @@ class MainActivity : AppCompatActivity() {
                 if (mRealProviderName != "manual") {
                     mLastLocation?.altitude = 0.0
                 }
-                val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
-                val tzname: String = zoneId?.get()?.toString() ?: "<null>"
+                var tzname = ""
+                try {
+                    val zoneId = engine.query(
+                        mLastLocation?.latitude ?: 0.0,
+                        mLastLocation?.longitude ?: 0.0
+                    )
+                    tzname = zoneId?.get()?.toString() ?: "<null>"
+                }
+                catch (e: Exception) {
+                    // ignore it
+                }
                 val something = doGlobe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
@@ -104,10 +114,16 @@ class MainActivity : AppCompatActivity() {
             if (mRealProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
                 displayProvider += " [DISABLED!]"
             }
-            var tzname : String = ""
+            var tzname : String = TimeZone.getDefault().toZoneId().toString()
             if (mTimeZoneProvider == "location") {
                 val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
-                tzname = zoneId?.get()?.toString() ?: ""
+                try {
+                    tzname = zoneId?.get()?.toString() ?: ""
+                }
+                catch (e: Exception) {
+                    // do nothing
+                    // this effectively falls back to "system" timezone
+                }
             }
             else if (mTimeZoneProvider == "manual") {
                 tzname = mManualTimeZone

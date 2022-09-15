@@ -2398,13 +2398,10 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
-   if (tz == NULL || tz[0] == 0) {
-      unsetenv("TZ");
-   }
-   else {
+   if (tz != NULL && tz[0] != 0) {
       setenv("TZ", tz, 1);
+      tzset();
    }
-   tzset();
 
    double JD;
    double up;

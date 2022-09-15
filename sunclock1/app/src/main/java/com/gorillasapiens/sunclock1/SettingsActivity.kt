@@ -3,8 +3,10 @@ package com.gorillasapiens.sunclock1
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import com.wozniakconsulting.sunclock1.R
+import java.util.*
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -33,6 +35,13 @@ class SettingsActivity : AppCompatActivity() {
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
+
+            var mtz = findPreference<ListPreference>("manual_timezone")
+            if (mtz != null) {
+                val timezones = TimeZone.getAvailableIDs()
+                mtz.entries = timezones
+                mtz.entryValues = timezones
+            }
         }
     }
 }

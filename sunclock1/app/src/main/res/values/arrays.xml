@@ -14,6 +14,34 @@
         <item>manual</item>
     </string-array>
 
+    <string-array name="timezones">
+	<item>Etc/GMT-12</item>
+	<item>Etc/GMT-11</item>
+	<item>Etc/GMT-10</item>
+	<item>Etc/GMT-9</item>
+	<item>Etc/GMT-8</item>
+	<item>Etc/GMT-7</item>
+	<item>Etc/GMT-6</item>
+	<item>Etc/GMT-5</item>
+	<item>Etc/GMT-4</item>
+	<item>Etc/GMT-3</item>
+	<item>Etc/GMT-2</item>
+	<item>Etc/GMT-1</item>
+	<item>Etc/GMT+0</item>
+	<item>Etc/GMT+1</item>
+	<item>Etc/GMT+2</item>
+	<item>Etc/GMT+3</item>
+	<item>Etc/GMT+4</item>
+	<item>Etc/GMT+5</item>
+	<item>Etc/GMT+6</item>
+	<item>Etc/GMT+7</item>
+	<item>Etc/GMT+8</item>
+	<item>Etc/GMT+9</item>
+	<item>Etc/GMT+10</item>
+	<item>Etc/GMT+11</item>
+	<item>Etc/GMT+12</item>
+    </string-array>
+
     <string-array name="date_values">
         <item>today</item>
         <item>manual</item>

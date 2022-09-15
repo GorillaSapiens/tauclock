@@ -27,12 +27,12 @@
             android:key="timezone"
             android:title="@string/timezone_title"
             app:useSimpleSummaryProvider="true" />
-        <EditTextPreference
-            android:defaultValue="+0"
-            android:key="manual_timezone"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
+        <ListPreference
+            android:defaultValue="Etc/GMT+0"
+            android:entries="@array/timezones"
+            android:entryValues="@array/timezones"
             android:title="@string/manual_timezone_title"
+            app:key="manual_timezone"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/date_category_title">

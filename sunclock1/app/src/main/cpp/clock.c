@@ -2216,17 +2216,30 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
 ///
 /// @param canvas The Canvas to draw on
 /// @param JD The current Julian Date
+/// @param offset The offset passed into do_all
 /// @return void
-void do_debug_info(Canvas * canvas, double JD) {
+void do_debug_info(Canvas * canvas, double JD, double offset) {
    // for debugging, put the Julian date in the lower right
    char buf[1024];
-   sprintf(buf, "JD=%f", JD);
+   sprintf(buf, "JD=%0.2f", JD);
    int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
          canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+
+   if (offset != 0.0) {
+      int up = h + 6;
+
+      sprintf(buf, "offset=%0.2f", offset);
+      int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+            COLOR_YELLOW, COLOR_BLACK, buf, 1, 3);
+      int w = wh >> 16;
+      int h = wh & 0xFFFF;
+      text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
+            canvas->h - h / 2 - 3 - up, COLOR_YELLOW, COLOR_BLACK, buf, 1, 3);
+   }
 
    // for debugging, put time zone info in the lower left
    time_t present;
@@ -2275,11 +2288,11 @@ void do_debug_info(Canvas * canvas, double JD) {
 /// @return void
 void do_provider_info(Canvas * canvas, const char *provider) {
    int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                        COLOR_MAGENTA, COLOR_BLACK, provider, 1, 3);
+                        COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
-               h / 2 + 20, COLOR_MAGENTA, COLOR_BLACK, provider, 1, 3);
+               h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
 }
 
 void initialize_all(void) {
@@ -2512,7 +2525,7 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // embedded watch won't have weather info
    //do_weather(canvas);
 
-   do_debug_info(canvas, JD);
+   do_debug_info(canvas, JD, offset);
 
    do_provider_info(canvas, provider);
 

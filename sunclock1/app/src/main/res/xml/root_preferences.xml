@@ -35,25 +35,25 @@
             app:key="manual_timezone"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="@string/date_category_title">
+    <PreferenceCategory android:title="@string/offset_category_title">
 
         <ListPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:defaultValue="today"
-            android:entries="@array/date_values"
-            android:entryValues="@array/date_values"
-            android:key="date"
-            android:title="@string/date_title"
+            android:defaultValue="none"
+            android:entries="@array/offset_values"
+            android:entryValues="@array/offset_values"
+            android:key="offset"
+            android:title="@string/offset_title"
             app:useSimpleSummaryProvider="true" />
         <EditTextPreference
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:defaultValue="+0"
-            android:key="manual_date"
+            android:key="manual_offset"
             android:selectAllOnFocus="true"
             android:singleLine="true"
-            android:title="@string/manual_date_title"
+            android:title="@string/manual_offset_title"
             app:useSimpleSummaryProvider="true" />
     </PreferenceCategory>
 

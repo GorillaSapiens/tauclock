@@ -22,7 +22,6 @@ import com.wozniakconsulting.sunclock1.R
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.math.*
@@ -57,8 +56,8 @@ class MainActivity : AppCompatActivity() {
     var mTimeZoneProvider : String = "system"
     var mManualTimeZone : String = "Etc/GMT"
 
-    var mDate : String = "today"
-    var mManualDate : String = "0"
+    var mOffset: String = "none"
+    var mManualOffset : String = "0"
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -113,10 +112,19 @@ class MainActivity : AppCompatActivity() {
             else if (mTimeZoneProvider == "manual") {
                 tzname = mManualTimeZone
             }
+            var offset = 0.0
+            if (mOffset == "manual") {
+                try {
+                    offset = mManualOffset.toDouble()
+                }
+                catch (e: Exception) {
+                    // do nothing
+                }
+            }
             val something = doAll(
                 mLastLocation?.latitude ?: -181.0,
                 mLastLocation?.longitude ?: -181.0,
-                0.0,
+                offset,
                 min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                 displayProvider, tzname
             )
@@ -246,13 +254,13 @@ class MainActivity : AppCompatActivity() {
             mManualTimeZone = tmp;
         }
 
-        tmp = sharedPreferences.getString("date", "")
+        tmp = sharedPreferences.getString("offset", "")
         if (tmp != null && tmp.length > 0) {
-            mDate = tmp;
+            mOffset = tmp;
         }
-        tmp = sharedPreferences.getString("mannual_date", "")
+        tmp = sharedPreferences.getString("manual_offset", "")
         if (tmp != null && tmp.length > 0) {
-            mManualDate = tmp;
+            mManualOffset = tmp;
         }
     }
 
@@ -264,8 +272,8 @@ class MainActivity : AppCompatActivity() {
         editor.putString("manual_location", "") // TODO FIX
         editor.putString("timezone", mTimeZoneProvider)
         editor.putString("manual_timezone", mManualTimeZone)
-        editor.putString("date", mDate)
-        editor.putString("manual_date", mManualDate)
+        editor.putString("offset", mOffset)
+        editor.putString("manual_offset", mManualOffset)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -308,6 +316,8 @@ class MainActivity : AppCompatActivity() {
         if (checkPermissions()) {
             startProvider()
         }
+
+        mNeedUpdate = true
     }
 
     override fun onPause() {

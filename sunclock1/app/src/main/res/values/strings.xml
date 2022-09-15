@@ -10,7 +10,7 @@
     <string name="timezone_title">Timezone Provider</string>
     <string name="manual_timezone_title">Manual Timezone</string>
 
-    <string name="date_category_title">Date</string>
-    <string name="date_title">Date Provider</string>
-    <string name="manual_date_title">Manual Date</string>
+    <string name="offset_category_title">Offset</string>
+    <string name="offset_title">Offset Provider</string>
+    <string name="manual_offset_title">Manual Offset</string>
 </resources>

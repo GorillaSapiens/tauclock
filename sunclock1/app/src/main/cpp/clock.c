@@ -118,14 +118,6 @@ const char *weekdays[] = {
    "Saturday"
 };
 
-/// @brief An array containing zodiac sign names
-const char *signs[] = {
-   "Aries", "Taurus", "Gemini",
-   "Cancer", "Leo", "Virgo",
-   "Libra", "Scorpio", "Sagitarius",
-   "Capricorn", "Aquarius", "Pisces"
-};
-
 typedef enum EventType {
    EVENT_DOWN,
    EVENT_RISE,
@@ -1529,49 +1521,6 @@ void do_weather(Canvas * canvas) {
    }
 }
 
-/// @brief Add zodiac details to the clock
-///
-/// This is dead code.
-///
-/// @param canvas The Canvas to draw on
-/// @param JD the current Julian Date
-/// @return void
-void do_zodiac(Canvas * canvas, double JD) {
-   struct ln_equ_posn sun_equatorial;
-   ln_get_solar_equ_coords(JD, &sun_equatorial);
-   double ra = sun_equatorial.ra;
-
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
-   char buf[2] = { 0, 0 };
-   for (int sign = 0; sign < 12; sign++) {
-      // aries is at 0 + (360.0/12.0/2.0)
-      int angle = sign * (360.0 / 12.0);
-      int theta = 270.0 - ra + (360.0 / 12.0 / 2.0) + angle;
-      int cx =
-         canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20) * cos(DEG2RAD(theta));
-      int cy =
-         canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20) * sin(DEG2RAD(theta));
-      buf[0] = 'a' + sign;
-      text_canvas(shadow, ASTRO_FONT, cx, cy, COLOR_BLACK, COLOR_NONE, buf, 1,
-                  3);
-
-      theta += (360.0 / 12.0 / 2.0);
-      cx = canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20 +
-                            15) * cos(DEG2RAD(theta));
-      cy = canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20 +
-                            15) * sin(DEG2RAD(theta));
-      int cx2 =
-         canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20 -
-                          15) * cos(DEG2RAD(theta));
-      int cy2 =
-         canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20 -
-                          15) * sin(DEG2RAD(theta));
-      line_canvas(shadow, cx, cy, cx2, cy2, COLOR_BLACK);
-   }
-   xor_canvas(shadow, canvas);
-   delete_canvas(shadow);
-}
-
 /// @brief A struct used to remember where something is drawn.
 typedef struct AccumDrawnMemory {
     int x;
@@ -2370,9 +2319,6 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
    arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
-
-   // zodiac, skip because woo-woo
-   // do_zodiac(canvas, JD);
 
    // information in the center
    do_now_time(canvas, JD);

@@ -1672,6 +1672,7 @@ void do_zodiac(Canvas * canvas, double JD) {
    delete_canvas(shadow);
 }
 
+/// @brief A struct used to remember where something is drawn.
 typedef struct AccumDrawnMemory {
     int x;
     int y;
@@ -1680,10 +1681,18 @@ typedef struct AccumDrawnMemory {
     char *str;
 } AccumDrawnMemory;
 
+/// @brief An array of things drawn
 AccumDrawnMemory accumdrawnmemory[8];
 
+/// @brief The next open spot in the array
 int accumdrawnspot = 0;
 
+/// @brief Redraw stored accumulator times
+///
+/// This fixes some drawing oddities on very small screens
+///
+/// @param canvas Pointer to the canvas object
+/// @returns void
 void replay_accum_memory(Canvas *canvas) {
    for (int i = 0; i < accumdrawnspot; i++) {
       text_canvas(canvas, FONT_BOLD_MED, accumdrawnmemory[i].x, accumdrawnmemory[i].y,
@@ -2447,6 +2456,7 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // our rotating "now" hand
    do_now_hand(canvas, up, JD);
 
+   // draw accumulated times
    replay_accum_memory(canvas);
 
    // hour ticks

@@ -478,6 +478,15 @@ arc_canvas(Canvas * canvas,
    }
 }
 
+/// @brief helper function to compute shaded color
+///
+/// @param color The base color
+/// @param x The x coordinate being drawn
+/// @param y The y coordinate being drawn
+/// @param cx The center x coordinate
+/// @param cy The center y coordinate
+/// @param l The total length of the line
+/// @return a new shaded color
 unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
    int mask = color >> 24;
    int r = 0xFF & (color >> 16);

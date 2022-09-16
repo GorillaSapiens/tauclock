@@ -19,6 +19,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
 import com.wozniakconsulting.sunclock1.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
@@ -48,7 +51,8 @@ class MainActivity : AppCompatActivity() {
     private var mOtlLon : Double = 0.0
     private var mOtlSpin : Double = 0.0
 
-    var engine: TimeZoneEngine = TimeZoneEngine.initialize()
+    var mTimeZoneEngine: TimeZoneEngine? = null
+    var mEngineDone = false
 
     private var mLocationManager : LocationManager? = null
     var mProviderName: String = "best"
@@ -75,17 +79,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (mOtlDown) {
-            if (mOtlChanged || mLastLocation != mLastLastLocation) {
+            if (mNeedUpdate || mOtlChanged || mLastLocation != mLastLastLocation) {
                 if (mRealProviderName != "manual") {
                     mLastLocation?.altitude = 0.0
                 }
-                var tzname = ""
+                var tzname = "(initializing...)"
                 try {
-                    val zoneId = engine.query(
+                    val zoneId = mTimeZoneEngine!!.query(
                         mLastLocation?.latitude ?: 0.0,
                         mLastLocation?.longitude ?: 0.0
                     )
-                    tzname = zoneId?.get()?.toString() ?: "<null>"
+                    tzname = zoneId?.get()?.toString() ?: ""
                 }
                 catch (e: Exception) {
                     // ignore it
@@ -116,13 +120,16 @@ class MainActivity : AppCompatActivity() {
             }
             var tzname : String = TimeZone.getDefault().toZoneId().toString()
             if (mTimeZoneProvider == "location") {
-                val zoneId = engine.query(mLastLocation?.latitude ?: 0.0, mLastLocation?.longitude ?: 0.0)
                 try {
+                    tzname = "(initializing...)"
+                    val zoneId = mTimeZoneEngine!!.query(
+                        mLastLocation?.latitude ?: 0.0,
+                        mLastLocation?.longitude ?: 0.0
+                    )
                     tzname = zoneId?.get()?.toString() ?: ""
                 }
                 catch (e: Exception) {
                     // do nothing
-                    // this effectively falls back to "system" timezone
                 }
             }
             else if (mTimeZoneProvider == "manual") {
@@ -316,6 +323,15 @@ class MainActivity : AppCompatActivity() {
         mLocationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager?
 
         mHandler.post(runVeryOften)
+
+        GlobalScope.launch(Dispatchers.IO) {
+            mTimeZoneEngine = TimeZoneEngine.initialize();
+            launch(Dispatchers.Main) {
+                mEngineDone = true
+                mNeedUpdate = true
+                updateDrawing()
+            }
+        }
     }
 
     override fun onStart() {
@@ -411,11 +427,6 @@ class MainActivity : AppCompatActivity() {
                 when (mTimeZoneProvider) {
                     "system" -> {
                         mTimeZoneProvider = "location"
-//                        val tzName = engine.query(mLastLocation?.latitude ?: 0.0,
-//                            mLastLocation?.longitude ?: 0.0).get().toString()
-//                        val timeZone =
-//                            TimeZone.getTimeZone(tzName)
-//                        TimeZone.setDefault(timeZone)
                     }
                     "location" -> {
                         mTimeZoneProvider = "manual"

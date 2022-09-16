@@ -1,5 +1,6 @@
 package com.gorillasapiens.sunclock1
 
+import android.location.LocationManager
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
@@ -36,11 +37,23 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-            var mtz = findPreference<ListPreference>("manual_timezone")
-            if (mtz != null) {
+            var multiTimezone = findPreference<ListPreference>("manual_timezone")
+            if (multiTimezone != null) {
                 val timezones = TimeZone.getAvailableIDs()
-                mtz.entries = timezones
-                mtz.entryValues = timezones
+                multiTimezone.entries = timezones
+                multiTimezone.entryValues = timezones
+            }
+
+            var locationProviders = findPreference<ListPreference>("provider")
+            if (locationProviders != null) {
+                var mLocationManager = activity!!.getSystemService(LOCATION_SERVICE) as LocationManager?
+                val allProviders = mLocationManager!!.getProviders(false)
+                allProviders.sort()
+                allProviders.add(0, "best")
+                allProviders.add("manual")
+                val array: Array<String> = allProviders.toTypedArray()
+                locationProviders.entries = array
+                locationProviders.entryValues = array
             }
         }
     }

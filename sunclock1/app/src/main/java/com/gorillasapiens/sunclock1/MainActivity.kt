@@ -603,8 +603,10 @@ class MainActivity : AppCompatActivity() {
         stopProvider()
 
         val allProviders = mLocationManager!!.getProviders(false)
+        allProviders.sort()
         allProviders.add(0, "best")
         allProviders.add("manual")
+
         var n = 0
         for (s in allProviders) {
             if (s == mProviderName) {

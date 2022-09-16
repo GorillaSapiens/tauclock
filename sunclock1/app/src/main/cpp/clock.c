@@ -373,7 +373,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
 /// @return void
 void do_now_hand(Canvas * canvas, double up, double now) {
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
+   //Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
 
    double up_angle = frac(up) * 360.0;
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
@@ -390,10 +390,10 @@ void do_now_hand(Canvas * canvas, double up, double now) {
       canvas->h / 2 + (canvas->h / 2 / 2 -
                        SCALE(128)) * sin(DEG2RAD(now_angle));
 
-   thick_line_canvas(shadow, xc2, yc2, xc, yc, COLOR_WHITE, 3);
-   xor_canvas(shadow, canvas);
+   thick_line_canvas(canvas, xc2, yc2, xc, yc, COLOR_LIGHTGRAY, 3);
+   //xor_canvas(shadow, canvas);
 
-   delete_canvas(shadow);
+   //delete_canvas(shadow);
 }
 
 /// @brief Draw the current time in the center of the Canvas
@@ -2021,6 +2021,9 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                      canvas->w / 3 - SCALE(48), transit_fore, transit_back);
    }
 
+   // our rotating "now" hand
+   do_now_hand(canvas, up, now);
+
    if (daylight > one_minute) {
       accum_helper(canvas, daylight, "daylight", 270.0, COLOR_BLACK,
                    COLOR_YELLOW);
@@ -2065,90 +2068,6 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
       }
    }
 }
-
-#if 0
-#define ISDITHERCOLOR(x) (\
-   (x) == COLOR_YELLOW || \
-   (x) == COLOR_ORANGE || \
-   (x) == COLOR_LIGHTBLUE || \
-   (x) == COLOR_BLUE || \
-   (x) == COLOR_DARKBLUE \
-)
-
-#define DITHER 3
-
-/// @brief add some faded dithering to existing sun bands
-///
-/// @param canvas The canvas to draw on
-void do_sun_dithering(Canvas * canvas) {
-   for (int y = 0; y < canvas->h; y += DITHER) {
-      for (int x = 0; x < canvas->w; x += DITHER) {
-         int count = 0;
-         int counts[5] = { 0,0,0,0,0 };
-         unsigned int array[(DITHER*DITHER)];
-         for (int j = 0; j < DITHER; j++) {
-            for (int i = 0; i < DITHER; i++) {
-               int c = array[j*DITHER+i] = peek_canvas(canvas, i+x, j+y);
-               switch(c) {
-                  case COLOR_YELLOW:
-                     count++;
-                     counts[0]++;
-                     break;
-                  case COLOR_ORANGE:
-                     count++;
-                     counts[1]++;
-                     break;
-                  case COLOR_LIGHTBLUE:
-                     count++;
-                     counts[2]++;
-                     break;
-                  case COLOR_BLUE:
-                     count++;
-                     counts[3]++;
-                     break;
-                  case COLOR_DARKBLUE:
-                     count++;
-                     counts[4]++;
-                     break;
-               }
-            }
-         }
-         if (count > 0) {
-            count = 0;
-            for (int k = 0; k < 5; k++) {
-               if (counts[k] != 0) {
-                  count++;
-               }
-            }
-            if (count > 0) {
-               unsigned int convolution[(DITHER*DITHER)];
-               for (int k = 0; k < (DITHER*DITHER); k++) {
-                  if (ISDITHERCOLOR(array[k])) {
-again:
-                     convolution[k] = rand() % (DITHER*DITHER);
-                     if (!ISDITHERCOLOR(array[convolution[k]])) {
-                        goto again;
-                     }
-                     for (int l = 0; l < k; l++) {
-                        if (convolution[l] == convolution[k]) {
-                           goto again;
-                        }
-                     }
-                  }
-                  else {
-                     convolution[k] = k;
-                  }
-               }
-               // now do the switching
-               for (int k = 0; k < (DITHER*DITHER); k++) {
-                  poke_canvas(canvas, x + k % DITHER, y + k / DITHER, array[convolution[k]]);
-               }
-            }
-         }
-      }
-   }
-}
-#endif
 
 /// @brief Get a Julian Date for the last New Moon
 ///
@@ -2515,9 +2434,6 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
    arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
-
-   // our rotating "now" hand
-   do_now_hand(canvas, up, JD);
 
    // zodiac, skip because woo-woo
    // do_zodiac(canvas, JD);

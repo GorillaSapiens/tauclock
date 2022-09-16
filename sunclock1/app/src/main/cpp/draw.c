@@ -477,3 +477,95 @@ arc_canvas(Canvas * canvas,
       }
    }
 }
+
+unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
+   int mask = color >> 24;
+   int r = 0xFF & (color >> 16);
+   int g = 0xFF & (color >> 8);
+   int b = 0xFF & (color);
+
+   int d = ((x-cx)*(x-cx)+(y-cy)*(y-cy));
+   l = l * l / 4;
+
+   r = r * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
+   g = g * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
+   b = b * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
+
+   return (mask << 24) | (r << 16) | (g << 8) | b;
+}
+
+/// @brief Draw a shadedline
+///
+/// This function uses recursion to draw the line
+///
+/// @param canvas The Canvas to draw on
+/// @param x1 The start X coordinate
+/// @param y1 The start Y coordinate
+/// @param x2 The end X coordinate
+/// @param y2 The end Y coordinate
+/// @param color The color to draw
+/// @param cx The center x coordinate
+/// @param cy The center y coordinate
+/// @param l The total length of the line
+/// @return void
+void
+line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
+            unsigned int color, int cx, int cy, int l) {
+   blur_poke_canvas(canvas, x1, y1, shade(color, x1, y1, cx, cy, l), 1);
+   blur_poke_canvas(canvas, x2, y2, shade(color, x2, y2, cx, cy, l), 1);
+
+   int d = ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
+
+   if (d > 2) {
+      int mx = (x1 + x2) / 2;
+      int my = (y1 + y2) / 2;
+      line_canvas_shaded(canvas, x1, y1, mx, my, color, cx, cy, l);
+      line_canvas_shaded(canvas, mx, my, x2, y2, color, cx, cy, l);
+   }
+}
+
+/// @brief Draw a shaded arc on the canvas
+///
+/// This function uses the recursive line_canvas to draw short segments of arc
+///
+/// @param canvas The Canvas to draw on
+/// @param center_x The center X coordinate used by the arc
+/// @param center_y The center Y coordinate used by the arc
+/// @param radius The radius of the arc
+/// @param strokewidth The width of the drawn arc
+/// @param strokecolor The color to draw inside the arc
+/// @param begin_deg The starting angle for the arc
+/// @param end_deg The ending angle for the arc
+/// @return void
+void
+arc_canvas_shaded(Canvas * canvas,
+           int center_x, int center_y, int radius,
+           int strokewidth, unsigned int strokecolor,
+           double begin_deg, double end_deg) {
+   float theta;
+
+   if (end_deg <= begin_deg) {
+      end_deg += 360.0;
+   }
+
+   if (strokecolor != COLOR_NONE) {
+      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
+         int x1, y1, x2, y2;
+         x1 = center_x + ((float)radius -
+                          ((float)strokewidth) / 2.0) *
+            cos(theta * M_PI / 180.0);
+         y1 = center_y + ((float)radius -
+                          ((float)strokewidth) / 2.0) *
+            sin(theta * M_PI / 180.0);
+         x2 = center_x + ((float)radius +
+                          ((float)strokewidth) / 2.0) *
+            cos(theta * M_PI / 180.0);
+         y2 = center_y + ((float)radius +
+                          ((float)strokewidth) / 2.0) *
+            sin(theta * M_PI / 180.0);
+         line_canvas_shaded(canvas, x1, y1, x2, y2, strokecolor,
+			 (x1 + x2) / 2, (y1 + y2) / 2,
+			 sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)));
+      }
+   }
+}

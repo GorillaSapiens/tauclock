@@ -1847,7 +1847,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
-               arc_canvas(canvas, canvas->w / 2,
+               arc_canvas_shaded(canvas, canvas->w / 2,
                           canvas->h / 2,
                           canvas->w / 2 / 2,
                           canvas->h / 2 / 2, color, start_angle, stop_angle);
@@ -1967,7 +1967,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    double here = now + 0.5;
    double start_angle = frac(last) * 360.0 - up_angle + 270.0;
    double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
-   arc_canvas(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
+   arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
               canvas->h / 2 / 2, color, start_angle, stop_angle);
 
    // accumulate daylight and darkness
@@ -2050,6 +2050,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 }
 
+#if 0
 #define ISDITHERCOLOR(x) (\
    (x) == COLOR_YELLOW || \
    (x) == COLOR_ORANGE || \
@@ -2131,6 +2132,7 @@ again:
       }
    }
 }
+#endif
 
 /// @brief Get a Julian Date for the last New Moon
 ///
@@ -2485,7 +2487,7 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // colored bands for the sun
    if (goodloc) {
       do_sun_bands(canvas, up, JD);
-      do_sun_dithering(canvas);
+      //do_sun_dithering(canvas);
    }
 
    // hour ticks

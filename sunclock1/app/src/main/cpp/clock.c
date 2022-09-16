@@ -575,6 +575,28 @@ do_moon_draw(Canvas * canvas,
       }
    }
 
+#if 1
+   unsigned int shademap[2048] = { 0 };
+
+   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
+      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_LIGHTGRAY) {
+            int d2 = dx*dx+dy*dy;
+            if (d2 < sizeof(shademap)/sizeof(shademap[0])) {
+               if (shademap[d2] == 0) {
+                  unsigned int color = COLOR_LIGHTGRAY & 0xFF;
+                  color = color * (.8 + .2 * (1.0 - (2.0*(double)(dx*dx+dy*dy)/(double)(SCALE(40)*SCALE(40)))));
+                  color = (COLOR_LIGHTGRAY & 0xFF000000) |
+                          (color << 16) | (color << 8) | (color);
+                  shademap[d2] = color;
+               }
+               poke_canvas(canvas, cx + dx, cy + dy, shademap[d2]);
+            }
+         }
+      }
+   }
+#endif
+
    // outline
    arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_DARKGRAY, 0, 360.0);
 

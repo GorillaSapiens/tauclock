@@ -684,6 +684,9 @@ do_planet_band(Canvas * canvas, double up, double now,
       }
    }
 
+   double transit_x = 0.0;
+   double transit_y = 0.0;
+
    for (int i = 0; i < event_spot; i++) {
       if (events[i].category == category) {
          if (!events[i].prune) {
@@ -728,6 +731,10 @@ do_planet_band(Canvas * canvas, double up, double now,
                                     COLOR_BLACK, sym, 1, 1);
                         need_character = 0;
                      }
+                     else {
+                             transit_x = x;
+                             transit_y = y;
+                     }
                   }
                   break;
             }
@@ -736,8 +743,12 @@ do_planet_band(Canvas * canvas, double up, double now,
    }
    if (need_character && is_up) {
       // shazbat!
-      double x = (canvas->w / 2) + (radius+15) * cos(DEG2RAD((int)(category-CAT_MERCURY) * (360/5)));
-      double y = (canvas->h / 2) + (radius+15) * sin(DEG2RAD((int)(category-CAT_MERCURY) * (360/5)));
+      double x = (canvas->w / 2) + (radius+15) * cos(DEG2RAD((int)(category-CAT_LUNAR) * (360/6)));
+      double y = (canvas->h / 2) + (radius+15) * sin(DEG2RAD((int)(category-CAT_LUNAR) * (360/6)));
+      if (transit_x != 0.0) {
+         x = transit_x;
+         y = transit_y;
+      }
       text_canvas(canvas, ASTRO_FONT, x, y, color,
                   COLOR_BLACK, sym, 1, 1);
    }

@@ -487,9 +487,9 @@ unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
    int d = ((x-cx)*(x-cx)+(y-cy)*(y-cy));
    l = l * l / 4;
 
-   r = r * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
-   g = g * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
-   b = b * (.5 + .5 * (1.0 - (2.0*(double)d/(double)l)));
+   r = r * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
+   g = g * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
+   b = b * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
 
    return (mask << 24) | (r << 16) | (g << 8) | b;
 }

@@ -517,11 +517,9 @@ do_moon_draw(Canvas * canvas,
    int cx, cy;
 
    cx =
-      canvas->w / 2 + (canvas->w / 2 / 2 +
-                       SCALE(128 + 16 + 64)) * cos(DEG2RAD(where_angle));
+      canvas->w / 2 + (canvas->w / 6) * cos(DEG2RAD(where_angle));
    cy =
-      canvas->h / 2 + (canvas->h / 2 / 2 +
-                       SCALE(128 + 16 + 64)) * sin(DEG2RAD(where_angle));
+      canvas->h / 2 + (canvas->h / 6) * sin(DEG2RAD(where_angle));
 
    unsigned int interior_color;
    unsigned int chunk_color;
@@ -621,115 +619,6 @@ do_moon_draw(Canvas * canvas,
    }
 }
 
-/// @brief Draw the perimeter band indicating lunar rise/transit/set
-///
-/// @param canvas The Canvas to draw on
-/// @param up The Julian Date used as "up" on the clock
-/// @param now The current Julian Date
-/// @param moon_angle The clock angle at which to draw the moon
-/// @param color The color to use when drawing
-/// @return void
-void
-do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
-             unsigned int color) {
-   double up_angle = frac(up) * 360.0;
-
-   double last = now - .5;
-   int is_up = -1;
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].jd > now + .5) {
-         break;
-      }
-      if (events[i].category == CAT_LUNAR) {
-         switch (events[i].type) {
-            case EVENT_UP:
-            case EVENT_RISE:
-            case EVENT_TRANSIT:
-               if (is_up == 0) {
-                  if (events[i].jd > last) {
-                     last = events[i].jd;
-                  }
-               }
-               is_up = 1;
-               break;
-            case EVENT_DOWN:
-            case EVENT_SET:
-               if (events[i].jd > last && is_up == 1) {
-                  double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-                  double stop_angle =
-                     frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                  arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                             canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5),
-                             color, start_angle, stop_angle);
-
-                  last = events[i].jd;
-               }
-               is_up = 0;
-               break;
-         }
-      }
-   }
-   if (is_up == 1) {
-      double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-      double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
-      arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                 canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5), color,
-                 start_angle, stop_angle);
-   }
-
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].category == CAT_LUNAR) {
-         if (!events[i].prune) {
-            switch (events[i].type) {
-               case EVENT_UP:
-               case EVENT_DOWN:
-                  // do nothing
-                  break;
-               case EVENT_RISE:
-               case EVENT_TRANSIT:
-               case EVENT_SET:
-                  {
-                     double x1, y1, x2, y2;
-                     double x, y;
-                     double angle =
-                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
-
-                     x1 = canvas->w / 2 +
-                        (canvas->w / 2 / 2 +
-                         SCALE(128 + 16 - 16)) * cos(DEG2RAD(angle));
-                     y1 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 +
-                                         SCALE(128 + 16 -
-                                               16)) * sin(DEG2RAD(angle));
-                     x2 =
-                        canvas->w / 2 + (canvas->w / 2 / 2 +
-                                         SCALE(128 + 16 +
-                                               16)) * cos(DEG2RAD(angle));
-                     y2 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 +
-                                         SCALE(128 + 16 +
-                                               16)) * sin(DEG2RAD(angle));
-                     thick_line_canvas(canvas, x1, y1, x2, y2, color, 3);
-
-                     if (angle_between(angle, moon_angle) < 10.0) {
-                        angle = moon_angle - 10.0;
-                     }
-                     x = (canvas->w / 2) +
-                        (canvas->w / 2 / 2 +
-                         SCALE(128 + 16 + 50)) * cos(DEG2RAD(angle));
-                     y = (canvas->h / 2) + (canvas->h / 2 / 2 +
-                                            SCALE(128 + 16 +
-                                                  50)) * sin(DEG2RAD(angle));
-                     do_xy_time(canvas, now, events[i].jd, x, y, COLOR_WHITE,
-                                COLOR_BLACK);
-                  }
-                  break;
-            }
-         }
-      }
-   }
-}
-
 /// @brief Draw the perimeter planet band
 ///
 /// @param canvas The Canvas to draw on
@@ -748,7 +637,7 @@ do_planet_band(Canvas * canvas, double up, double now,
    int need_character = mode & 2; // draw characters at ticks
 
    char sym[2] = { 0, 0 };
-   sym[0] = 'C' + (category - CAT_MERCURY);
+   sym[0] = 'B' + (category - CAT_LUNAR);
 
    double last = now - .5;
    int is_up = -1;
@@ -775,8 +664,8 @@ do_planet_band(Canvas * canvas, double up, double now,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   if (mode & 1) {
-                     arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                                radius, 1, color, start_angle, stop_angle);
+                     arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                                radius, SCALE(5), color, start_angle, stop_angle);
                   }
 
                   last = events[i].jd;
@@ -790,8 +679,8 @@ do_planet_band(Canvas * canvas, double up, double now,
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       if (mode & 1) {
-         arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                    radius, 1, color, start_angle, stop_angle);
+         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                    radius, SCALE(5), color, start_angle, stop_angle);
       }
    }
 
@@ -1735,10 +1624,10 @@ accum_helper(Canvas * canvas,
    }
    double x =
       (canvas->w / 2) +
-      ((canvas->w / 3 - SCALE(24)) * 5 / 8) * cos(DEG2RAD(draw_angle));
+      (canvas->w * 4 / 16) * cos(DEG2RAD(draw_angle));
    double y =
       (canvas->h / 2) +
-      ((canvas->h / 3 - SCALE(24)) * 5 / 8) * sin(DEG2RAD(draw_angle));
+      (canvas->h * 4 / 16) * sin(DEG2RAD(draw_angle));
 //   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
 //   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory){ x, y - SCALE(16), fore, back, strdup(buffer) };
@@ -1927,7 +1816,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   times_written++;
                   // TODO FIX check size
                   do_tr_time_sun(canvas, now, last, start_angle,
-                                 (canvas->w / 3 - SCALE(48)), fore, back);
+                                 (canvas->w / 3 - SCALE(32)), fore, back);
                }
 
                last = here;
@@ -2043,13 +1932,13 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    if (times_written) {
       do_tr_time_sun(canvas, now, last, start_angle,
-                     canvas->w / 3 - SCALE(48), fore, back);
+                     canvas->w / 3 - SCALE(32), fore, back);
    }
 
    if (transited != 0.0) {
       double angle = frac(transited) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(canvas, now, transited, angle,
-                     canvas->w / 3 - SCALE(48), transit_fore, transit_back);
+                     canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }
 
    if (daylight > one_minute) {
@@ -2150,6 +2039,7 @@ double get_moon_angle(double JD, double lunar_new) {
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
    r += SCALE(20);
    do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
    r += SCALE(20);
@@ -2161,7 +2051,9 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
    r += SCALE(20);
    do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
 
-   r -= SCALE(80);
+   r -= SCALE(100);
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 2);
+   r += SCALE(20);
    do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 2);
    r += SCALE(20);
    do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 2);
@@ -2439,18 +2331,17 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
       do_planet_bands(canvas, JD, up);
    }
 
+   // colored bands for the sun
+   if (goodloc) {
+      do_sun_bands(canvas, up, JD);
+   }
+
    // draw the moon
    double moon_angle = 0.0;
    if (goodloc) {
       moon_angle = get_moon_angle(JD, lunar_new);
       do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
          moon_angle);
-   }
-
-   // colored bands for the sun
-   if (goodloc) {
-      do_sun_bands(canvas, up, JD);
-      //do_sun_dithering(canvas);
    }
 
    // our rotating "now" hand
@@ -2471,11 +2362,6 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
 
    // zodiac, skip because woo-woo
    // do_zodiac(canvas, JD);
-
-   // colored band for the moon
-   if (goodloc) {
-      do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);
-   }
 
    // information in the center
    do_now_time(canvas, JD);

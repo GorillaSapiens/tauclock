@@ -292,11 +292,20 @@ class MainActivity : AppCompatActivity() {
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
 
         editor.putString("provider", mProviderName)
-        editor.putString("manual_location", "") // TODO FIX
+        if (mProviderName == "manual") {
+            if (mLastLocation != null) {
+                editor.putString("manual_location",
+                    ((mLastLocation!!.latitude * 10000.0).toInt().toDouble() / 10000.0).toString() +
+                    "," +
+                    ((mLastLocation!!.longitude * 10000.0).toInt().toDouble() / 10000.0).toString())
+            }
+        }
         editor.putString("timezone", mTimeZoneProvider)
         editor.putString("manual_timezone", mManualTimeZone)
         editor.putString("offset", mOffset)
         editor.putString("manual_offset", mManualOffset)
+
+        editor.commit()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -421,6 +430,7 @@ class MainActivity : AppCompatActivity() {
             if (isCloseToProvider(motionEvent)){
                 chooseNewProvider()
                 updateDrawing()
+                exportSettings()
                 return
             }
             else if (isCloseToTimeZone(motionEvent)) {
@@ -436,6 +446,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 updateDrawing()
+                exportSettings()
                 return
             }
             else if (isCloseToSettings(motionEvent)) {
@@ -479,6 +490,7 @@ class MainActivity : AppCompatActivity() {
                 MotionEvent.ACTION_UP -> {
                     mOtlDown = false
                     updateDrawing()
+                    exportSettings()
                 }
                 MotionEvent.ACTION_POINTER_UP -> {
                     mOtlDown = false

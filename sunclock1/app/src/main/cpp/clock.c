@@ -390,7 +390,7 @@ void do_now_hand(Canvas * canvas, double up, double now) {
       canvas->h / 2 + (canvas->h / 2 / 2 -
                        SCALE(128)) * sin(DEG2RAD(now_angle));
 
-   thick_line_canvas(canvas, xc2, yc2, xc, yc, COLOR_LIGHTGRAY, 3);
+   thick_line_canvas(canvas, xc2, yc2, xc, yc, COLOR_WHITE, 3);
    //xor_canvas(shadow, canvas);
 
    //delete_canvas(shadow);
@@ -1672,6 +1672,28 @@ void do_zodiac(Canvas * canvas, double JD) {
    delete_canvas(shadow);
 }
 
+typedef struct AccumDrawnMemory {
+    int x;
+    int y;
+    unsigned int fg;
+    unsigned int bg;
+    char *str;
+} AccumDrawnMemory;
+
+AccumDrawnMemory accumdrawnmemory[8];
+
+int accumdrawnspot = 0;
+
+void replay_accum_memory(Canvas *canvas) {
+   for (int i = 0; i < accumdrawnspot; i++) {
+      text_canvas(canvas, FONT_BOLD_MED, accumdrawnmemory[i].x, accumdrawnmemory[i].y,
+                  accumdrawnmemory[i].fg, accumdrawnmemory[i].bg,
+                  accumdrawnmemory[i].str, 1, 3);
+      free(accumdrawnmemory[i].str);
+   }
+   accumdrawnspot = 0;
+}
+
 /// @brief Helper function to accumulate total sunlight/night/whatever hours
 ///
 /// @param canvas The Canvas to draw on
@@ -1708,10 +1730,10 @@ accum_helper(Canvas * canvas,
    double y =
       (canvas->h / 2) +
       ((canvas->h / 3 - SCALE(24)) * 5 / 8) * sin(DEG2RAD(draw_angle));
-   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1,
-               3);
-   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1,
-               3);
+//   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
+//   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
+   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory){ x, y - SCALE(16), fore, back, strdup(buffer) };
+   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory){ x, y + SCALE(16), fore, back, strdup(label) };
 }
 
 /// @brief A struct used to remember where something is drawn.
@@ -2020,9 +2042,6 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
       do_tr_time_sun(canvas, now, transited, angle,
                      canvas->w / 3 - SCALE(48), transit_fore, transit_back);
    }
-
-   // our rotating "now" hand
-   do_now_hand(canvas, up, now);
 
    if (daylight > one_minute) {
       accum_helper(canvas, daylight, "daylight", 270.0, COLOR_BLACK,
@@ -2424,6 +2443,11 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
       do_sun_bands(canvas, up, JD);
       //do_sun_dithering(canvas);
    }
+
+   // our rotating "now" hand
+   do_now_hand(canvas, up, JD);
+
+   replay_accum_memory(canvas);
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);

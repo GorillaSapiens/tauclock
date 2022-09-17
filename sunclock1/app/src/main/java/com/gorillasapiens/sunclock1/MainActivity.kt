@@ -149,7 +149,7 @@ class MainActivity : AppCompatActivity() {
                 mLastLocation?.longitude ?: -181.0,
                 offset,
                 min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                displayProvider, tzname
+                displayProvider, mTimeZoneProvider, tzname
             )
             mSunClockDrawable?.setThing(something)
             mImageView?.invalidate()
@@ -645,6 +645,6 @@ class MainActivity : AppCompatActivity() {
         mNeedUpdate = true
     }
 
-    private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tz:String) : IntArray
+    private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tzprovider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
 }

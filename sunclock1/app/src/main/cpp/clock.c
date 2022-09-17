@@ -2032,66 +2032,100 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
 /// @param canvas The Canvas to draw on
 /// @param JD The current Julian Date
 /// @param offset The offset passed into do_all
+/// @param tzProvider Name of the timezone provider
 /// @return void
-void do_debug_info(Canvas * canvas, double JD, double offset) {
-   // for debugging, put the Julian date in the lower right
-   char buf[1024];
-   sprintf(buf, "JD=%0.2f", JD);
-   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
-   int w = wh >> 16;
-   int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
-         canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+void do_debug_info(Canvas * canvas, double JD, double offset, const char *tzProvider) {
 
+   // buffer for julian date
+   char jd_buf[1024];
+   sprintf(jd_buf, "JD=%0.2f", JD);
+
+   // buffer for offset
+   char offset_buf[1024];
    if (offset != 0.0) {
-      int up = h + 6;
-
-      sprintf(buf, "offset=%0.2f", offset);
-      int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-            COLOR_YELLOW, COLOR_BLACK, buf, 1, 3);
-      int w = wh >> 16;
-      int h = wh & 0xFFFF;
-      text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
-            canvas->h - h / 2 - 3 - up, COLOR_YELLOW, COLOR_BLACK, buf, 1, 3);
+      sprintf(offset_buf, "offset=%0.2f", offset);
+   }
+   else {
+      offset_buf[0] = 0;
    }
 
-   // for debugging, put time zone info in the lower left
+   // buffer for tz abbreviation
+   char abbrev_buf[1024];
    time_t present;
    ln_get_timet_from_julian(JD, &present);
    struct tm *tm = localtime(&present);
-
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
-      sprintf(buf, "%s%s%s/%s%s%s",
+      sprintf(abbrev_buf, "%s%s%s/%s%s%s",
             tm->tm_isdst ? "" : "[",
-            tzname[0],
+              tzname[0],
             tm->tm_isdst ? "" : "]",
             tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
    }
    else if (tzname[0] != NULL) {
-      sprintf(buf, "[%s]", tzname[0]);
+      sprintf(abbrev_buf, "[%s]", tzname[0]);
    }
    else {
-      sprintf(buf, "[(null)]");
+      abbrev_buf[0] = 0;
    }
 
-   wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
-   w = wh >> 16;
-   h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
-
+   // setting of tz
    const char *tz = getenv("TZ");
-   if (tz != NULL) {
-      int up = h + 6;
-      wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-            COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
-      w = wh >> 16;
-      h = wh & 0xFFFF;
-      text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3 - up,
-            COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   if (tz == NULL) {
+       tz = "(null)";
    }
+
+   // no buffer needed for tzProvider
+
+   // probe our font
+   int whn = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, "A_gy", 1, 3);
+   int wn = whn >> 16;
+   int hn = whn & 0xFFFF;
+
+   // get sizes of various pieces
+   int wh0 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   int w0 = wh0 >> 16;
+   int h0 = wh0 & 0xFFFF;
+
+   int wh1 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
+   int w1 = wh1 >> 16;
+   int h1 = wh1 & 0xFFFF;
+
+   int wh2 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   int w2 = wh2 >> 16;
+   int h2 = wh2 & 0xFFFF;
+
+   int wh3 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   int w3 = wh3 >> 16;
+   int h3 = wh3 & 0xFFFF;
+
+   int wh4 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
+   int w4 = wh4 >> 16;
+   int h4 = wh4 & 0xFFFF;
+
+   // find highest height
+   int h = hn;
+
+   // now output the things...
+
+   // date side
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w0 / 2, canvas->h - 5 - h/2,
+         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w1 / 2, canvas->h - 5 - (h+5) - h/2,
+         COLOR_YELLOW, COLOR_BLACK, offset_buf, 1, 3);
+
+   // timezone side
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w2 / 2, canvas->h - 5 - h/2,
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w3 / 2, canvas->h - 5 - (h+5) - h/2,
+         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w4 / 2, canvas->h - 5 - 2*(h+5) - h/2,
+         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
 }
 
 /// @brief Draw provider information
@@ -2211,7 +2245,7 @@ void set_italic_med(int width) {
 /// @param provider Name of the location provider to be displayed
 /// @param tz Name of timezone to be used
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lon, double offset, int width, const char *provider, const char *tz) {
+Canvas *do_all(double lat, double lon, double offset, int width, const char *provider, const char *tzprovider, const char *tz) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
@@ -2331,9 +2365,11 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    // embedded watch won't have weather info
    //do_weather(canvas);
 
-   do_debug_info(canvas, JD, offset);
+   do_debug_info(canvas, JD, offset, tzprovider);
 
    do_provider_info(canvas, provider);
 
    return canvas;
 }
+
+// vim: expandtab:noai:ts=3:sw=3

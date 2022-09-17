@@ -359,6 +359,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         mNeedUpdate = true
+        updateDrawing()
     }
 
     override fun onPause() {

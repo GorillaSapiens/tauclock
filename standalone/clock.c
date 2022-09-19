@@ -1385,7 +1385,7 @@ my_get_everything(double JDstart,
 /// @param observer The observer's lat/lon coordinates
 /// @return void
 void events_populate(double JD, struct ln_lnlat_posn *observer) {
-   my_get_everything(JD - 2.0, JD + 1.0, observer);
+   my_get_everything(JD - 0.6, JD + 0.6, observer);
 }
 
 /// @brief Figure out which way is "up"

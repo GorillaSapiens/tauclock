@@ -16,7 +16,7 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-rm out*.png
+rm out*
 ./calcdata 34.0007 -81.0348 0  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_00.png
 ./calcdata 34.0007 -81.0348 1  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_01.png
 ./calcdata 34.0007 -81.0348 2  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_02.png
@@ -47,4 +47,4 @@ rm out*.png
 ./calcdata 34.0007 -81.0348 27  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_27.png
 ./calcdata 34.0007 -81.0348 28  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_28.png
 ./calcdata 34.0007 -81.0348 29  ; convert -size 1024x1024 -depth 8 RGBA:out.bin out.png ; mv out.png out_29.png
-convert -delay 100 *.png out.gif
+convert -delay 100 out*.png out.gif

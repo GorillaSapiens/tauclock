@@ -1320,36 +1320,51 @@ my_get_everything_planet(double JDstart,
    struct ln_equ_posn planet_posn;
    double planet_angle_2 = 0.0;
    double planet_angle_1 = 0.0;
+   double planet_angle = 0.0;
+   struct ln_hrz_posn planet_hrz_posn;
 
-   // the planet doesn't move much, calculate it once
+   // two hours before start
+   get_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 2.0, &planet_hrz_posn);
+   planet_angle_2 = planet_hrz_posn.alt;
 
-   get_equ_coords((JDstart + JDend) / 2.0, &planet_posn);
+   // one hour before start
+   get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0, &planet_hrz_posn);
+   planet_angle_1 = planet_hrz_posn.alt;
 
-   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
-        i += ONE_MINUTE_JD) {
-      struct ln_hrz_posn planet_hrz_posn;
+   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+      get_equ_coords(i, &planet_posn);
       ln_get_hrz_from_equ(&planet_posn, observer, i, &planet_hrz_posn);
-      double planet_angle = planet_hrz_posn.alt;
+      planet_angle = planet_hrz_posn.alt;
 
-      if (i >= JDstart) {
-         if (planet_angle_1 < 0.0 && planet_angle >= 0.0) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_coords, 0.0, category, EVENT_RISE);
-         }
-
-         if (planet_angle_1 >= 0.0 && planet_angle < 0.0) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_coords, 0.0, category, EVENT_SET);
-         }
-
-         if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
-            my_get_everything_helper(i, observer, get_equ_coords, -90.1,        // a fake horizon
-                                     category, EVENT_TRANSIT);
-         }
+      // test for various horizon crossings...
+      if (planet_angle_1 < LN_LUNAR_STANDART_HORIZON &&
+          planet_angle >= LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  get_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  category, EVENT_RISE);
+      }
+      if (planet_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
+          planet_angle < LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  get_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  category, EVENT_SET);
       }
 
+      if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
+         my_get_everything_helper2(i - 2.0 * ONE_HOUR_JD, i,
+                                   observer,
+                                   get_equ_coords,
+                                   -90.1,       // a fake horizon
+                                  category, EVENT_TRANSIT);
+      }
+
+      // shift
       planet_angle_2 = planet_angle_1;
       planet_angle_1 = planet_angle;
    }

@@ -312,6 +312,7 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
 /// Ticks are drawn using xor logic, so they should always be visible
 ///
 /// @param canvas The Canvas to draw on
+/// @param JD the Julian Date
 /// @param x The X coordinate of the center of the clock
 /// @param y The Y coordinate of the center of the clock
 /// @param r The radius of the clock
@@ -866,12 +867,16 @@ void events_dump(void) {
 /// @brief One second of Julian Date.
 #define ONE_SECOND_JD (1.0/(24.0*60.0*60.0))
 
+/// @brief One second of Julian Date.
+#define HALF_SECOND_JD (1.0/(24.0*60.0*60.0*2.0))
+
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
 /// @brief A helper function to place rise/transit/set events in event list
 ///
-/// @param JD The current Julian Date
+/// @param JDstart The start Julian Date for fine search
+/// @param JDend The end Julian Date for fine search
 /// @param observer The lat/lon of the observer position
 /// @param get_equ_coords A function returning Equ coordinates for object
 /// @param horizon The horizon angle of interest
@@ -891,14 +896,27 @@ my_get_everything_helper(double JDstart, double JDend,
 
    if (type == EVENT_RISE || type == EVENT_SET || type == EVENT_TRANSIT) {
       double angles[3];
+      double slopes[3];
 
       get_equ_coords(JDstart, &posn);
       ln_get_hrz_from_equ(&posn, observer, JDstart, &hrz_posn);
       angles[0] = hrz_posn.alt;
 
+      if (type == EVENT_TRANSIT) {
+         get_equ_coords(JDstart + HALF_SECOND_JD, &posn);
+         ln_get_hrz_from_equ(&posn, observer, JDstart + HALF_SECOND_JD, &hrz_posn);
+         slopes[0] = hrz_posn.alt - angles[0];
+      }
+
       get_equ_coords(JDend, &posn);
       ln_get_hrz_from_equ(&posn, observer, JDend, &hrz_posn);
       angles[2] = hrz_posn.alt;
+
+      if (type == EVENT_TRANSIT) {
+         get_equ_coords(JDend + HALF_SECOND_JD, &posn);
+         ln_get_hrz_from_equ(&posn, observer, JDend + HALF_SECOND_JD, &hrz_posn);
+         slopes[2] = hrz_posn.alt - angles[2];
+      }
 
       do {
          double JDmid = (JDstart + JDend) / 2.0;
@@ -906,6 +924,12 @@ my_get_everything_helper(double JDstart, double JDend,
          get_equ_coords(JDmid, &posn);
          ln_get_hrz_from_equ(&posn, observer, JDmid, &hrz_posn);
          angles[1] = hrz_posn.alt;
+
+         if (type == EVENT_TRANSIT) {
+            get_equ_coords(JDmid + HALF_SECOND_JD, &posn);
+            ln_get_hrz_from_equ(&posn, observer, JDmid + HALF_SECOND_JD, &hrz_posn);
+            slopes[1] = hrz_posn.alt - angles[1];
+         }
 
          if (type == EVENT_RISE) {
             if (angles[1] < horizon) {
@@ -928,17 +952,15 @@ my_get_everything_helper(double JDstart, double JDend,
             }
          }
          else if (type == EVENT_TRANSIT) {
-            get_equ_coords(JDmid + ONE_SECOND_JD / 2.0, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JDmid + ONE_SECOND_JD / 2.0, &hrz_posn);
-            double angle = hrz_posn.alt;
-
-            if (angle > angles[1]) {
+            if (slopes[1] > 0.0) {
                JDstart = JDmid;
                angles[0] = angles[1];
+               slopes[0] = slopes[1];
             }
             else {
                JDend = JDmid;
                angles[2] = angles[1];
+               slopes[2] = slopes[1];
             }
          }
          iterations++;
@@ -958,53 +980,55 @@ void
 my_get_everything_solar(double JDstart,
                         double JDend, struct ln_lnlat_posn *observer) {
    struct ln_equ_posn sun_posn;
-   double sun_angle_2 = 0.0;
-   double sun_angle_1 = 0.0;
-   double sun_angle = 0.0;
+   double angles[2] = { 0.0, 0.0 };
+   double slopes[2] = { 0.0, 0.0 };
    struct ln_hrz_posn sun_hrz_posn;
-
-   // two hours before start
-   ln_get_solar_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &sun_posn);
-   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 2.0, &sun_hrz_posn);
-   sun_angle_2 = sun_hrz_posn.alt;
 
    // one hour before start
    ln_get_solar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &sun_posn);
-   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0, &sun_hrz_posn);
-   sun_angle_1 = sun_hrz_posn.alt;
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &sun_hrz_posn);
+   angles[1] = sun_hrz_posn.alt;
+
+   ln_get_solar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &sun_posn);
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &sun_hrz_posn);
+   slopes[1] = sun_hrz_posn.alt - angles[1];
 
    for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
       ln_get_solar_equ_coords(i, &sun_posn);
       ln_get_hrz_from_equ(&sun_posn, observer, i, &sun_hrz_posn);
-      sun_angle = sun_hrz_posn.alt;
+      angles[0] = sun_hrz_posn.alt;
+
+      ln_get_solar_equ_coords(i + HALF_SECOND_JD, &sun_posn);
+      ln_get_hrz_from_equ(&sun_posn, observer, i + HALF_SECOND_JD, &sun_hrz_posn);
+      slopes[0] = sun_hrz_posn.alt - angles[0];
 
       // test for various horizon crossings...
-      if (sun_angle_1 < LN_SOLAR_ASTRONOMICAL_HORIZON &&
-          sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
+      if (angles[1] < LN_SOLAR_ASTRONOMICAL_HORIZON &&
+          angles[0] >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
                                   CAT_ASTRONOMICAL, EVENT_RISE);
       }
-      if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
-          sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
+      if (angles[1] < LN_SOLAR_NAUTIC_HORIZON &&
+          angles[0] >= LN_SOLAR_NAUTIC_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
                                   CAT_NAUTICAL, EVENT_RISE);
       }
-      if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
-          sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
+      if (angles[1] < LN_SOLAR_CIVIL_HORIZON &&
+          angles[0] >= LN_SOLAR_CIVIL_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
                                   CAT_CIVIL, EVENT_RISE);
       }
-      if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
-          sun_angle >= LN_SOLAR_STANDART_HORIZON) {
+      if (angles[1] < LN_SOLAR_STANDART_HORIZON &&
+          angles[0] >= LN_SOLAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
@@ -1012,32 +1036,32 @@ my_get_everything_solar(double JDstart,
                                   CAT_SOLAR, EVENT_RISE);
       }
 
-      if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
-          sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
+      if (angles[1] >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
+          angles[0] < LN_SOLAR_ASTRONOMICAL_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
                                   CAT_ASTRONOMICAL, EVENT_SET);
       }
-      if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
-          sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
+      if (angles[1] >= LN_SOLAR_NAUTIC_HORIZON &&
+          angles[0] < LN_SOLAR_NAUTIC_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
                                   CAT_NAUTICAL, EVENT_SET);
       }
-      if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
-          sun_angle < LN_SOLAR_CIVIL_HORIZON) {
+      if (angles[1] >= LN_SOLAR_CIVIL_HORIZON &&
+          angles[0] < LN_SOLAR_CIVIL_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
                                   CAT_CIVIL, EVENT_SET);
       }
-      if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
-          sun_angle < LN_SOLAR_STANDART_HORIZON) {
+      if (angles[1] >= LN_SOLAR_STANDART_HORIZON &&
+          angles[0] < LN_SOLAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
@@ -1045,8 +1069,8 @@ my_get_everything_solar(double JDstart,
                                   CAT_SOLAR, EVENT_SET);
       }
 
-      if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
-         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+      if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
+         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                    observer,
                                    ln_get_solar_equ_coords,
                                    -90.1,       // a fake horizon
@@ -1054,8 +1078,8 @@ my_get_everything_solar(double JDstart,
       }
 
       // shift
-      sun_angle_2 = sun_angle_1;
-      sun_angle_1 = sun_angle;
+      angles[1] = angles[0];
+      slopes[1] = slopes[0];
    }
 }
 
@@ -1118,37 +1142,39 @@ void
 my_get_everything_lunar(double JDstart,
                         double JDend, struct ln_lnlat_posn *observer) {
    struct ln_equ_posn moon_posn;
-   double moon_angle_2 = 0.0;
-   double moon_angle_1 = 0.0;
-   double moon_angle = 0.0;
+   double angles[2];
+   double slopes[2];
    struct ln_hrz_posn moon_hrz_posn;
-
-   // two hours before start
-   ln_get_lunar_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &moon_posn);
-   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 2.0, &moon_hrz_posn);
-   moon_angle_2 = moon_hrz_posn.alt;
 
    // one hour before start
    ln_get_lunar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &moon_posn);
-   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0, &moon_hrz_posn);
-   moon_angle_1 = moon_hrz_posn.alt;
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &moon_hrz_posn);
+   angles[1] = moon_hrz_posn.alt;
+
+   ln_get_lunar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &moon_posn);
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &moon_hrz_posn);
+   slopes[1] = moon_hrz_posn.alt - angles[1];
 
    for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
       ln_get_lunar_equ_coords(i, &moon_posn);
       ln_get_hrz_from_equ(&moon_posn, observer, i, &moon_hrz_posn);
-      moon_angle = moon_hrz_posn.alt;
+      angles[0] = moon_hrz_posn.alt;
+
+      ln_get_lunar_equ_coords(i + HALF_SECOND_JD, &moon_posn);
+      ln_get_hrz_from_equ(&moon_posn, observer, i + HALF_SECOND_JD, &moon_hrz_posn);
+      slopes[0] = moon_hrz_posn.alt - angles[0];
 
       // test for various horizon crossings...
-      if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
-          moon_angle >= LN_LUNAR_STANDART_HORIZON) {
+      if (angles[1] < LN_LUNAR_STANDART_HORIZON &&
+          angles[0] >= LN_LUNAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
                                   CAT_LUNAR, EVENT_RISE);
       }
-      if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
-          moon_angle < LN_LUNAR_STANDART_HORIZON) {
+      if (angles[1] >= LN_LUNAR_STANDART_HORIZON &&
+          angles[0] < LN_LUNAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
@@ -1156,8 +1182,8 @@ my_get_everything_lunar(double JDstart,
                                   CAT_LUNAR, EVENT_SET);
       }
 
-      if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
-         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+      if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
+         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                    observer,
                                    ln_get_lunar_equ_coords,
                                    -90.1,       // a fake horizon
@@ -1165,8 +1191,8 @@ my_get_everything_lunar(double JDstart,
       }
 
       // shift
-      moon_angle_2 = moon_angle_1;
-      moon_angle_1 = moon_angle;
+      angles[1] = angles[0];
+      slopes[1] = slopes[0];
    }
 }
 
@@ -1208,37 +1234,39 @@ my_get_everything_planet(double JDstart,
                          Get_Equ_Coords get_equ_coords,
                          EventCategory category) {
    struct ln_equ_posn planet_posn;
-   double planet_angle_2 = 0.0;
-   double planet_angle_1 = 0.0;
-   double planet_angle = 0.0;
+   double angles[2];
+   double slopes[2];
    struct ln_hrz_posn planet_hrz_posn;
-
-   // two hours before start
-   get_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &planet_posn);
-   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 2.0, &planet_hrz_posn);
-   planet_angle_2 = planet_hrz_posn.alt;
 
    // one hour before start
    get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &planet_posn);
-   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0, &planet_hrz_posn);
-   planet_angle_1 = planet_hrz_posn.alt;
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &planet_hrz_posn);
+   angles[1] = planet_hrz_posn.alt;
+
+   get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &planet_hrz_posn);
+   slopes[1] = planet_hrz_posn.alt - angles[1];
 
    for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
       get_equ_coords(i, &planet_posn);
       ln_get_hrz_from_equ(&planet_posn, observer, i, &planet_hrz_posn);
-      planet_angle = planet_hrz_posn.alt;
+      angles[0] = planet_hrz_posn.alt;
+
+      get_equ_coords(i + HALF_SECOND_JD, &planet_posn);
+      ln_get_hrz_from_equ(&planet_posn, observer, i + HALF_SECOND_JD, &planet_hrz_posn);
+      slopes[0] = planet_hrz_posn.alt - angles[0];
 
       // test for various horizon crossings...
-      if (planet_angle_1 < LN_LUNAR_STANDART_HORIZON &&
-          planet_angle >= LN_LUNAR_STANDART_HORIZON) {
+      if (angles[1] < LN_LUNAR_STANDART_HORIZON &&
+          angles[0] >= LN_LUNAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
                                   category, EVENT_RISE);
       }
-      if (planet_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
-          planet_angle < LN_LUNAR_STANDART_HORIZON) {
+      if (angles[1] >= LN_LUNAR_STANDART_HORIZON &&
+          angles[0] < LN_LUNAR_STANDART_HORIZON) {
          my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   get_equ_coords,
@@ -1246,8 +1274,8 @@ my_get_everything_planet(double JDstart,
                                   category, EVENT_SET);
       }
 
-      if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
-         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+      if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
+         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                    observer,
                                    get_equ_coords,
                                    -90.1,       // a fake horizon
@@ -1255,8 +1283,8 @@ my_get_everything_planet(double JDstart,
       }
 
       // shift
-      planet_angle_2 = planet_angle_1;
-      planet_angle_1 = planet_angle;
+      angles[1] = angles[0];
+      slopes[1] = slopes[0];
    }
 }
 
@@ -2194,7 +2222,9 @@ void set_italic_med(int width) {
 /// @param lat The observer's Latitude in degrees, South is negative
 /// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
+/// @param width Width of canvas to draw
 /// @param provider Name of the location provider to be displayed
+/// @param tzprovider Name of the timezone provider to be displayed
 /// @param tz Name of timezone to be used
 /// @return A canvas that has been drawn upon
 Canvas *do_all(double lat, double lon, double offset, int width, const char *provider, const char *tzprovider, const char *tz) {

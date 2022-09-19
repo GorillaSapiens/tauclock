@@ -118,14 +118,6 @@ const char *weekdays[] = {
    "Saturday"
 };
 
-/// @brief An array containing zodiac sign names
-const char *signs[] = {
-   "Aries", "Taurus", "Gemini",
-   "Cancer", "Leo", "Virgo",
-   "Libra", "Scorpio", "Sagitarius",
-   "Capricorn", "Aquarius", "Pisces"
-};
-
 typedef enum EventType {
    EVENT_DOWN,
    EVENT_RISE,
@@ -151,6 +143,12 @@ typedef enum EventCategory {
 const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
    "lunar", "mercury", "venus", "mars", "jupiter", "saturn"
 };
+
+#define COLOR_MERCURY   COLOR_GRAY
+#define COLOR_VENUS     COLOR_WHITE
+#define COLOR_MARS      COLOR_RED
+#define COLOR_JUPITER   COLOR_ORANGE
+#define COLOR_SATURN    COLOR_LIGHTBLUE // RGB(0xea, 0xd6, 0xb8)
 
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "down", "rise", "transit", "set", "up" };
@@ -253,7 +251,7 @@ void remove_newlines(char *p) {
    }
 }
 
-/// @brief Draw stars on COLOR_NIGHT areas
+/// @brief Draw stars on COLOR_DARKBLUE areas
 ///
 /// This is dead code.  The intent was to draw fanciful stars
 /// on the darkness portion of the clock.  It's unused, as it
@@ -269,21 +267,21 @@ void do_stars(Canvas * canvas) {
 
       for (int jx = -dx; jx <= dx; jx++) {
          conditional_poke_canvas(canvas, x + jx, y, COLOR_WHITE,
-                                 COLOR_NIGHT);
+                                 COLOR_DARKBLUE);
       }
       for (int jy = -dy; jy <= dy; jy++) {
          conditional_poke_canvas(canvas, x, y + jy, COLOR_WHITE,
-                                 COLOR_NIGHT);
+                                 COLOR_DARKBLUE);
       }
       if (rand() % 2) {
          conditional_poke_canvas(canvas, x + 1, y + 1,
-                                 COLOR_WHITE, COLOR_NIGHT);
+                                 COLOR_WHITE, COLOR_DARKBLUE);
          conditional_poke_canvas(canvas, x - 1, y + 1,
-                                 COLOR_WHITE, COLOR_NIGHT);
+                                 COLOR_WHITE, COLOR_DARKBLUE);
          conditional_poke_canvas(canvas, x + 1, y - 1,
-                                 COLOR_WHITE, COLOR_NIGHT);
+                                 COLOR_WHITE, COLOR_DARKBLUE);
          conditional_poke_canvas(canvas, x - 1, y - 1,
-                                 COLOR_WHITE, COLOR_NIGHT);
+                                 COLOR_WHITE, COLOR_DARKBLUE);
       }
    }
 }
@@ -367,7 +365,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
 /// @return void
 void do_now_hand(Canvas * canvas, double up, double now) {
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
+   //Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
 
    double up_angle = frac(up) * 360.0;
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
@@ -384,10 +382,10 @@ void do_now_hand(Canvas * canvas, double up, double now) {
       canvas->h / 2 + (canvas->h / 2 / 2 -
                        SCALE(128)) * sin(DEG2RAD(now_angle));
 
-   thick_line_canvas(shadow, xc2, yc2, xc, yc, COLOR_WHITE, 3);
-   xor_canvas(shadow, canvas);
+   thick_line_canvas(canvas, xc2, yc2, xc, yc, COLOR_WHITE, 3);
+   //xor_canvas(shadow, canvas);
 
-   delete_canvas(shadow);
+   //delete_canvas(shadow);
 }
 
 /// @brief Draw the current time in the center of the Canvas
@@ -456,19 +454,19 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
       NS = 'S';
    }
 
-   double lng = observer->lng;
+   double lon = observer->lng;
    char EW = 'E';
-   if (lng < 0.0) {
-      lng = -lng;
+   if (lon < 0.0) {
+       lon = -lon;
       EW = 'W';
    }
    char *degree = "\u00B0";     // in utf8, degree symbol
 
-   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
+   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
       sprintf(location, "INVALID_LOCATION");
    }
    else {
-      sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lng, degree, EW);
+      sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree, EW);
    }
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
                canvas->h / 2 + SCALE(48), COLOR_WHITE, COLOR_BLACK, location, 1,
@@ -511,11 +509,9 @@ do_moon_draw(Canvas * canvas,
    int cx, cy;
 
    cx =
-      canvas->w / 2 + (canvas->w / 2 / 2 +
-                       SCALE(128 + 16 + 64)) * cos(DEG2RAD(where_angle));
+      canvas->w / 2 + (canvas->w / 6) * cos(DEG2RAD(where_angle));
    cy =
-      canvas->h / 2 + (canvas->h / 2 / 2 +
-                       SCALE(128 + 16 + 64)) * sin(DEG2RAD(where_angle));
+      canvas->h / 2 + (canvas->h / 6) * sin(DEG2RAD(where_angle));
 
    unsigned int interior_color;
    unsigned int chunk_color;
@@ -569,6 +565,22 @@ do_moon_draw(Canvas * canvas,
       }
    }
 
+#if 1
+   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
+      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_LIGHTGRAY) {
+            int d2 = dx*dx+dy*dy;
+            unsigned int color = COLOR_LIGHTGRAY & 0xFF;
+            color = color * (.8 + .2 * (1.0 - (2.0*(double)(d2)/(double)(SCALE(40)*SCALE(40)))));
+            color = (COLOR_LIGHTGRAY & 0xFF000000) |
+                    (color << 16) | (color << 8) | (color);
+
+            poke_canvas(canvas, cx + dx, cy + dy, color);
+         }
+      }
+   }
+#endif
+
    // outline
    arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_DARKGRAY, 0, 360.0);
 
@@ -599,115 +611,6 @@ do_moon_draw(Canvas * canvas,
    }
 }
 
-/// @brief Draw the perimeter band indicating lunar rise/transit/set
-///
-/// @param canvas The Canvas to draw on
-/// @param up The Julian Date used as "up" on the clock
-/// @param now The current Julian Date
-/// @param moon_angle The clock angle at which to draw the moon
-/// @param color The color to use when drawing
-/// @return void
-void
-do_moon_band(Canvas * canvas, double up, double now, double moon_angle,
-             unsigned int color) {
-   double up_angle = frac(up) * 360.0;
-
-   double last = now - .5;
-   int is_up = -1;
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].jd > now + .5) {
-         break;
-      }
-      if (events[i].category == CAT_LUNAR) {
-         switch (events[i].type) {
-            case EVENT_UP:
-            case EVENT_RISE:
-            case EVENT_TRANSIT:
-               if (is_up == 0) {
-                  if (events[i].jd > last) {
-                     last = events[i].jd;
-                  }
-               }
-               is_up = 1;
-               break;
-            case EVENT_DOWN:
-            case EVENT_SET:
-               if (events[i].jd > last && is_up == 1) {
-                  double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-                  double stop_angle =
-                     frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                  arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                             canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5),
-                             color, start_angle, stop_angle);
-
-                  last = events[i].jd;
-               }
-               is_up = 0;
-               break;
-         }
-      }
-   }
-   if (is_up == 1) {
-      double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-      double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
-      arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                 canvas->w / 2 / 2 + SCALE(128 + 16), SCALE(5), color,
-                 start_angle, stop_angle);
-   }
-
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].category == CAT_LUNAR) {
-         if (!events[i].prune) {
-            switch (events[i].type) {
-               case EVENT_UP:
-               case EVENT_DOWN:
-                  // do nothing
-                  break;
-               case EVENT_RISE:
-               case EVENT_TRANSIT:
-               case EVENT_SET:
-                  {
-                     double x1, y1, x2, y2;
-                     double x, y;
-                     double angle =
-                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
-
-                     x1 = canvas->w / 2 +
-                        (canvas->w / 2 / 2 +
-                         SCALE(128 + 16 - 16)) * cos(DEG2RAD(angle));
-                     y1 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 +
-                                         SCALE(128 + 16 -
-                                               16)) * sin(DEG2RAD(angle));
-                     x2 =
-                        canvas->w / 2 + (canvas->w / 2 / 2 +
-                                         SCALE(128 + 16 +
-                                               16)) * cos(DEG2RAD(angle));
-                     y2 =
-                        canvas->h / 2 + (canvas->h / 2 / 2 +
-                                         SCALE(128 + 16 +
-                                               16)) * sin(DEG2RAD(angle));
-                     thick_line_canvas(canvas, x1, y1, x2, y2, color, 3);
-
-                     if (angle_between(angle, moon_angle) < 10.0) {
-                        angle = moon_angle - 10.0;
-                     }
-                     x = (canvas->w / 2) +
-                        (canvas->w / 2 / 2 +
-                         SCALE(128 + 16 + 50)) * cos(DEG2RAD(angle));
-                     y = (canvas->h / 2) + (canvas->h / 2 / 2 +
-                                            SCALE(128 + 16 +
-                                                  50)) * sin(DEG2RAD(angle));
-                     do_xy_time(canvas, now, events[i].jd, x, y, COLOR_WHITE,
-                                COLOR_BLACK);
-                  }
-                  break;
-            }
-         }
-      }
-   }
-}
-
 /// @brief Draw the perimeter planet band
 ///
 /// @param canvas The Canvas to draw on
@@ -723,6 +626,10 @@ do_planet_band(Canvas * canvas, double up, double now,
                unsigned int color, double radius, EventCategory category,
                int mode) {
    double up_angle = frac(up) * 360.0;
+   int need_character = mode & 2; // draw characters at ticks
+
+   char sym[2] = { 0, 0 };
+   sym[0] = 'B' + (category - CAT_LUNAR);
 
    double last = now - .5;
    int is_up = -1;
@@ -749,8 +656,8 @@ do_planet_band(Canvas * canvas, double up, double now,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   if (mode & 1) {
-                     arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                                radius, 1, color, start_angle, stop_angle);
+                     arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                                radius, SCALE(5), color, start_angle, stop_angle);
                   }
 
                   last = events[i].jd;
@@ -764,10 +671,13 @@ do_planet_band(Canvas * canvas, double up, double now,
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       if (mode & 1) {
-         arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
-                    radius, 1, color, start_angle, stop_angle);
+         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                    radius, SCALE(5), color, start_angle, stop_angle);
       }
    }
+
+   double transit_x = 0.0;
+   double transit_y = 0.0;
 
    for (int i = 0; i < event_spot; i++) {
       if (events[i].category == category) {
@@ -782,16 +692,12 @@ do_planet_band(Canvas * canvas, double up, double now,
                      double x, y;
                      double angle =
                         frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                     char sym[2] = { 0, 0 };
-
-                     sym[0] = 'C' + (category - CAT_MERCURY);
 
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     if (mode & 2) {
-                        text_canvas(canvas, ASTRO_FONT, x, y, color,
-                                    COLOR_BLACK, sym, 1, 1);
-                     }
+                     text_canvas(canvas, ASTRO_FONT, x, y, color,
+                                 COLOR_BLACK, sym, 1, 1);
+                     need_character = 0;
                   }
                   // fallthrough
                case EVENT_TRANSIT:
@@ -806,14 +712,37 @@ do_planet_band(Canvas * canvas, double up, double now,
                      x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
                      y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
 
+                     double x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
+                     double y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
+
                      if (mode & 2) {
                         line_canvas(canvas, x1, y1, x2, y2, color);
+                     }
+                     if (events[i].type == EVENT_SET) {
+                        text_canvas(canvas, ASTRO_FONT, x, y, color,
+                                    COLOR_BLACK, sym, 1, 1);
+                        need_character = 0;
+                     }
+                     else {
+                             transit_x = x;
+                             transit_y = y;
                      }
                   }
                   break;
             }
          }
       }
+   }
+   if (need_character && is_up) {
+      // shazbat!
+      double x = (canvas->w / 2) + (radius+15) * cos(DEG2RAD((int)(category-CAT_LUNAR) * (360/6)));
+      double y = (canvas->h / 2) + (radius+15) * sin(DEG2RAD((int)(category-CAT_LUNAR) * (360/6)));
+      if (transit_x != 0.0) {
+         x = transit_x;
+         y = transit_y;
+      }
+      text_canvas(canvas, ASTRO_FONT, x, y, color,
+                  COLOR_BLACK, sym, 1, 1);
    }
 }
 
@@ -928,8 +857,14 @@ void events_dump(void) {
    }
 }
 
+/// @brief One hour of Julian Date.
+#define ONE_HOUR_JD (1.0/(24.0))
+
 /// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
+
+/// @brief One second of Julian Date.
+#define ONE_SECOND_JD (1.0/(24.0*60.0*60.0))
 
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
@@ -944,7 +879,7 @@ typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 /// @param type An EVENT_* macro indicating event type
 /// @return void
 void
-my_get_everything_helper(double JD,
+my_get_everything_helper(double JDstart, double JDend,
                          struct ln_lnlat_posn *observer,
                          Get_Equ_Coords get_equ_coords,
                          double horizon, EventCategory category,
@@ -952,105 +887,65 @@ my_get_everything_helper(double JD,
 
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
-   double angle;
-   double angles[3];
-
    int iterations = 0;
 
-   get_equ_coords(JD, &posn);
-   ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-   angle = hrz_posn.alt;
+   if (type == EVENT_RISE || type == EVENT_SET || type == EVENT_TRANSIT) {
+      double angles[3];
 
-   switch (type) {
-      case EVENT_UP:
-      case EVENT_DOWN:
-         // ignore it
-         break;
-      case EVENT_RISE:
-         while (angle >= horizon) {
-            iterations++;
-            JD -= ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
+      get_equ_coords(JDstart, &posn);
+      ln_get_hrz_from_equ(&posn, observer, JDstart, &hrz_posn);
+      angles[0] = hrz_posn.alt;
+
+      get_equ_coords(JDend, &posn);
+      ln_get_hrz_from_equ(&posn, observer, JDend, &hrz_posn);
+      angles[2] = hrz_posn.alt;
+
+      do {
+         double JDmid = (JDstart + JDend) / 2.0;
+
+         get_equ_coords(JDmid, &posn);
+         ln_get_hrz_from_equ(&posn, observer, JDmid, &hrz_posn);
+         angles[1] = hrz_posn.alt;
+
+         if (type == EVENT_RISE) {
+            if (angles[1] < horizon) {
+               JDstart = JDmid;
+               angles[0] = angles[1];
+            }
+            else { // if (angles[1] >= horizon) {
+               JDend = JDmid;
+               angles[2] = angles[1];
             }
          }
-         while (angle < horizon) {
-            iterations++;
-            JD += ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
+         else if (type == EVENT_SET) {
+            if (angles[1] >= horizon) {
+               JDstart = JDmid;
+               angles[0] = angles[1];
+            }
+            else { // if (angles[1] < horizon) {
+               JDend = JDmid;
+               angles[2] = angles[1];
             }
          }
-         events[event_spot++] = (Event) {
-         JD, category, EVENT_RISE};
-         break;
-      case EVENT_SET:
-         while (angle >= horizon) {
-            iterations++;
-            JD += ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
+         else if (type == EVENT_TRANSIT) {
+            get_equ_coords(JDmid + ONE_SECOND_JD / 2.0, &posn);
+            ln_get_hrz_from_equ(&posn, observer, JDmid + ONE_SECOND_JD / 2.0, &hrz_posn);
+            double angle = hrz_posn.alt;
+
+            if (angle > angles[1]) {
+               JDstart = JDmid;
+               angles[0] = angles[1];
+            }
+            else {
+               JDend = JDmid;
+               angles[2] = angles[1];
             }
          }
-         while (angle < horizon) {
-            iterations++;
-            JD -= ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         events[event_spot++] = (Event) {
-         JD, category, EVENT_SET};
-         break;
-      case EVENT_TRANSIT:
-         angles[1] = angle;
-         ln_get_hrz_from_equ(&posn, observer, JD - ONE_MINUTE_JD, &hrz_posn);
-         angles[0] = hrz_posn.alt;
-         ln_get_hrz_from_equ(&posn, observer, JD + ONE_MINUTE_JD, &hrz_posn);
-         angles[2] = hrz_posn.alt;
-         while (angles[0] < angles[1] && angles[1] < angles[2]) {
-            iterations++;
-            angles[0] = angles[1];
-            angles[1] = angles[2];
-            JD += ONE_MINUTE_JD;
-            ln_get_hrz_from_equ(&posn, observer, JD + ONE_MINUTE_JD, &hrz_posn);
-            angles[2] = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         while (angles[0] > angles[1] && angles[1] > angles[2]) {
-            iterations++;
-            angles[2] = angles[1];
-            angles[1] = angles[0];
-            JD -= ONE_MINUTE_JD;
-            ln_get_hrz_from_equ(&posn, observer, JD - ONE_MINUTE_JD, &hrz_posn);
-            angles[0] = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         // only maxima above horizon count as "transit"
-         if (angles[1] > horizon) {
-            events[event_spot++] = (Event) {
-            JD, category, EVENT_TRANSIT};
-         }
-         break;
+         iterations++;
+      }
+      while ((JDend - JDstart) > ONE_SECOND_JD && iterations < 32);
+      events[event_spot++] = (Event) {(JDstart + JDend)/2.0, category, type};
    }
- abort:
-   return;
 }
 
 /// @brief Collect solar rise/transit/set events that might be of interest
@@ -1065,90 +960,100 @@ my_get_everything_solar(double JDstart,
    struct ln_equ_posn sun_posn;
    double sun_angle_2 = 0.0;
    double sun_angle_1 = 0.0;
+   double sun_angle = 0.0;
+   struct ln_hrz_posn sun_hrz_posn;
 
-   // the sun doesn't move much, calculate it once
+   // two hours before start
+   ln_get_solar_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &sun_posn);
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 2.0, &sun_hrz_posn);
+   sun_angle_2 = sun_hrz_posn.alt;
 
-   ln_get_solar_equ_coords((JDstart + JDend) / 2.0, &sun_posn);
+   // one hour before start
+   ln_get_solar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &sun_posn);
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0, &sun_hrz_posn);
+   sun_angle_1 = sun_hrz_posn.alt;
 
-   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
-        i += ONE_MINUTE_JD) {
-      struct ln_hrz_posn sun_hrz_posn;
+   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+      ln_get_solar_equ_coords(i, &sun_posn);
       ln_get_hrz_from_equ(&sun_posn, observer, i, &sun_hrz_posn);
-      double sun_angle = sun_hrz_posn.alt;
+      sun_angle = sun_hrz_posn.alt;
 
-      if (i >= JDstart) {
-         if (sun_angle_1 < LN_SOLAR_ASTRONOMICAL_HORIZON &&
-             sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_ASTRONOMICAL_HORIZON,
-                                     CAT_ASTRONOMICAL, EVENT_RISE);
-         }
-         if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
-             sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_NAUTIC_HORIZON,
-                                     CAT_NAUTICAL, EVENT_RISE);
-         }
-         if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
-             sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_CIVIL_HORIZON,
-                                     CAT_CIVIL, EVENT_RISE);
-         }
-         if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
-             sun_angle >= LN_SOLAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_STANDART_HORIZON,
-                                     CAT_SOLAR, EVENT_RISE);
-         }
-
-         if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
-             sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_ASTRONOMICAL_HORIZON,
-                                     CAT_ASTRONOMICAL, EVENT_SET);
-         }
-         if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
-             sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_NAUTIC_HORIZON,
-                                     CAT_NAUTICAL, EVENT_SET);
-         }
-         if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
-             sun_angle < LN_SOLAR_CIVIL_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_CIVIL_HORIZON,
-                                     CAT_CIVIL, EVENT_SET);
-         }
-         if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
-             sun_angle < LN_SOLAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_solar_equ_coords,
-                                     LN_SOLAR_STANDART_HORIZON,
-                                     CAT_SOLAR, EVENT_SET);
-         }
-
-         if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
-            my_get_everything_helper(i, observer, ln_get_solar_equ_coords, -90.1,       // a fake horizon
-                                     CAT_SOLAR, EVENT_TRANSIT);
-         }
+      // test for various horizon crossings...
+      if (sun_angle_1 < LN_SOLAR_ASTRONOMICAL_HORIZON &&
+          sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_ASTRONOMICAL_HORIZON,
+                                  CAT_ASTRONOMICAL, EVENT_RISE);
+      }
+      if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
+          sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_NAUTIC_HORIZON,
+                                  CAT_NAUTICAL, EVENT_RISE);
+      }
+      if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
+          sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_CIVIL_HORIZON,
+                                  CAT_CIVIL, EVENT_RISE);
+      }
+      if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
+          sun_angle >= LN_SOLAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_STANDART_HORIZON,
+                                  CAT_SOLAR, EVENT_RISE);
       }
 
+      if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
+          sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_ASTRONOMICAL_HORIZON,
+                                  CAT_ASTRONOMICAL, EVENT_SET);
+      }
+      if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
+          sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_NAUTIC_HORIZON,
+                                  CAT_NAUTICAL, EVENT_SET);
+      }
+      if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
+          sun_angle < LN_SOLAR_CIVIL_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_CIVIL_HORIZON,
+                                  CAT_CIVIL, EVENT_SET);
+      }
+      if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
+          sun_angle < LN_SOLAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_solar_equ_coords,
+                                  LN_SOLAR_STANDART_HORIZON,
+                                  CAT_SOLAR, EVENT_SET);
+      }
+
+      if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+                                   observer,
+                                   ln_get_solar_equ_coords,
+                                   -90.1,       // a fake horizon
+                                  CAT_SOLAR, EVENT_TRANSIT);
+      }
+
+      // shift
       sun_angle_2 = sun_angle_1;
       sun_angle_1 = sun_angle;
    }
@@ -1212,88 +1117,54 @@ void my_get_everything_solar_updowns(double earliest,
 void
 my_get_everything_lunar(double JDstart,
                         double JDend, struct ln_lnlat_posn *observer) {
-   // the moon moves a lot more, so it is more complicated.
    struct ln_equ_posn moon_posn;
-
    double moon_angle_2 = 0.0;
    double moon_angle_1 = 0.0;
-
+   double moon_angle = 0.0;
    struct ln_hrz_posn moon_hrz_posn;
 
-   // now do a quick pass for rough times,
-   // and call a helper for refinement
+   // two hours before start
+   ln_get_lunar_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &moon_posn);
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 2.0, &moon_hrz_posn);
+   moon_angle_2 = moon_hrz_posn.alt;
 
-   struct ln_equ_posn moon_posn_start;
-   double moon_jd_start = JDstart - (ONE_MINUTE_JD * 2.0);
+   // one hour before start
+   ln_get_lunar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &moon_posn);
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0, &moon_hrz_posn);
+   moon_angle_1 = moon_hrz_posn.alt;
 
-   ln_get_lunar_equ_coords(moon_jd_start, &moon_posn_start);
-   float moon_xyz_start[3];
-   moon_xyz_start[0] =
-      cos(DEG2RAD(moon_posn_start.dec)) * cos(DEG2RAD(moon_posn_start.ra));
-   moon_xyz_start[1] =
-      cos(DEG2RAD(moon_posn_start.dec)) * sin(DEG2RAD(moon_posn_start.ra));
-   moon_xyz_start[2] = sin(DEG2RAD(moon_posn_start.dec));
-
-   struct ln_equ_posn moon_posn_end;
-   double moon_jd_end = JDend;
-   ln_get_lunar_equ_coords(moon_jd_end, &moon_posn_end);
-   float moon_xyz_end[3];
-   moon_xyz_end[0] =
-      cos(DEG2RAD(moon_posn_end.dec)) * cos(DEG2RAD(moon_posn_end.ra));
-   moon_xyz_end[1] =
-      cos(DEG2RAD(moon_posn_end.dec)) * sin(DEG2RAD(moon_posn_end.ra));
-   moon_xyz_end[2] = sin(DEG2RAD(moon_posn_end.dec));
-
-   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
-        i += ONE_MINUTE_JD) {
-
-      // === INTERPOLATE_MOON POSITION (because it is faster)
-      float fraction = (i - JDstart) / (JDend - JDstart);
-      float xyz[3];
-      xyz[0] =
-         moon_xyz_start[0] + fraction * (moon_xyz_end[0] - moon_xyz_start[0]);
-      xyz[1] =
-         moon_xyz_start[1] + fraction * (moon_xyz_end[1] - moon_xyz_start[1]);
-      xyz[2] =
-         moon_xyz_start[2] + fraction * (moon_xyz_end[2] - moon_xyz_start[2]);
-      float d = sqrt(xyz[0] * xyz[0] + xyz[1] * xyz[1] + xyz[2] * xyz[2]);
-      xyz[0] /= d;
-      xyz[1] /= d;
-      xyz[2] /= d;
-      moon_posn.ra = RAD2DEG(atan2(xyz[1], xyz[0]));
-      moon_posn.dec = RAD2DEG(asin(xyz[2]));
-      // === END
-
+   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+      ln_get_lunar_equ_coords(i, &moon_posn);
       ln_get_hrz_from_equ(&moon_posn, observer, i, &moon_hrz_posn);
-      double moon_angle = moon_hrz_posn.alt;
+      moon_angle = moon_hrz_posn.alt;
 
-      if (i >= JDstart) {
-         if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
-             moon_angle >= LN_LUNAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_lunar_equ_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_RISE);
-         }
-
-         if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
-             moon_angle < LN_LUNAR_STANDART_HORIZON) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     ln_get_lunar_equ_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_SET);
-         }
-
-         if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
-            my_get_everything_helper(i, observer,
-                                     ln_get_lunar_equ_coords,
-                                     LN_LUNAR_STANDART_HORIZON,
-                                     CAT_LUNAR, EVENT_TRANSIT);
-         }
+      // test for various horizon crossings...
+      if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
+          moon_angle >= LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_lunar_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  CAT_LUNAR, EVENT_RISE);
+      }
+      if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
+          moon_angle < LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  ln_get_lunar_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  CAT_LUNAR, EVENT_SET);
       }
 
+      if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+                                   observer,
+                                   ln_get_lunar_equ_coords,
+                                   -90.1,       // a fake horizon
+                                  CAT_LUNAR, EVENT_TRANSIT);
+      }
+
+      // shift
       moon_angle_2 = moon_angle_1;
       moon_angle_1 = moon_angle;
    }
@@ -1339,36 +1210,51 @@ my_get_everything_planet(double JDstart,
    struct ln_equ_posn planet_posn;
    double planet_angle_2 = 0.0;
    double planet_angle_1 = 0.0;
+   double planet_angle = 0.0;
+   struct ln_hrz_posn planet_hrz_posn;
 
-   // the planet doesn't move much, calculate it once
+   // two hours before start
+   get_equ_coords(JDstart - 2.0 * ONE_HOUR_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 2.0, &planet_hrz_posn);
+   planet_angle_2 = planet_hrz_posn.alt;
 
-   get_equ_coords((JDstart + JDend) / 2.0, &planet_posn);
+   // one hour before start
+   get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0, &planet_hrz_posn);
+   planet_angle_1 = planet_hrz_posn.alt;
 
-   for (double i = JDstart - (ONE_MINUTE_JD * 2.0); i < JDend;
-        i += ONE_MINUTE_JD) {
-      struct ln_hrz_posn planet_hrz_posn;
+   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+      get_equ_coords(i, &planet_posn);
       ln_get_hrz_from_equ(&planet_posn, observer, i, &planet_hrz_posn);
-      double planet_angle = planet_hrz_posn.alt;
+      planet_angle = planet_hrz_posn.alt;
 
-      if (i >= JDstart) {
-         if (planet_angle_1 < 0.0 && planet_angle >= 0.0) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_coords, 0.0, category, EVENT_RISE);
-         }
-
-         if (planet_angle_1 >= 0.0 && planet_angle < 0.0) {
-            my_get_everything_helper(i,
-                                     observer,
-                                     get_equ_coords, 0.0, category, EVENT_SET);
-         }
-
-         if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
-            my_get_everything_helper(i, observer, get_equ_coords, -90.1,        // a fake horizon
-                                     category, EVENT_TRANSIT);
-         }
+      // test for various horizon crossings...
+      if (planet_angle_1 < LN_LUNAR_STANDART_HORIZON &&
+          planet_angle >= LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  get_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  category, EVENT_RISE);
+      }
+      if (planet_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
+          planet_angle < LN_LUNAR_STANDART_HORIZON) {
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
+                                  observer,
+                                  get_equ_coords,
+                                  LN_LUNAR_STANDART_HORIZON,
+                                  category, EVENT_SET);
       }
 
+      if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
+                                   observer,
+                                   get_equ_coords,
+                                   -90.1,       // a fake horizon
+                                  category, EVENT_TRANSIT);
+      }
+
+      // shift
       planet_angle_2 = planet_angle_1;
       planet_angle_1 = planet_angle;
    }
@@ -1535,7 +1421,7 @@ void do_weather(Canvas * canvas) {
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE / 2 / 2 + SCALE(64),
-                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1543,28 +1429,28 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE / 2 / 2, COLOR_BLACK,
-                  COLOR_DAY, buffer, 1, 1);
+                  COLOR_YELLOW, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - SCALE(104), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + SCALE(128), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_DAY, buffer, 1, 3);
+                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE * 3 / 4 + SCALE(64),
-                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1572,67 +1458,55 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE * 3 / 4, COLOR_WHITE,
-                  COLOR_NIGHT, buffer, 1, 1);
+                  COLOR_DARKBLUE, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - 104, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + 128, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_NIGHT, buffer, 1, 3);
+                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       fclose(f);
    }
 }
 
-/// @brief Add zodiac details to the clock
-///
-/// This is dead code.
-///
-/// @param canvas The Canvas to draw on
-/// @param JD the current Julian Date
-/// @return void
-void do_zodiac(Canvas * canvas, double JD) {
-   struct ln_equ_posn sun_equatorial;
-   ln_get_solar_equ_coords(JD, &sun_equatorial);
-   double ra = sun_equatorial.ra;
+/// @brief A struct used to remember where something is drawn.
+typedef struct AccumDrawnMemory {
+    int x;
+    int y;
+    unsigned int fg;
+    unsigned int bg;
+    char *str;
+} AccumDrawnMemory;
 
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
-   char buf[2] = { 0, 0 };
-   for (int sign = 0; sign < 12; sign++) {
-      // aries is at 0 + (360.0/12.0/2.0)
-      int angle = sign * (360.0 / 12.0);
-      int theta = 270.0 - ra + (360.0 / 12.0 / 2.0) + angle;
-      int cx =
-         canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20) * cos(DEG2RAD(theta));
-      int cy =
-         canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20) * sin(DEG2RAD(theta));
-      buf[0] = 'a' + sign;
-      text_canvas(shadow, ASTRO_FONT, cx, cy, COLOR_BLACK, COLOR_NONE, buf, 1,
-                  3);
+/// @brief An array of things drawn
+AccumDrawnMemory accumdrawnmemory[8];
 
-      theta += (360.0 / 12.0 / 2.0);
-      cx = canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20 +
-                            15) * cos(DEG2RAD(theta));
-      cy = canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20 +
-                            15) * sin(DEG2RAD(theta));
-      int cx2 =
-         canvas->w / 2 + (canvas->w / 2 / 2 - 128 + 20 -
-                          15) * cos(DEG2RAD(theta));
-      int cy2 =
-         canvas->h / 2 + (canvas->h / 2 / 2 - 128 + 20 -
-                          15) * sin(DEG2RAD(theta));
-      line_canvas(shadow, cx, cy, cx2, cy2, COLOR_BLACK);
+/// @brief The next open spot in the array
+int accumdrawnspot = 0;
+
+/// @brief Redraw stored accumulator times
+///
+/// This fixes some drawing oddities on very small screens
+///
+/// @param canvas Pointer to the canvas object
+/// @returns void
+void replay_accum_memory(Canvas *canvas) {
+   for (int i = 0; i < accumdrawnspot; i++) {
+      text_canvas(canvas, FONT_BOLD_MED, accumdrawnmemory[i].x, accumdrawnmemory[i].y,
+                  accumdrawnmemory[i].fg, accumdrawnmemory[i].bg,
+                  accumdrawnmemory[i].str, 1, 3);
+      free(accumdrawnmemory[i].str);
    }
-   xor_canvas(shadow, canvas);
-   delete_canvas(shadow);
+   accumdrawnspot = 0;
 }
 
 /// @brief Helper function to accumulate total sunlight/night/whatever hours
@@ -1667,14 +1541,14 @@ accum_helper(Canvas * canvas,
    }
    double x =
       (canvas->w / 2) +
-      ((canvas->w / 3 - SCALE(24)) * 5 / 8) * cos(DEG2RAD(draw_angle));
+      (canvas->w * 4 / 16) * cos(DEG2RAD(draw_angle));
    double y =
       (canvas->h / 2) +
-      ((canvas->h / 3 - SCALE(24)) * 5 / 8) * sin(DEG2RAD(draw_angle));
-   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1,
-               3);
-   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1,
-               3);
+      (canvas->h * 4 / 16) * sin(DEG2RAD(draw_angle));
+//   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
+//   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
+   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory){ x, y - SCALE(16), fore, back, strdup(buffer) };
+   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory){ x, y + SCALE(16), fore, back, strdup(label) };
 }
 
 /// @brief A struct used to remember where something is drawn.
@@ -1797,9 +1671,9 @@ void replayTimeDrawnMemory(Canvas * canvas) {
 void do_sun_bands(Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
-   unsigned int color = COLOR_NIGHT;
+   unsigned int color = COLOR_DARKBLUE;
    unsigned int fore = COLOR_WHITE;
-   unsigned int back = COLOR_NIGHT;
+   unsigned int back = COLOR_DARKBLUE;
 
    unsigned int transit_fore = COLOR_GREEN;
    unsigned int transit_back = COLOR_RED;
@@ -1826,7 +1700,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
-               arc_canvas(canvas, canvas->w / 2,
+               arc_canvas_shaded(canvas, canvas->w / 2,
                           canvas->h / 2,
                           canvas->w / 2 / 2,
                           canvas->h / 2 / 2, color, start_angle, stop_angle);
@@ -1838,19 +1712,19 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   stop_angle += 360.0;
                }
                switch (color) {
-                  case COLOR_DAY:
+                  case COLOR_YELLOW:
                      daylight += stop_angle - start_angle;
                      break;
-                  case COLOR_CIVIL:
+                  case COLOR_ORANGE:
                      civil += stop_angle - start_angle;
                      break;
-                  case COLOR_NAUTICAL:
+                  case COLOR_LIGHTBLUE:
                      nautical += stop_angle - start_angle;
                      break;
-                  case COLOR_ASTRONOMICAL:
+                  case COLOR_BLUE:
                      astronomical += stop_angle - start_angle;
                      break;
-                  case COLOR_NIGHT:
+                  case COLOR_DARKBLUE:
                      darkness += stop_angle - start_angle;
                      break;
                }
@@ -1859,7 +1733,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   times_written++;
                   // TODO FIX check size
                   do_tr_time_sun(canvas, now, last, start_angle,
-                                 (canvas->w / 3 - SCALE(48)), fore, back);
+                                 (canvas->w / 3 - SCALE(32)), fore, back);
                }
 
                last = here;
@@ -1882,19 +1756,19 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
          if (events[i].type == EVENT_UP || events[i].type == EVENT_RISE) {
             switch (events[i].category) {
                case CAT_ASTRONOMICAL:
-                  color = back = COLOR_ASTRONOMICAL;
+                  color = back = COLOR_BLUE;
                   fore = COLOR_WHITE;
                   break;
                case CAT_NAUTICAL:
-                  color = back = COLOR_NAUTICAL;
+                  color = back = COLOR_LIGHTBLUE;
                   fore = COLOR_WHITE;
                   break;
                case CAT_CIVIL:
-                  color = back = COLOR_CIVIL;
+                  color = back = COLOR_ORANGE;
                   fore = COLOR_BLACK;
                   break;
                case CAT_SOLAR:
-                  color = back = COLOR_DAY;
+                  color = back = COLOR_YELLOW;
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
@@ -1912,22 +1786,22 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
             switch (events[i].category) {
                case CAT_ASTRONOMICAL:
                   back = color;
-                  color = COLOR_NIGHT;
+                  color = COLOR_DARKBLUE;
                   fore = COLOR_WHITE;
                   break;
                case CAT_NAUTICAL:
                   back = color;
-                  color = COLOR_ASTRONOMICAL;
+                  color = COLOR_BLUE;
                   fore = COLOR_WHITE;
                   break;
                case CAT_CIVIL:
                   back = color;
-                  color = COLOR_NAUTICAL;
+                  color = COLOR_LIGHTBLUE;
                   fore = COLOR_BLACK;
                   break;
                case CAT_SOLAR:
                   back = color;
-                  color = COLOR_CIVIL;
+                  color = COLOR_ORANGE;
                   fore = COLOR_BLACK;
                   break;
                case CAT_LUNAR:
@@ -1946,7 +1820,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    double here = now + 0.5;
    double start_angle = frac(last) * 360.0 - up_angle + 270.0;
    double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
-   arc_canvas(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
+   arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
               canvas->h / 2 / 2, color, start_angle, stop_angle);
 
    // accumulate daylight and darkness
@@ -1956,157 +1830,75 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
       stop_angle += 360.0;
    }
    switch (color) {
-      case COLOR_DAY:
+      case COLOR_YELLOW:
          daylight += stop_angle - start_angle;
          break;
-      case COLOR_CIVIL:
+      case COLOR_ORANGE:
          civil += stop_angle - start_angle;
          break;
-      case COLOR_NAUTICAL:
+      case COLOR_LIGHTBLUE:
          nautical += stop_angle - start_angle;
          break;
-      case COLOR_ASTRONOMICAL:
+      case COLOR_BLUE:
          astronomical += stop_angle - start_angle;
          break;
-      case COLOR_NIGHT:
+      case COLOR_DARKBLUE:
          darkness += stop_angle - start_angle;
          break;
    }
 
    if (times_written) {
       do_tr_time_sun(canvas, now, last, start_angle,
-                     canvas->w / 3 - SCALE(48), fore, back);
+                     canvas->w / 3 - SCALE(32), fore, back);
    }
 
    if (transited != 0.0) {
       double angle = frac(transited) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(canvas, now, transited, angle,
-                     canvas->w / 3 - SCALE(48), transit_fore, transit_back);
+                     canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }
 
    if (daylight > one_minute) {
       accum_helper(canvas, daylight, "daylight", 270.0, COLOR_BLACK,
-                   COLOR_DAY);
+                   COLOR_YELLOW);
    }
    else if (civil > one_minute) {
-      accum_helper(canvas, civil, "civil", 270.0, COLOR_BLACK, COLOR_CIVIL);
+      accum_helper(canvas, civil, "civil", 270.0, COLOR_BLACK, COLOR_ORANGE);
    }
    else if (nautical > one_minute) {
       accum_helper(canvas, nautical, "nautical", 270.0, COLOR_WHITE,
-                   COLOR_NAUTICAL);
+                   COLOR_LIGHTBLUE);
    }
    else if (astronomical > one_minute) {
       accum_helper(canvas, astronomical, "astronomical", 270.0,
-                   COLOR_WHITE, COLOR_ASTRONOMICAL);
+                   COLOR_WHITE, COLOR_BLUE);
    }
    else if (darkness > one_minute) {
       accum_helper(canvas, darkness, "darkness", 270.0, COLOR_WHITE,
-                   COLOR_NIGHT);
+                   COLOR_DARKBLUE);
    }
 
    if (darkness > one_minute) {
       if (astronomical > one_minute) {
          accum_helper(canvas, darkness, "darkness", 90.0,
-                      COLOR_WHITE, COLOR_NIGHT);
+                      COLOR_WHITE, COLOR_DARKBLUE);
       }
    }
    else if (astronomical > one_minute) {
       if (nautical > one_minute) {
          accum_helper(canvas, astronomical, "astronomical", 90.0,
-                      COLOR_WHITE, COLOR_ASTRONOMICAL);
+                      COLOR_WHITE, COLOR_BLUE);
       }
    }
    else if (nautical > one_minute) {
       if (civil > one_minute) {
          accum_helper(canvas, nautical, "nautical", 90.0,
-                      COLOR_WHITE, COLOR_NAUTICAL);
+                      COLOR_WHITE, COLOR_LIGHTBLUE);
       }
    }
    else if (civil > one_minute) {
       if (daylight > one_minute) {
-         accum_helper(canvas, civil, "civil", 90.0, COLOR_BLACK, COLOR_CIVIL);
-      }
-   }
-}
-
-#define ISDITHERCOLOR(x) (\
-   (x) == COLOR_DAY || \
-   (x) == COLOR_CIVIL || \
-   (x) == COLOR_NAUTICAL || \
-   (x) == COLOR_ASTRONOMICAL || \
-   (x) == COLOR_NIGHT \
-)
-
-#define DITHER 3
-
-/// @brief add some faded dithering to existing sun bands
-///
-/// @param canvas The canvas to draw on
-void do_sun_dithering(Canvas * canvas) {
-   for (int y = 0; y < canvas->h; y += DITHER) {
-      for (int x = 0; x < canvas->w; x += DITHER) {
-         int count = 0;
-         int counts[5] = { 0,0,0,0,0 };
-         unsigned int array[(DITHER*DITHER)];
-         for (int j = 0; j < DITHER; j++) {
-            for (int i = 0; i < DITHER; i++) {
-               int c = array[j*DITHER+i] = peek_canvas(canvas, i+x, j+y);
-               switch(c) {
-                  case COLOR_DAY:
-                     count++;
-                     counts[0]++;
-                     break;
-                  case COLOR_CIVIL:
-                     count++;
-                     counts[1]++;
-                     break;
-                  case COLOR_NAUTICAL:
-                     count++;
-                     counts[2]++;
-                     break;
-                  case COLOR_ASTRONOMICAL:
-                     count++;
-                     counts[3]++;
-                     break;
-                  case COLOR_NIGHT:
-                     count++;
-                     counts[4]++;
-                     break;
-               }
-            }
-         }
-         if (count > 0) {
-            count = 0;
-            for (int k = 0; k < 5; k++) {
-               if (counts[k] != 0) {
-                  count++;
-               }
-            }
-            if (count > 0) {
-               unsigned int convolution[(DITHER*DITHER)];
-               for (int k = 0; k < (DITHER*DITHER); k++) {
-                  if (ISDITHERCOLOR(array[k])) {
-again:
-                     convolution[k] = rand() % (DITHER*DITHER);
-                     if (!ISDITHERCOLOR(array[convolution[k]])) {
-                        goto again;
-                     }
-                     for (int l = 0; l < k; l++) {
-                        if (convolution[l] == convolution[k]) {
-                           goto again;
-                        }
-                     }
-                  }
-                  else {
-                     convolution[k] = k;
-                  }
-               }
-               // now do the switching
-               for (int k = 0; k < (DITHER*DITHER); k++) {
-                  poke_canvas(canvas, x + k % DITHER, y + k / DITHER, array[convolution[k]]);
-               }
-            }
-         }
+         accum_helper(canvas, civil, "civil", 90.0, COLOR_BLACK, COLOR_ORANGE);
       }
    }
 }
@@ -2164,27 +1956,30 @@ double get_moon_angle(double JD, double lunar_new) {
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 1);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 1);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 1);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 1);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 1);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
 
-   r -= SCALE(80);
-   do_planet_band(canvas, up, JD, COLOR_GRAY, r, CAT_MERCURY, 2);
+   r -= SCALE(100);
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_LIGHTGRAY, r, CAT_VENUS, 2);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_RED, r, CAT_MARS, 2);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_ORANGE, r, CAT_JUPITER, 2);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 2);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_BLUE, r, CAT_SATURN, 2);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 2);
+   r += SCALE(20);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 2);
 }
 
 /// @brief Draw debugging information
@@ -2193,43 +1988,112 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
 ///
 /// @param canvas The Canvas to draw on
 /// @param JD The current Julian Date
+/// @param offset The offset passed into do_all
+/// @param tzProvider Name of the timezone provider
 /// @return void
-void do_debug_info(Canvas * canvas, double JD) {
-   // for debugging, put the Julian date in the lower right
-   char buf[1024];
-   sprintf(buf, "JD=%f", JD);
-   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
-   int w = wh >> 16;
-   int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - w / 2 - 20,
-         canvas->h - h / 2 - 3, COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+void do_debug_info(Canvas * canvas, double JD, double offset, const char *tzProvider) {
 
-   // for debugging, put time zone info in the lower left
+   // buffer for julian date
+   char jd_buf[1024];
+   sprintf(jd_buf, "JD=%0.2f", JD);
+
+   // buffer for offset
+   char offset_buf[1024];
+   if (offset != 0.0) {
+      sprintf(offset_buf, "offset=%0.2f", offset);
+   }
+   else {
+      offset_buf[0] = 0;
+   }
+
+   // buffer for tz abbreviation
+   char abbrev_buf[1024];
    time_t present;
    ln_get_timet_from_julian(JD, &present);
    struct tm *tm = localtime(&present);
-
-   if (tzname[0] != NULL && tzname[1] != NULL) {
-      sprintf(buf, "%s%s%s/%s%s%s",
+   if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
+      sprintf(abbrev_buf, "%s%s%s/%s%s%s",
             tm->tm_isdst ? "" : "[",
-            tzname[0],
+              tzname[0],
             tm->tm_isdst ? "" : "]",
             tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
    }
    else if (tzname[0] != NULL) {
-      sprintf(buf, "[%s]", tzname[0]);
+      sprintf(abbrev_buf, "[%s]", tzname[0]);
    }
    else {
-      sprintf(buf, "[(null)]");
+      abbrev_buf[0] = 0;
    }
 
-   wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
-   w = wh >> 16;
-   h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20, canvas->h - h / 2 - 3,
-         COLOR_WHITE, COLOR_BLACK, buf, 1, 3);
+   // setting of tz
+   const char *tz = getenv("TZ");
+   if (tz == NULL) {
+       tz = "(null)";
+   }
+
+   // no buffer needed for tzProvider
+
+   // probe our font
+#define TEST_STRING "A_gy" // includes upercase and descenders
+   int whn = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, TEST_STRING, 1, 3);
+   int hn = whn & 0xFFFF;
+
+   // get sizes of various pieces
+   int wh0 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   int w0 = wh0 >> 16;
+
+   int wh1 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
+   int w1 = wh1 >> 16;
+
+   int wh2 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   int w2 = wh2 >> 16;
+
+   int wh3 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   int w3 = wh3 >> 16;
+
+   int wh4 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
+   int w4 = wh4 >> 16;
+
+   // find highest height
+   int h = hn;
+
+   // now output the things...
+
+   // date side
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w0 / 2, canvas->h - 5 - h/2,
+         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w1 / 2, canvas->h - 5 - (h+5) - h/2,
+         COLOR_YELLOW, COLOR_BLACK, offset_buf, 1, 3);
+
+   // timezone side
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w2 / 2, canvas->h - 5 - h/2,
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w3 / 2, canvas->h - 5 - (h+5) - h/2,
+         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+   text_canvas(canvas, FONT_BOLD_MED, 5 + w4 / 2, canvas->h - 5 - 2*(h+5) - h/2,
+         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
+}
+
+/// @brief Draw provider information
+///
+/// upper left
+///
+/// @param canvas The Canvas to draw on
+/// @param provider The current location provider
+/// @return void
+void do_provider_info(Canvas * canvas, const char *provider) {
+   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+                        COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
+   int w = wh >> 16;
+   int h = wh & 0xFFFF;
+   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
+               h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
 }
 
 void initialize_all(void) {
@@ -2328,12 +2192,19 @@ void set_italic_med(int width) {
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
-/// @param lng The observer's Longitude in degrees, West is negative
+/// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
+/// @param provider Name of the location provider to be displayed
+/// @param tz Name of timezone to be used
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lng, double offset, int width) {
+Canvas *do_all(double lat, double lon, double offset, int width, const char *provider, const char *tzprovider, const char *tz) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
+
+   if (tz != NULL && tz[0] != 0) {
+      setenv("TZ", tz, 1);
+      tzset();
+   }
 
    double JD;
    double up;
@@ -2356,7 +2227,7 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
 
    // observer's location
    observer.lat = lat;          // degrees, North is positive
-   observer.lng = lng;          // degrees, East is positive
+   observer.lng = lon;          // degrees, East is positive
 
    // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
@@ -2387,7 +2258,7 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    int mid = canvas->w / 2;
 
    int goodloc = 1;
-   if (lat > 90.0 || lng > 180.0 || lat < -90.0 || lng < -180.0) {
+   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
       goodloc = 0;
 
       time_t present;
@@ -2406,6 +2277,11 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
       do_planet_bands(canvas, JD, up);
    }
 
+   // colored bands for the sun
+   if (goodloc) {
+      do_sun_bands(canvas, up, JD);
+   }
+
    // draw the moon
    double moon_angle = 0.0;
    if (goodloc) {
@@ -2414,11 +2290,11 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
          moon_angle);
    }
 
-   // colored bands for the sun
-   if (goodloc) {
-      do_sun_bands(canvas, up, JD);
-      do_sun_dithering(canvas);
-   }
+   // our rotating "now" hand
+   do_now_hand(canvas, up, JD);
+
+   // draw accumulated times
+   replay_accum_memory(canvas);
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
@@ -2429,17 +2305,6 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
    arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
-
-   // our rotating "now" hand
-   do_now_hand(canvas, up, JD);
-
-   // zodiac, skip because woo-woo
-   // do_zodiac(canvas, JD);
-
-   // colored band for the moon
-   if (goodloc) {
-      do_moon_band(canvas, up, JD, moon_angle, COLOR_MOONBAND);
-   }
 
    // information in the center
    do_now_time(canvas, JD);
@@ -2452,7 +2317,11 @@ Canvas *do_all(double lat, double lng, double offset, int width) {
    // embedded watch won't have weather info
    //do_weather(canvas);
 
-   do_debug_info(canvas, JD);
+   do_debug_info(canvas, JD, offset, tzprovider);
+
+   do_provider_info(canvas, provider);
 
    return canvas;
 }
+
+// vim: expandtab:noai:ts=3:sw=3

@@ -70,12 +70,6 @@
 #define COLOR_WHITE      RGB(255, 255, 255)
 #define COLOR_YELLOW     RGB(255, 255,   0)
 
-#define COLOR_DAY           COLOR_YELLOW
-#define COLOR_CIVIL         COLOR_ORANGE
-#define COLOR_NAUTICAL      COLOR_LIGHTBLUE
-#define COLOR_ASTRONOMICAL  COLOR_BLUE
-#define COLOR_NIGHT         COLOR_DARKBLUE
-
 /// @brief A struct defining an area to draw on.
 typedef struct Canvas {
    int w;                       ///< The width of the Canvas
@@ -104,5 +98,7 @@ void thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 void arc_canvas(Canvas * canvas, int center_x, int center_y, int radius,
                 int strokewidth, unsigned int strokecolor,
                 double begin_deg, double end_deg);
-
+void arc_canvas_shaded(Canvas * canvas, int center_x, int center_y, int radius,
+                int strokewidth, unsigned int strokecolor,
+                double begin_deg, double end_deg);
 #endif

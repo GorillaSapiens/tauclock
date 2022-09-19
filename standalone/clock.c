@@ -2312,6 +2312,9 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
       do_sun_bands(canvas, up, JD);
    }
 
+   // our rotating "now" hand
+   do_now_hand(canvas, up, JD);
+
    // draw the moon
    double moon_angle = 0.0;
    if (goodloc) {
@@ -2319,9 +2322,6 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
       do_moon_draw(canvas, up, JD, lunar_phase, lunar_bright_limb, lunar_disk,
          moon_angle);
    }
-
-   // our rotating "now" hand
-   do_now_hand(canvas, up, JD);
 
    // draw accumulated times
    replay_accum_memory(canvas);

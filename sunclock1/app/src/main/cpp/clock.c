@@ -879,117 +879,7 @@ typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 /// @param type An EVENT_* macro indicating event type
 /// @return void
 void
-my_get_everything_helper(double JD,
-                         struct ln_lnlat_posn *observer,
-                         Get_Equ_Coords get_equ_coords,
-                         double horizon, EventCategory category,
-                         EventType type) {
-
-   struct ln_equ_posn posn;
-   struct ln_hrz_posn hrz_posn;
-   double angle;
-   double angles[3];
-
-   int iterations = 0;
-
-   get_equ_coords(JD, &posn);
-   ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-   angle = hrz_posn.alt;
-
-   switch (type) {
-      case EVENT_UP:
-      case EVENT_DOWN:
-         // ignore it
-         break;
-      case EVENT_RISE:
-         while (angle >= horizon) {
-            iterations++;
-            JD -= ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         while (angle < horizon) {
-            iterations++;
-            JD += ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         events[event_spot++] = (Event) {
-         JD, category, EVENT_RISE};
-         break;
-      case EVENT_SET:
-         while (angle >= horizon) {
-            iterations++;
-            JD += ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         while (angle < horizon) {
-            iterations++;
-            JD -= ONE_MINUTE_JD;
-            get_equ_coords(JD, &posn);
-            ln_get_hrz_from_equ(&posn, observer, JD, &hrz_posn);
-            angle = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         events[event_spot++] = (Event) {
-         JD, category, EVENT_SET};
-         break;
-      case EVENT_TRANSIT:
-         angles[1] = angle;
-         ln_get_hrz_from_equ(&posn, observer, JD - ONE_MINUTE_JD, &hrz_posn);
-         angles[0] = hrz_posn.alt;
-         ln_get_hrz_from_equ(&posn, observer, JD + ONE_MINUTE_JD, &hrz_posn);
-         angles[2] = hrz_posn.alt;
-         while (angles[0] < angles[1] && angles[1] < angles[2]) {
-            iterations++;
-            angles[0] = angles[1];
-            angles[1] = angles[2];
-            JD += ONE_MINUTE_JD;
-            ln_get_hrz_from_equ(&posn, observer, JD + ONE_MINUTE_JD, &hrz_posn);
-            angles[2] = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         while (angles[0] > angles[1] && angles[1] > angles[2]) {
-            iterations++;
-            angles[2] = angles[1];
-            angles[1] = angles[0];
-            JD -= ONE_MINUTE_JD;
-            ln_get_hrz_from_equ(&posn, observer, JD - ONE_MINUTE_JD, &hrz_posn);
-            angles[0] = hrz_posn.alt;
-            if (iterations > 120) {
-               goto abort;
-            }
-         }
-         // only maxima above horizon count as "transit"
-         if (angles[1] > horizon) {
-            events[event_spot++] = (Event) {
-            JD, category, EVENT_TRANSIT};
-         }
-         break;
-   }
- abort:
-   return;
-}
-
-void
-my_get_everything_helper2(double JDstart, double JDend,
+my_get_everything_helper(double JDstart, double JDend,
                          struct ln_lnlat_posn *observer,
                          Get_Equ_Coords get_equ_coords,
                          double horizon, EventCategory category,
@@ -1091,7 +981,7 @@ my_get_everything_solar(double JDstart,
       // test for various horizon crossings...
       if (sun_angle_1 < LN_SOLAR_ASTRONOMICAL_HORIZON &&
           sun_angle >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
@@ -1099,7 +989,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 < LN_SOLAR_NAUTIC_HORIZON &&
           sun_angle >= LN_SOLAR_NAUTIC_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
@@ -1107,7 +997,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 < LN_SOLAR_CIVIL_HORIZON &&
           sun_angle >= LN_SOLAR_CIVIL_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
@@ -1115,7 +1005,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 < LN_SOLAR_STANDART_HORIZON &&
           sun_angle >= LN_SOLAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_STANDART_HORIZON,
@@ -1124,7 +1014,7 @@ my_get_everything_solar(double JDstart,
 
       if (sun_angle_1 >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
           sun_angle < LN_SOLAR_ASTRONOMICAL_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
@@ -1132,7 +1022,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 >= LN_SOLAR_NAUTIC_HORIZON &&
           sun_angle < LN_SOLAR_NAUTIC_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
@@ -1140,7 +1030,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 >= LN_SOLAR_CIVIL_HORIZON &&
           sun_angle < LN_SOLAR_CIVIL_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
@@ -1148,7 +1038,7 @@ my_get_everything_solar(double JDstart,
       }
       if (sun_angle_1 >= LN_SOLAR_STANDART_HORIZON &&
           sun_angle < LN_SOLAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_STANDART_HORIZON,
@@ -1156,7 +1046,7 @@ my_get_everything_solar(double JDstart,
       }
 
       if (sun_angle_2 < sun_angle_1 && sun_angle < sun_angle_1) {
-         my_get_everything_helper2(i - 2.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
                                    observer,
                                    ln_get_solar_equ_coords,
                                    -90.1,       // a fake horizon
@@ -1251,7 +1141,7 @@ my_get_everything_lunar(double JDstart,
       // test for various horizon crossings...
       if (moon_angle_1 < LN_LUNAR_STANDART_HORIZON &&
           moon_angle >= LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1259,7 +1149,7 @@ my_get_everything_lunar(double JDstart,
       }
       if (moon_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
           moon_angle < LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1267,7 +1157,7 @@ my_get_everything_lunar(double JDstart,
       }
 
       if (moon_angle_2 < moon_angle_1 && moon_angle < moon_angle_1) {
-         my_get_everything_helper2(i - 2.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
                                    observer,
                                    ln_get_lunar_equ_coords,
                                    -90.1,       // a fake horizon
@@ -1341,7 +1231,7 @@ my_get_everything_planet(double JDstart,
       // test for various horizon crossings...
       if (planet_angle_1 < LN_LUNAR_STANDART_HORIZON &&
           planet_angle >= LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1349,7 +1239,7 @@ my_get_everything_planet(double JDstart,
       }
       if (planet_angle_1 >= LN_LUNAR_STANDART_HORIZON &&
           planet_angle < LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper2(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - ONE_HOUR_JD, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1357,7 +1247,7 @@ my_get_everything_planet(double JDstart,
       }
 
       if (planet_angle_2 < planet_angle_1 && planet_angle < planet_angle_1) {
-         my_get_everything_helper2(i - 2.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - 2.0 * ONE_HOUR_JD, i,
                                    observer,
                                    get_equ_coords,
                                    -90.1,       // a fake horizon

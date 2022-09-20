@@ -1403,27 +1403,48 @@ events_populate_circumpolar_transit(double JDstart, double JDend,
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
 
-   double angle;
-   double slope;
+   double angles[3];
+   double slopes[3];
 
-   double middle = (JDstart + JDend) / 2.0;
+   double middle;
+
+   get_equ_coords(JDstart, &posn);
+   ln_get_hrz_from_equ(&posn, observer, JDstart, &hrz_posn);
+   angles[0] = hrz_posn.alt;
+
+   get_equ_coords(JDstart + HALF_SECOND_JD, &posn);
+   ln_get_hrz_from_equ(&posn, observer, JDstart + HALF_SECOND_JD, &hrz_posn);
+   slopes[0] = hrz_posn.alt - angles[0];
+
+   get_equ_coords(JDend, &posn);
+   ln_get_hrz_from_equ(&posn, observer, JDend, &hrz_posn);
+   angles[2] = hrz_posn.alt;
+
+   get_equ_coords(JDend + HALF_SECOND_JD, &posn);
+   ln_get_hrz_from_equ(&posn, observer, JDend + HALF_SECOND_JD, &hrz_posn);
+   slopes[2] = hrz_posn.alt - angles[2];
 
    do {
+      middle = (JDstart + JDend) / 2.0;
+
       get_equ_coords(middle, &posn);
-      ln_get_hrz_from_equ(&posn, observer, JDstart, &hrz_posn);
-      angle = hrz_posn.alt;
+      ln_get_hrz_from_equ(&posn, observer, middle, &hrz_posn);
+      angles[1] = hrz_posn.alt;
 
       get_equ_coords(middle + HALF_SECOND_JD, &posn);
       ln_get_hrz_from_equ(&posn, observer, middle + HALF_SECOND_JD, &hrz_posn);
-      slope = hrz_posn.alt - angle;
+      slopes[1] = hrz_posn.alt - angles[1];
 
-      if (slope > 0.0) {
-         JDstart = middle;
-      }
-      else {
+      if (slopes[0] > 0.0 && slopes[1] < 0.0) {
          JDend = middle;
+         angles[2] = angles[1];
+         slopes[2] = slopes[1];
       }
-      middle = (JDstart + JDend) / 2.0;
+      else if (slopes[1] > 0.0 && slopes[2] < 0.0) {
+         JDstart = middle;
+         angles[0] = angles[1];
+         slopes[0] = slopes[1];
+      }
    } while ((JDend - JDstart) > HALF_MINUTE_JD);
 
    double when = ((JDstart + JDend) / 2.0);

@@ -788,6 +788,22 @@ void events_sort(void) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
 
+/// @brief Uniq the events list
+///
+/// Uses the event_compar function
+void events_uniq(void) {
+   int i = 0;
+   while (i < event_spot - 1) {
+      if (!event_compar(events + i, events + (i + 1))) {
+         memmove(events + i, events + (i + 1), sizeof(Event) * (event_spot - i));
+         event_spot--;
+      }
+      else {
+         i++;
+      }
+   }
+}
+
 /// @brief Mark events of interest / noninterest
 ///
 /// Used to mark events occurring +/- 12 hours from current time.
@@ -819,10 +835,13 @@ void events_dump(void) {
 /// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
+/// @brief One half minute of Julian Date.
+#define HALF_MINUTE_JD (1.0/(24.0*60.0*2.0))
+
 /// @brief One second of Julian Date.
 #define ONE_SECOND_JD (1.0/(24.0*60.0*60.0))
 
-/// @brief One second of Julian Date.
+/// @brief One half second of Julian Date.
 #define HALF_SECOND_JD (1.0/(24.0*60.0*60.0*2.0))
 
 /// @brief Typedef for functions returning Equ coordinates of object
@@ -923,9 +942,23 @@ my_get_everything_helper(double JDstart, double JDend,
       }
       while ((JDend - JDstart) > ONE_SECOND_JD && iterations < 32);
 
-      if (type != EVENT_TRANSIT || angles[1] >= horizon) {
-         events[event_spot++] = (Event) {(JDstart + JDend)/2.0, category, type};
+      if (type == EVENT_TRANSIT && angles[1] < horizon) {
+         return;
       }
+      if (type == EVENT_RISE && angles[0] < horizon && angles[2] < horizon) {
+         return;
+      }
+      if (type == EVENT_SET && angles[0] > horizon && angles[2] > horizon) {
+         return;
+      }
+
+      double when = ((JDstart + JDend) / 2.0);
+      double whole = (int)when;
+      double fraction = when - (double)whole;
+      fraction *= 24.0*60.0*60.0;
+      fraction = (int)fraction;
+      fraction /= 24.0*60.0*60.0;
+      events[event_spot++] = (Event) {(whole + fraction), category, type};
    }
 }
 
@@ -942,7 +975,7 @@ my_get_everything_solar(double JDstart,
    double angles[2] = { 0.0, 0.0 };
    double slopes[2] = { 0.0, 0.0 };
    struct ln_hrz_posn sun_hrz_posn;
-   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15.0;
 
    // one hour before start
    ln_get_solar_equ_coords(JDstart - stepsize, &sun_posn);
@@ -1105,7 +1138,7 @@ my_get_everything_lunar(double JDstart,
    double angles[2];
    double slopes[2];
    struct ln_hrz_posn moon_hrz_posn;
-   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15.0;
 
    // one hour before start
    ln_get_lunar_equ_coords(JDstart - stepsize, &moon_posn);
@@ -1198,7 +1231,7 @@ my_get_everything_planet(double JDstart,
    double angles[2];
    double slopes[2];
    struct ln_hrz_posn planet_hrz_posn;
-   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15.0;
 
    // one hour before start
    get_equ_coords(JDstart - stepsize, &planet_posn);
@@ -1341,13 +1374,195 @@ my_get_everything(double JDstart,
    my_get_everything_saturn_updowns(earliest, observer);
 }
 
+void events_populate_helper(double JD, struct ln_rst_time rst_time,
+                              struct ln_lnlat_posn *observer,
+                              void (*get_equ_body_coords)(double, struct ln_equ_posn *),
+                              double horizon,
+                              EventCategory category) {
+   if (fabs(rst_time.rise - (JD + .5)) <= .5) {
+      my_get_everything_helper(rst_time.rise - ONE_MINUTE_JD * 10.0, rst_time.rise + ONE_MINUTE_JD * 10.0,
+                         observer, get_equ_body_coords, horizon, category, EVENT_RISE);
+   }
+   if (fabs(rst_time.transit - (JD + .5)) <= .5) {
+      my_get_everything_helper(rst_time.transit - ONE_MINUTE_JD * 10.0, rst_time.transit + ONE_MINUTE_JD * 10.0,
+                         observer, get_equ_body_coords, horizon, category, EVENT_TRANSIT);
+   }
+   if (fabs(rst_time.set - (JD + .5)) <= .5) {
+      my_get_everything_helper(rst_time.set - ONE_MINUTE_JD * 10.0, rst_time.set + ONE_MINUTE_JD * 10.0,
+                         observer, get_equ_body_coords, horizon, category, EVENT_SET);
+   }
+}
+
+void
+events_populate_circumpolar_transit(double JDstart, double JDend,
+                         struct ln_lnlat_posn *observer,
+                         Get_Equ_Coords get_equ_coords,
+                         double horizon,
+                         EventCategory category,
+                         EventType type) {
+   struct ln_equ_posn posn;
+   struct ln_hrz_posn hrz_posn;
+
+   double angle;
+   double slope;
+
+   double middle = (JDstart + JDend) / 2.0;
+
+   do {
+      get_equ_coords(middle, &posn);
+      ln_get_hrz_from_equ(&posn, observer, JDstart, &hrz_posn);
+      angle = hrz_posn.alt;
+
+      get_equ_coords(middle + HALF_SECOND_JD, &posn);
+      ln_get_hrz_from_equ(&posn, observer, middle + HALF_SECOND_JD, &hrz_posn);
+      slope = hrz_posn.alt - angle;
+
+      if (slope > 0.0) {
+         JDstart = middle;
+      }
+      else {
+         JDend = middle;
+      }
+      middle = (JDstart + JDend) / 2.0;
+   } while ((JDend - JDstart) > HALF_MINUTE_JD);
+
+   double when = ((JDstart + JDend) / 2.0);
+   double whole = (int)when;
+   double fraction = when - (double)whole;
+   fraction *= 24.0*60.0*60.0;
+   fraction = (int)fraction;
+   fraction /= 24.0*60.0*60.0;
+   events[event_spot++] = (Event) {(whole + fraction), category, type};
+}
+
+void events_populate_anything(double JD,
+                              struct ln_lnlat_posn *observer,
+                              void (*get_equ_body_coords)(double, struct ln_equ_posn *),
+                              double horizon,
+                              EventCategory category) {
+   struct ln_rst_time rst_time;
+   int ret;
+   int need_transit = 0;
+
+   #define STEPS 3
+   for (int i = 0; i <= STEPS; i++) {
+      double when = JD - 1.0 + 2.0 * (double)i / ((double)STEPS);
+      rst_time = (struct ln_rst_time) { 0, 0, 0 };
+      ret = ln_get_body_next_rst_horizon(when, observer, get_equ_body_coords, horizon, &rst_time);
+      if (ret == 0) {
+         events_populate_helper(when, rst_time, observer, get_equ_body_coords, horizon, category);
+      }
+      else if (ret == 1) {
+         need_transit = 1;
+      }
+   }
+
+   // libnova SUCKS
+   events_sort();
+   events_uniq();
+   int last = -1;
+
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].category == category) {
+         if (last != -1) {
+            switch(events[last].type) {
+               case EVENT_UP:
+               case EVENT_DOWN:
+                  // these don't exist yet!
+                  break;
+               case EVENT_RISE:
+                  if (events[i].type != EVENT_TRANSIT) {
+                     my_get_everything_helper(events[last].jd, events[i].jd,
+                                              observer,
+                                              get_equ_body_coords,
+                                              horizon,
+                                              category,
+                                              EVENT_TRANSIT);
+                  }
+                  break;
+               case EVENT_TRANSIT:
+                  need_transit = 0;
+                  if (events[i].type != EVENT_SET) {
+                     my_get_everything_helper(events[last].jd, events[i].jd,
+                                              observer,
+                                              get_equ_body_coords,
+                                              horizon,
+                                              category,
+                                              EVENT_SET);
+                  }
+                  break;
+               case EVENT_SET:
+                  if (events[i].type != EVENT_RISE) {
+                     my_get_everything_helper(events[last].jd, events[i].jd,
+                                              observer,
+                                              get_equ_body_coords,
+                                              horizon,
+                                              category,
+                                              EVENT_RISE);
+                  }
+                  break;
+            }
+         }
+         last = i;
+      }
+   }
+   if (need_transit) {
+      events_populate_circumpolar_transit(JD - .5, JD + .5,
+                                          observer,
+                                          get_equ_body_coords,
+                                          horizon,
+                                          category,
+                                          EVENT_TRANSIT);
+   }
+}
+
+void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
+   events_populate_anything(JD, observer, ln_get_solar_equ_coords, LN_SOLAR_ASTRONOMICAL_HORIZON, CAT_ASTRONOMICAL);
+   events_populate_anything(JD, observer, ln_get_solar_equ_coords, LN_SOLAR_NAUTIC_HORIZON,       CAT_NAUTICAL);
+   events_populate_anything(JD, observer, ln_get_solar_equ_coords, LN_SOLAR_CIVIL_HORIZON,        CAT_CIVIL);
+   events_populate_anything(JD, observer, ln_get_solar_equ_coords, LN_SOLAR_STANDART_HORIZON,     CAT_SOLAR);
+}
+
+void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
+   events_populate_anything(JD, observer, ln_get_lunar_equ_coords, LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
+}
+
+void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
+   events_populate_anything(JD, observer, ln_get_mercury_equ_coords, 0.0, CAT_MERCURY);
+   events_populate_anything(JD, observer, ln_get_venus_equ_coords, 0.0, CAT_VENUS);
+   events_populate_anything(JD, observer, ln_get_mars_equ_coords, 0.0, CAT_MARS);
+   events_populate_anything(JD, observer, ln_get_jupiter_equ_coords, 0.0, CAT_JUPITER);
+   events_populate_anything(JD, observer, ln_get_saturn_equ_coords, 0.0, CAT_SATURN);
+}
+
 /// @brief Populate the event list
 ///
 /// @param JD The current Julian Date
 /// @param observer The observer's lat/lon coordinates
 /// @return void
 void events_populate(double JD, struct ln_lnlat_posn *observer) {
-   my_get_everything(JD - 0.75, JD + 0.55, observer);
+   events_populate_solar(JD, observer);
+   events_populate_lunar(JD, observer);
+   events_populate_planets(JD, observer);
+
+   double earliest = events[0].jd;
+   for (int i = 1; i < event_spot; i++) {
+      if (events[i].jd < earliest) {
+         earliest = events[i].jd;
+      }
+   }
+   earliest -= ONE_MINUTE_JD;
+
+   // now do all the up downs for the earliest time
+
+   my_get_everything_solar_updowns(earliest, observer);
+   my_get_everything_lunar_updowns(earliest, observer);
+
+   my_get_everything_mercury_updowns(earliest, observer);
+   my_get_everything_venus_updowns(earliest, observer);
+   my_get_everything_mars_updowns(earliest, observer);
+   my_get_everything_jupiter_updowns(earliest, observer);
+   my_get_everything_saturn_updowns(earliest, observer);
 }
 
 /// @brief Figure out which way is "up"
@@ -2233,6 +2448,7 @@ Canvas *do_all(double lat, double lon, double offset, int width, const char *pro
    events_clear();
    events_populate(JD, &observer);
    events_sort();
+   events_uniq();
    events_prune(JD);
    events_dump();
 

@@ -51,18 +51,18 @@ class MainActivity : AppCompatActivity() {
     private var mOtlLon : Double = 0.0
     private var mOtlSpin : Double = 0.0
 
-    var mTimeZoneEngine: TimeZoneEngine? = null
-    var mEngineDone = false
+    private var mTimeZoneEngine: TimeZoneEngine? = null
+    private var mEngineDone = false
 
     private var mLocationManager : LocationManager? = null
     var mProviderName: String = "best"
-    var mRealProviderName : String = "gps"
+    private var mRealProviderName : String = "gps"
 
-    var mTimeZoneProvider : String = "system"
-    var mManualTimeZone : String = "Etc/GMT"
+    private var mTimeZoneProvider : String = "system"
+    private var mManualTimeZone : String = "Etc/GMT"
 
-    var mOffset: String = "none"
-    var mManualOffset : String = "0"
+    private var mOffset: String = "none"
+    private var mManualOffset : String = "0"
 
     // Create the Handler object (on the main thread by default)
     var mHandler = Handler(Looper.getMainLooper())
@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
             var displayProvider = mProviderName
             if (displayProvider == "best") {
                 displayProvider += " ("
-                displayProvider += mRealProviderName;
+                displayProvider += mRealProviderName
                 displayProvider += ")"
             }
             if (mRealProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
@@ -121,7 +121,6 @@ class MainActivity : AppCompatActivity() {
             var tzname : String = TimeZone.getDefault().toZoneId().toString()
             if (mTimeZoneProvider == "location") {
                 try {
-                    tzname = "(initializing...)"
                     val zoneId = mTimeZoneEngine!!.query(
                         mLastLocation?.latitude ?: 0.0,
                         mLastLocation?.longitude ?: 0.0
@@ -130,6 +129,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 catch (e: Exception) {
                     // do nothing
+                    tzname = "(error...)"
                 }
             }
             else if (mTimeZoneProvider == "manual") {
@@ -245,10 +245,10 @@ class MainActivity : AppCompatActivity() {
 
         var tmp = sharedPreferences.getString("provider", "")
         if (tmp != null && tmp.length > 0) {
-            mProviderName = tmp;
+            mProviderName = tmp
         }
         if (mProviderName == "manual") {
-            tmp = sharedPreferences.getString("manual_location", "");
+            tmp = sharedPreferences.getString("manual_location", "")
             if (tmp != null && tmp.length > 0) {
                 val pattern : Pattern = Pattern.compile("^([^,]+),(.+)$")
                 val matcher : Matcher = pattern.matcher(tmp)
@@ -257,8 +257,8 @@ class MainActivity : AppCompatActivity() {
                 if (isMatch) {
                     try {
                         mLastLocation = Location("manual")
-                        mLastLocation?.latitude = matcher.group(1).toDouble()
-                        mLastLocation?.longitude = matcher.group(2).toDouble()
+                        mLastLocation?.latitude = matcher.group(1)?.toDouble() ?: -91.0
+                        mLastLocation?.longitude = matcher.group(2)?.toDouble() ?: -181.0
                         mLastLocation?.altitude = 0.0
                     }
                     catch (e: Exception) {
@@ -270,20 +270,20 @@ class MainActivity : AppCompatActivity() {
 
         tmp = sharedPreferences.getString("timezone", "")
         if (tmp != null && tmp.length > 0) {
-            mTimeZoneProvider = tmp;
+            mTimeZoneProvider = tmp
         }
         tmp = sharedPreferences.getString("manual_timezone", "")
         if (tmp != null && tmp.length > 0) {
-            mManualTimeZone = tmp;
+            mManualTimeZone = tmp
         }
 
         tmp = sharedPreferences.getString("offset", "")
         if (tmp != null && tmp.length > 0) {
-            mOffset = tmp;
+            mOffset = tmp
         }
         tmp = sharedPreferences.getString("manual_offset", "")
         if (tmp != null && tmp.length > 0) {
-            mManualOffset = tmp;
+            mManualOffset = tmp
         }
     }
 
@@ -305,7 +305,7 @@ class MainActivity : AppCompatActivity() {
         editor.putString("offset", mOffset)
         editor.putString("manual_offset", mManualOffset)
 
-        editor.commit()
+        editor.apply()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -334,7 +334,7 @@ class MainActivity : AppCompatActivity() {
         mHandler.post(runVeryOften)
 
         GlobalScope.launch(Dispatchers.IO) {
-            mTimeZoneEngine = TimeZoneEngine.initialize();
+            mTimeZoneEngine = TimeZoneEngine.initialize()
             launch(Dispatchers.Main) {
                 mEngineDone = true
                 mNeedUpdate = true
@@ -372,56 +372,71 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isCloseToXY(motionEvent: MotionEvent, x: Double, y: Double, d: Double) : Boolean {
+        val dcx = motionEvent.x - x
+        val dcy = motionEvent.y - y
+        val dc = sqrt(dcx*dcx+dcy*dcy)
+        return dc < d
+    }
+
     private fun isCloseToCenter(motionEvent: MotionEvent) : Boolean {
         val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-        var dcx = motionEvent.x - (mImageView?.width ?: 1024) / 2.0
-        var dcy = motionEvent.y - (mImageView?.height ?: 1024) / 2.0
+        return isCloseToXY(motionEvent,
+            (mImageView?.width ?: 1024) / 2.0,
+            (mImageView?.height ?: 1024) / 2.0,
+            (width/2).toDouble()
+        )
+    }
 
-        dcx *= dcx
-        dcy *= dcy
-        val dc = sqrt(dcx+dcy)
+    private fun isCloseToLeft(motionEvent: MotionEvent) : Boolean {
+        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-        return (dc < (width / 2))
+        return isCloseToXY(motionEvent,
+           0.0,
+            (mImageView?.height ?: 1024) / 2.0,
+            (width/8).toDouble()
+        )
+    }
+
+    private fun isCloseToRight(motionEvent: MotionEvent) : Boolean {
+        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
+
+        return isCloseToXY(motionEvent,
+            (mImageView?.width ?: 1024).toDouble(),
+            (mImageView?.height ?: 1024) / 2.0,
+            (width/8).toDouble()
+        )
     }
 
     private fun isCloseToProvider(motionEvent: MotionEvent) : Boolean {
         val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-        var dcx = motionEvent.x
-        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 - width / 2.0)
-
-        dcx *= dcx
-        dcy *= dcy
-        val dc = sqrt(dcx+dcy)
-
-        return (dc < (width / 5))
+        return isCloseToXY(motionEvent,
+            0.0,
+            (mImageView?.height ?: 1024) / 2.0 - width / 2.0,
+            (width/5).toDouble()
+        )
     }
 
     private fun isCloseToTimeZone(motionEvent: MotionEvent) : Boolean {
         val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-        var dcx = motionEvent.x
-        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 + width / 2.0)
-
-        dcx *= dcx
-        dcy *= dcy
-        val dc = sqrt(dcx+dcy)
-
-        return (dc < (width / 5))
+        return isCloseToXY(motionEvent,
+            0.0,
+            (mImageView?.height ?: 1024) / 2.0 + width / 2.0,
+            (width/5).toDouble()
+        )
     }
 
     private fun isCloseToSettings(motionEvent: MotionEvent) : Boolean {
         val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
 
-        var dcx = motionEvent.x- ((mImageView?.width ?: 1024) / 2.0 + width / 2.0)
-        var dcy = motionEvent.y - ((mImageView?.height ?: 1024) / 2.0 + width / 2.0)
-
-        dcx *= dcx
-        dcy *= dcy
-        val dc = sqrt(dcx+dcy)
-
-        return (dc < (width / 5))
+        return isCloseToXY(motionEvent,
+            (mImageView?.width ?: 1024) / 2.0 + width / 2.0,
+            (mImageView?.height ?: 1024) / 2.0 + width / 2.0,
+            (width/5).toDouble()
+        )
     }
 
     private fun otl(motionEvent: MotionEvent) {
@@ -453,6 +468,18 @@ class MainActivity : AppCompatActivity() {
             else if (isCloseToSettings(motionEvent)) {
                 val switchActivityIntent = Intent(this, SettingsActivity::class.java)
                 startActivity(switchActivityIntent)
+                return
+            }
+            else if (isCloseToLeft(motionEvent) && mOffset == "manual") {
+                mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
+                updateDrawing()
+                exportSettings()
+                return
+            }
+            else if (isCloseToRight(motionEvent) && mOffset == "manual") {
+                mManualOffset = (mManualOffset.toDouble() + 1.0).toString()
+                updateDrawing()
+                exportSettings()
                 return
             }
         }
@@ -618,7 +645,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopProvider() {
-        if (mProviderName != null && mProviderName != "manual") {
+        if (mProviderName != "manual") {
             mLocationManager?.removeUpdates(mLocationListener)
         }
     }

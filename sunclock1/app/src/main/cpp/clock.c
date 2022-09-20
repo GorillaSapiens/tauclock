@@ -1844,46 +1844,46 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 
    if (angle_daylight > one_minute) {
-      accum_helper(canvas, angle_daylight, "angle_daylight", 270.0, COLOR_BLACK,
+      accum_helper(canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
                    COLOR_YELLOW);
    }
    else if (angle_civil > one_minute) {
-      accum_helper(canvas, angle_civil, "angle_civil", 270.0, COLOR_BLACK, COLOR_ORANGE);
+      accum_helper(canvas, angle_civil, "civil", 270.0, COLOR_BLACK, COLOR_ORANGE);
    }
    else if (angle_nautical > one_minute) {
-      accum_helper(canvas, angle_nautical, "angle_nautical", 270.0, COLOR_WHITE,
+      accum_helper(canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
                    COLOR_LIGHTBLUE);
    }
    else if (angle_astronomical > one_minute) {
-      accum_helper(canvas, angle_astronomical, "angle_astronomical", 270.0,
+      accum_helper(canvas, angle_astronomical, "astronomical", 270.0,
                    COLOR_WHITE, COLOR_BLUE);
    }
    else if (angle_darkness > one_minute) {
-      accum_helper(canvas, angle_darkness, "angle_darkness", 270.0, COLOR_WHITE,
+      accum_helper(canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
                    COLOR_DARKBLUE);
    }
 
    if (angle_darkness > one_minute) {
       if (angle_astronomical > one_minute) {
-         accum_helper(canvas, angle_darkness, "angle_darkness", 90.0,
+         accum_helper(canvas, angle_darkness, "darkness", 90.0,
                       COLOR_WHITE, COLOR_DARKBLUE);
       }
    }
    else if (angle_astronomical > one_minute) {
       if (angle_nautical > one_minute) {
-         accum_helper(canvas, angle_astronomical, "angle_astronomical", 90.0,
+         accum_helper(canvas, angle_astronomical, "astronomical", 90.0,
                       COLOR_WHITE, COLOR_BLUE);
       }
    }
    else if (angle_nautical > one_minute) {
       if (angle_civil > one_minute) {
-         accum_helper(canvas, angle_nautical, "angle_nautical", 90.0,
+         accum_helper(canvas, angle_nautical, "nautical", 90.0,
                       COLOR_WHITE, COLOR_LIGHTBLUE);
       }
    }
    else if (angle_civil > one_minute) {
       if (angle_daylight > one_minute) {
-         accum_helper(canvas, angle_civil, "angle_civil", 90.0, COLOR_BLACK, COLOR_ORANGE);
+         accum_helper(canvas, angle_civil, "civil", 90.0, COLOR_BLACK, COLOR_ORANGE);
       }
    }
 }

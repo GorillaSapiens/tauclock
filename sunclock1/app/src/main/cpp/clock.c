@@ -842,7 +842,8 @@ void
 my_get_everything_helper(double JDstart, double JDend,
                          struct ln_lnlat_posn *observer,
                          Get_Equ_Coords get_equ_coords,
-                         double horizon, EventCategory category,
+                         double horizon,
+                         EventCategory category,
                          EventType type) {
 
    struct ln_equ_posn posn;
@@ -921,7 +922,10 @@ my_get_everything_helper(double JDstart, double JDend,
          iterations++;
       }
       while ((JDend - JDstart) > ONE_SECOND_JD && iterations < 32);
-      events[event_spot++] = (Event) {(JDstart + JDend)/2.0, category, type};
+
+      if (type != EVENT_TRANSIT || angles[1] >= horizon) {
+         events[event_spot++] = (Event) {(JDstart + JDend)/2.0, category, type};
+      }
    }
 }
 
@@ -1028,7 +1032,7 @@ my_get_everything_solar(double JDstart,
          my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_solar_equ_coords,
-                                  -90.1,       // a fake horizon
+                                  LN_SOLAR_STANDART_HORIZON,
                                   CAT_SOLAR, EVENT_TRANSIT);
       }
 
@@ -1141,7 +1145,7 @@ my_get_everything_lunar(double JDstart,
          my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
-                                  -90.1,       // a fake horizon
+                                  LN_LUNAR_STANDART_HORIZON,
                                   CAT_LUNAR, EVENT_TRANSIT);
       }
 
@@ -1233,7 +1237,7 @@ my_get_everything_planet(double JDstart,
          my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
                                   observer,
                                   get_equ_coords,
-                                  -90.1,       // a fake horizon
+                                  LN_LUNAR_STANDART_HORIZON,
                                   category, EVENT_TRANSIT);
       }
 

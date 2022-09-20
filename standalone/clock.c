@@ -942,17 +942,18 @@ my_get_everything_solar(double JDstart,
    double angles[2] = { 0.0, 0.0 };
    double slopes[2] = { 0.0, 0.0 };
    struct ln_hrz_posn sun_hrz_posn;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
 
    // one hour before start
-   ln_get_solar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &sun_posn);
-   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &sun_hrz_posn);
+   ln_get_solar_equ_coords(JDstart - stepsize, &sun_posn);
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - stepsize, &sun_hrz_posn);
    angles[1] = sun_hrz_posn.alt;
 
-   ln_get_solar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &sun_posn);
-   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &sun_hrz_posn);
+   ln_get_solar_equ_coords(JDstart - stepsize + HALF_SECOND_JD, &sun_posn);
+   ln_get_hrz_from_equ(&sun_posn, observer, JDstart - stepsize + HALF_SECOND_JD, &sun_hrz_posn);
    slopes[1] = sun_hrz_posn.alt - angles[1];
 
-   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+   for (double i = JDstart; i < JDend; i += stepsize) {
       ln_get_solar_equ_coords(i, &sun_posn);
       ln_get_hrz_from_equ(&sun_posn, observer, i, &sun_hrz_posn);
       angles[0] = sun_hrz_posn.alt;
@@ -964,7 +965,7 @@ my_get_everything_solar(double JDstart,
       // test for various horizon crossings...
       if (angles[1] < LN_SOLAR_ASTRONOMICAL_HORIZON &&
           angles[0] >= LN_SOLAR_ASTRONOMICAL_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
@@ -972,7 +973,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] < LN_SOLAR_NAUTIC_HORIZON &&
           angles[0] >= LN_SOLAR_NAUTIC_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
@@ -980,7 +981,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] < LN_SOLAR_CIVIL_HORIZON &&
           angles[0] >= LN_SOLAR_CIVIL_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
@@ -988,7 +989,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] < LN_SOLAR_STANDART_HORIZON &&
           angles[0] >= LN_SOLAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_STANDART_HORIZON,
@@ -997,7 +998,7 @@ my_get_everything_solar(double JDstart,
 
       if (angles[1] >= LN_SOLAR_ASTRONOMICAL_HORIZON &&
           angles[0] < LN_SOLAR_ASTRONOMICAL_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_ASTRONOMICAL_HORIZON,
@@ -1005,7 +1006,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] >= LN_SOLAR_NAUTIC_HORIZON &&
           angles[0] < LN_SOLAR_NAUTIC_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_NAUTIC_HORIZON,
@@ -1013,7 +1014,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] >= LN_SOLAR_CIVIL_HORIZON &&
           angles[0] < LN_SOLAR_CIVIL_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_CIVIL_HORIZON,
@@ -1021,7 +1022,7 @@ my_get_everything_solar(double JDstart,
       }
       if (angles[1] >= LN_SOLAR_STANDART_HORIZON &&
           angles[0] < LN_SOLAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_STANDART_HORIZON,
@@ -1029,7 +1030,7 @@ my_get_everything_solar(double JDstart,
       }
 
       if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
-         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_solar_equ_coords,
                                   LN_SOLAR_STANDART_HORIZON,
@@ -1104,17 +1105,18 @@ my_get_everything_lunar(double JDstart,
    double angles[2];
    double slopes[2];
    struct ln_hrz_posn moon_hrz_posn;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
 
    // one hour before start
-   ln_get_lunar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &moon_posn);
-   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &moon_hrz_posn);
+   ln_get_lunar_equ_coords(JDstart - stepsize, &moon_posn);
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - stepsize, &moon_hrz_posn);
    angles[1] = moon_hrz_posn.alt;
 
-   ln_get_lunar_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &moon_posn);
-   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &moon_hrz_posn);
+   ln_get_lunar_equ_coords(JDstart - stepsize + HALF_SECOND_JD, &moon_posn);
+   ln_get_hrz_from_equ(&moon_posn, observer, JDstart - stepsize + HALF_SECOND_JD, &moon_hrz_posn);
    slopes[1] = moon_hrz_posn.alt - angles[1];
 
-   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+   for (double i = JDstart; i < JDend; i += stepsize) {
       ln_get_lunar_equ_coords(i, &moon_posn);
       ln_get_hrz_from_equ(&moon_posn, observer, i, &moon_hrz_posn);
       angles[0] = moon_hrz_posn.alt;
@@ -1126,7 +1128,7 @@ my_get_everything_lunar(double JDstart,
       // test for various horizon crossings...
       if (angles[1] < LN_LUNAR_STANDART_HORIZON &&
           angles[0] >= LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1134,7 +1136,7 @@ my_get_everything_lunar(double JDstart,
       }
       if (angles[1] >= LN_LUNAR_STANDART_HORIZON &&
           angles[0] < LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1142,7 +1144,7 @@ my_get_everything_lunar(double JDstart,
       }
 
       if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
-         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   ln_get_lunar_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1196,17 +1198,18 @@ my_get_everything_planet(double JDstart,
    double angles[2];
    double slopes[2];
    struct ln_hrz_posn planet_hrz_posn;
+   double stepsize = fabs(observer->lat) < 65.0 ? ONE_HOUR_JD : ONE_MINUTE_JD * 15;
 
    // one hour before start
-   get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD, &planet_posn);
-   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0 * ONE_HOUR_JD, &planet_hrz_posn);
+   get_equ_coords(JDstart - stepsize, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - stepsize, &planet_hrz_posn);
    angles[1] = planet_hrz_posn.alt;
 
-   get_equ_coords(JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &planet_posn);
-   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - 1.0 * ONE_HOUR_JD + HALF_SECOND_JD, &planet_hrz_posn);
+   get_equ_coords(JDstart - stepsize + HALF_SECOND_JD, &planet_posn);
+   ln_get_hrz_from_equ(&planet_posn, observer, JDstart - stepsize + HALF_SECOND_JD, &planet_hrz_posn);
    slopes[1] = planet_hrz_posn.alt - angles[1];
 
-   for (double i = JDstart; i < JDend; i += ONE_HOUR_JD) {
+   for (double i = JDstart; i < JDend; i += stepsize) {
       get_equ_coords(i, &planet_posn);
       ln_get_hrz_from_equ(&planet_posn, observer, i, &planet_hrz_posn);
       angles[0] = planet_hrz_posn.alt;
@@ -1218,7 +1221,7 @@ my_get_everything_planet(double JDstart,
       // test for various horizon crossings...
       if (angles[1] < LN_LUNAR_STANDART_HORIZON &&
           angles[0] >= LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1226,7 +1229,7 @@ my_get_everything_planet(double JDstart,
       }
       if (angles[1] >= LN_LUNAR_STANDART_HORIZON &&
           angles[0] < LN_LUNAR_STANDART_HORIZON) {
-         my_get_everything_helper(i - ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,
@@ -1234,7 +1237,7 @@ my_get_everything_planet(double JDstart,
       }
 
       if (slopes[1] > 0.0 && slopes[0] <= 0.0) {
-         my_get_everything_helper(i - 1.0 * ONE_HOUR_JD, i,
+         my_get_everything_helper(i - stepsize, i,
                                   observer,
                                   get_equ_coords,
                                   LN_LUNAR_STANDART_HORIZON,

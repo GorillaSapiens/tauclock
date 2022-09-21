@@ -99,6 +99,6 @@ void arc_canvas(Canvas * canvas, int center_x, int center_y, int radius,
                 int strokewidth, unsigned int strokecolor,
                 double begin_deg, double end_deg);
 void arc_canvas_shaded(Canvas * canvas, int center_x, int center_y, int radius,
-                int strokewidth, unsigned int strokecolor,
-                double begin_deg, double end_deg);
+                       int strokewidth, unsigned int strokecolor,
+                       double begin_deg, double end_deg);
 #endif

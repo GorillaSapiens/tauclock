@@ -493,12 +493,12 @@ unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
    int g = 0xFF & (color >> 8);
    int b = 0xFF & (color);
 
-   int d = ((x-cx)*(x-cx)+(y-cy)*(y-cy));
+   int d = ((x - cx) * (x - cx) + (y - cy) * (y - cy));
    l = l * l / 4;
 
-   r = r * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
-   g = g * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
-   b = b * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
+   r = r * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
+   g = g * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
+   b = b * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
 
    return (mask << 24) | (r << 16) | (g << 8) | b;
 }
@@ -519,7 +519,7 @@ unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
 /// @return void
 void
 line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
-            unsigned int color, int cx, int cy, int l) {
+                   unsigned int color, int cx, int cy, int l) {
    blur_poke_canvas(canvas, x1, y1, shade(color, x1, y1, cx, cy, l), 1);
    blur_poke_canvas(canvas, x2, y2, shade(color, x2, y2, cx, cy, l), 1);
 
@@ -548,9 +548,9 @@ line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @return void
 void
 arc_canvas_shaded(Canvas * canvas,
-           int center_x, int center_y, int radius,
-           int strokewidth, unsigned int strokecolor,
-           double begin_deg, double end_deg) {
+                  int center_x, int center_y, int radius,
+                  int strokewidth, unsigned int strokecolor,
+                  double begin_deg, double end_deg) {
    float theta;
 
    if (end_deg <= begin_deg) {
@@ -573,8 +573,9 @@ arc_canvas_shaded(Canvas * canvas,
                           ((float)strokewidth) / 2.0) *
             sin(theta * M_PI / 180.0);
          line_canvas_shaded(canvas, x1, y1, x2, y2, strokecolor,
-			 (x1 + x2) / 2, (y1 + y2) / 2,
-			 sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)));
+                            (x1 + x2) / 2, (y1 + y2) / 2,
+                            sqrt((x1 - x2) * (x1 - x2) +
+                                 (y1 - y2) * (y1 - y2)));
       }
    }
 }

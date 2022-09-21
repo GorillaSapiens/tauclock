@@ -1614,6 +1614,9 @@ void events_populate(double JD, struct ln_lnlat_posn *observer) {
          earliest = events[i].jd;
       }
    }
+   if (earliest > JD - 0.5) {
+      earliest = JD - 0.5;
+   }
    earliest -= ONE_MINUTE_JD;
 
    // now do all the up downs for the earliest time

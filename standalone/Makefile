@@ -34,7 +34,8 @@ icons:
 	rm -rf weather-underground-icons
 
 calcdata: main.c draw.c clock.c libnova.a
-	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
+	gcc -g -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
+#	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
 
 libnova-0.15.0/doc/html:
 	(cd libnova-0.15.0/doc; doxygen doxyfile.in )

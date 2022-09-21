@@ -1445,6 +1445,10 @@ events_populate_circumpolar_transit(double JDstart, double JDend,
          angles[0] = angles[1];
          slopes[0] = slopes[1];
       }
+      else {
+         // WTF?
+         return;
+      }
    } while ((JDend - JDstart) > HALF_MINUTE_JD);
 
    double when = ((JDstart + JDend) / 2.0);

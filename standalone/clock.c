@@ -620,7 +620,6 @@ do_planet_band(Canvas * canvas, double up, double now,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   if (mode & 1) {
-printf("acs %d %lf %lf\n", category, start_angle, stop_angle);
                      arcd = true;
                      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
                                        radius, SCALE(5), color, start_angle,
@@ -638,7 +637,6 @@ printf("acs %d %lf %lf\n", category, start_angle, stop_angle);
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       if (mode & 1) {
-printf("acs2 %d %lf %lf\n", category, start_angle, stop_angle);
          if (!arcd || start_angle != stop_angle) {
             arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
                               radius, SCALE(5), color, start_angle, stop_angle);
@@ -878,7 +876,7 @@ void events_populate_anything_updown(double JD,
    struct ln_hrz_posn hrz_posn;
    double angle;
 
-   JD -= 1.0 + HALF_MINUTE_JD;
+   JD -= 2.0 + HALF_MINUTE_JD;
 
    get_equ_body_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
@@ -913,16 +911,16 @@ void events_populate_anything_rst(double JD,
 
    ln_get_hrz_from_equ(&posn,
                        observer,
-                       JD - 1.0 - ONE_MINUTE_JD, &hrz_posn);
+                       JD - 2.0 - ONE_MINUTE_JD, &hrz_posn);
    angles[1] = hrz_posn.alt;
 
    ln_get_hrz_from_equ(&posn,
                        observer,
-                       JD - 1.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
+                       JD - 2.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
    angles[2] = hrz_posn.alt;
 
-   for (int i = 0; i < 2880+10; i++) {
-      double when = JD - 1.0 + (double) i / 1440.0;
+   for (int i = 0; i < (1440*3)+10; i++) {
+      double when = JD - 2.0 + (double) i / 1440.0;
       ln_get_hrz_from_equ(&posn, observer, when, &hrz_posn);
       angles[0] = hrz_posn.alt;
 
@@ -947,16 +945,16 @@ void events_populate_anything_rst(double JD,
 
       ln_get_hrz_from_equ(&posn,
             observer,
-            JD - 1.0 - ONE_MINUTE_JD, &hrz_posn);
+            JD - 2.0 - ONE_MINUTE_JD, &hrz_posn);
       angles[1] = hrz_posn.alt;
 
       ln_get_hrz_from_equ(&posn,
             observer,
-            JD - 1.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
+            JD - 2.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
       angles[2] = hrz_posn.alt;
 
-      for (int i = 0; i < 2880+10; i++) {
-         double when = JD - 1.0 + (double) i / 1440.0;
+      for (int i = 0; i < (1440*3)+10; i++) {
+         double when = JD - 2.0 + (double) i / 1440.0;
          ln_get_hrz_from_equ(&posn, observer, when, &hrz_posn);
          angles[0] = hrz_posn.alt;
 
@@ -1404,12 +1402,12 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
+               arcd = true;
                arc_canvas_shaded(canvas, canvas->w / 2,
                                  canvas->h / 2,
                                  canvas->w / 2 / 2,
                                  canvas->h / 2 / 2, color, start_angle,
                                  stop_angle);
-               arcd = true;
 
                // accumulate angle_daylight and angle_darkness
                start_angle = normalize_angle(start_angle);

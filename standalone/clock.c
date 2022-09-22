@@ -1397,7 +1397,6 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
-printf("acs %08x %lf %lf\n", color, start_angle, stop_angle);
                arc_canvas_shaded(canvas, canvas->w / 2,
                                  canvas->h / 2,
                                  canvas->w / 2 / 2,
@@ -1522,7 +1521,6 @@ printf("acs %08x %lf %lf\n", color, start_angle, stop_angle);
    double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
    if (!arcd || start_angle != stop_angle) {
-printf("acs2 %08x %lf %lf\n", color, start_angle, stop_angle);
       arc_canvas_shaded(canvas,
                         canvas->w / 2, canvas->h / 2,
                         canvas->w / 2 / 2,

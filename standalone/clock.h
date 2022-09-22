@@ -20,6 +20,6 @@
 #include "draw.h"
 
 Canvas *do_all(double lat, double lon, double offset, int width,
-               const char *provider, const char *tzprovider, const char *tz);
+      const char *provider, const char *tzprovider, const char *tz);
 
 #endif

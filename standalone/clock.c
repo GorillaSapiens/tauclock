@@ -255,13 +255,13 @@ void remove_newlines(char *p) {
 /// @return The return value of text_canvas()
 int
 do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
-           unsigned int fg, unsigned int bg) {
+      unsigned int fg, unsigned int bg) {
    char time[32];
    struct ln_zonedate zonedate;
    my_get_local_date(jd, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    return text_canvas(canvas, jd < now ? FONT_ITALIC_MED : FONT_BOLD_MED, x, y,
-                      fg, bg, time, 1, 3);
+         fg, bg, time, 1, 3);
 }
 
 /// @brief Draw ticks every hour around the outside edge
@@ -306,7 +306,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       char buf[32];
       sprintf(buf, "%02d", hour);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
-                  COLOR_BLACK, COLOR_NONE, buf, 1, 3);
+            COLOR_BLACK, COLOR_NONE, buf, 1, 3);
    }
    xor_canvas(shadow, canvas);
 
@@ -329,19 +329,19 @@ void do_now_hand(Canvas * canvas, double up, double now) {
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
    double xc =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-                         SCALE(128)) * cos(DEG2RAD(now_angle));
+            SCALE(128)) * cos(DEG2RAD(now_angle));
    double yc =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-                         SCALE(128)) * sin(DEG2RAD(now_angle));
+            SCALE(128)) * sin(DEG2RAD(now_angle));
    double xc2 =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-                         SCALE(128)) * cos(DEG2RAD(now_angle));
+            SCALE(128)) * cos(DEG2RAD(now_angle));
    double yc2 =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-                         SCALE(128)) * sin(DEG2RAD(now_angle));
+            SCALE(128)) * sin(DEG2RAD(now_angle));
 
    thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_WHITE,
-                     3);
+         3);
    //xor_canvas(shadow, canvas);
 
    //delete_canvas(shadow);
@@ -358,7 +358,7 @@ void do_now_time(Canvas * canvas, double now) {
    my_get_local_date(now, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    text_canvas(canvas, FONT_BOLD_BIG, canvas->w / 2, canvas->h / 2,
-               COLOR_WHITE, COLOR_BLACK, time, 1, 12);
+         COLOR_WHITE, COLOR_BLACK, time, 1, 12);
 }
 
 /// @brief Draw the current weekday in the center of the Canvas
@@ -382,8 +382,8 @@ void do_now_weekday(Canvas * canvas, double now) {
    char text[32];
    sprintf(text, "%s", weekdays[dow]);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
-               canvas->h / 2 - (int)SCALE(90), COLOR_WHITE, COLOR_BLACK, text,
-               1, 2);
+         canvas->h / 2 - (int)SCALE(90), COLOR_WHITE, COLOR_BLACK, text,
+         1, 2);
 }
 
 /// @brief Draw the current date in the center of the Canvas
@@ -397,8 +397,8 @@ void do_now_date(Canvas * canvas, double now) {
    my_get_local_date(now, &zonedate);
    sprintf(time, "%s-%d", months[zonedate.months - 1], zonedate.days);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
-               canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, time,
-               1, 2);
+         canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, time,
+         1, 2);
 }
 
 /// @brief Draw the location in the center of the Canvas
@@ -429,11 +429,11 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    }
    else {
       sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree,
-              EW);
+            EW);
    }
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
-               canvas->h / 2 + (int)SCALE(48), COLOR_WHITE, COLOR_BLACK,
-               location, 1, 2);
+         canvas->h / 2 + (int)SCALE(48), COLOR_WHITE, COLOR_BLACK,
+         location, 1, 2);
 }
 
 /// @brief Draw the current date in the center of the Canvas
@@ -446,10 +446,10 @@ void do_now_smalldate(Canvas * canvas, double now) {
    struct ln_zonedate zonedate;
    my_get_local_date(now, &zonedate);
    sprintf(time, "%04d-%02d-%02d", zonedate.years, zonedate.months,
-           zonedate.days);
+         zonedate.days);
    text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
-               canvas->h / 2 + (int)SCALE(72), COLOR_WHITE, COLOR_BLACK, time,
-               1, 2);
+         canvas->h / 2 + (int)SCALE(72), COLOR_WHITE, COLOR_BLACK, time,
+         1, 2);
 }
 
 /// @brief Draw the moon
@@ -462,8 +462,8 @@ void do_now_smalldate(Canvas * canvas, double now) {
 /// @return void
 void
 do_moon_draw(Canvas * canvas,
-             double now,
-             float lunar_phase, float lunar_bright_limb, double where_angle) {
+      double now,
+      float lunar_phase, float lunar_bright_limb, double where_angle) {
 
    // this is, quite tedious.  here we go...
    int cx, cy;
@@ -510,7 +510,7 @@ do_moon_draw(Canvas * canvas,
       for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
          double d_interior = sqrt(dx * dx + dy * dy);
          double d_chunk = sqrt((dx - chunk_x * cxm) * (dx - chunk_x * cxm) +
-                               dy * dy);
+               dy * dy);
 
          if (d_interior <= SCALE(40.0)) {
             if (d_chunk < chunk_r) {
@@ -531,9 +531,9 @@ do_moon_draw(Canvas * canvas,
             unsigned int color = COLOR_LIGHTGRAY & 0xFF;
             color =
                color * (.8 +
-                        .2 * (1.0 -
-                              (2.0 * (double)(d2) /
-                               (double)(SCALE(40) * SCALE(40)))));
+                     .2 * (1.0 -
+                        (2.0 * (double)(d2) /
+                         (double)(SCALE(40) * SCALE(40)))));
             color =
                (COLOR_LIGHTGRAY & 0xFF000000) | (color << 16) | (color << 8) |
                (color);
@@ -585,8 +585,8 @@ do_moon_draw(Canvas * canvas,
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
-               unsigned int color, double radius, EventCategory category,
-               int mode) {
+      unsigned int color, double radius, EventCategory category,
+      int mode) {
    double up_angle = frac(up) * 360.0;
    int need_character = mode & 2;       // draw characters at ticks
 
@@ -622,8 +622,8 @@ do_planet_band(Canvas * canvas, double up, double now,
                   if (mode & 1) {
                      arcd = true;
                      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                                       radius, SCALE(5), color, start_angle,
-                                       stop_angle);
+                           radius, SCALE(5), color, start_angle,
+                           stop_angle);
                   }
 
                   last = events[i].jd;
@@ -639,7 +639,7 @@ do_planet_band(Canvas * canvas, double up, double now,
       if (mode & 1) {
          if (!arcd || start_angle != stop_angle) {
             arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                              radius, SCALE(5), color, start_angle, stop_angle);
+                  radius, SCALE(5), color, start_angle, stop_angle);
          }
       }
    }
@@ -664,7 +664,7 @@ do_planet_band(Canvas * canvas, double up, double now,
                      x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
                      y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
                      text_canvas(canvas, ASTRO_FONT, x, y, color,
-                                 COLOR_BLACK, sym, 1, 1);
+                           COLOR_BLACK, sym, 1, 1);
                      need_character = 0;
                   }
                   // fallthrough
@@ -690,7 +690,7 @@ do_planet_band(Canvas * canvas, double up, double now,
                      }
                      if (events[i].type == EVENT_SET) {
                         text_canvas(canvas, ASTRO_FONT, x, y, color,
-                                    COLOR_BLACK, sym, 1, 1);
+                              COLOR_BLACK, sym, 1, 1);
                         need_character = 0;
                      }
                      else {
@@ -707,12 +707,12 @@ do_planet_band(Canvas * canvas, double up, double now,
       // shazbat!
       double x =
          (canvas->w / 2) + (radius +
-                            15) * cos(DEG2RAD((int)(category - CAT_LUNAR) *
-                                              (360 / 6)));
+               15) * cos(DEG2RAD((int)(category - CAT_LUNAR) *
+                     (360 / 6)));
       double y =
          (canvas->h / 2) + (radius +
-                            15) * sin(DEG2RAD((int)(category - CAT_LUNAR) *
-                                              (360 / 6)));
+               15) * sin(DEG2RAD((int)(category - CAT_LUNAR) *
+                     (360 / 6)));
       if (transit_x != 0.0) {
          x = transit_x;
          y = transit_y;
@@ -815,7 +815,7 @@ void events_uniq(void) {
    while (i < event_spot - 1) {
       if (!event_compar(events + i, events + (i + 1))) {
          memmove(events + i, events + (i + 1),
-                 sizeof(Event) * (event_spot - i));
+               sizeof(Event) * (event_spot - i));
          event_spot--;
       }
       else {
@@ -843,9 +843,9 @@ void events_dump(void) {
    for (int i = 0; i < event_spot; i++) {
       my_get_local_date(events[i].jd, &zonedate);
       printf("%6.12f %02d:%02d %d %s %s\n", events[i].jd,
-             zonedate.hours, zonedate.minutes,
-             events[i].prune, typenames[events[i].type],
-             categorynames[events[i].category]);
+            zonedate.hours, zonedate.minutes,
+            events[i].prune, typenames[events[i].type],
+            categorynames[events[i].category]);
    }
 }
 
@@ -868,10 +868,10 @@ void events_dump(void) {
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
 void events_populate_anything_updown(double JD,
-                              struct ln_lnlat_posn *observer,
-                              void (*get_equ_body_coords)(double,
-                                                          struct ln_equ_posn *),
-                              double horizon, EventCategory category) {
+      struct ln_lnlat_posn *observer,
+      void (*get_equ_body_coords)(double,
+         struct ln_equ_posn *),
+      double horizon, EventCategory category) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
    double angle;
@@ -880,8 +880,8 @@ void events_populate_anything_updown(double JD,
 
    get_equ_body_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
-                       observer,
-                       JD, &hrz_posn);
+         observer,
+         JD, &hrz_posn);
    angle = hrz_posn.alt;
 
    if (angle < horizon) {
@@ -896,10 +896,10 @@ void events_populate_anything_updown(double JD,
 #define WITHINHALF(a,b) (fabs((a)-(b)) < 0.5)
 
 void events_populate_anything_rst(double JD,
-                              struct ln_lnlat_posn *observer,
-                              void (*get_equ_body_coords)(double,
-                                                          struct ln_equ_posn *),
-                              double horizon, EventCategory category) {
+      struct ln_lnlat_posn *observer,
+      void (*get_equ_body_coords)(double,
+         struct ln_equ_posn *),
+      double horizon, EventCategory category) {
    Event tentative[64];
    int tent_spot = 0;
 
@@ -910,13 +910,13 @@ void events_populate_anything_rst(double JD,
    get_equ_body_coords(JD, &posn);
 
    ln_get_hrz_from_equ(&posn,
-                       observer,
-                       JD - 2.0 - ONE_MINUTE_JD, &hrz_posn);
+         observer,
+         JD - 2.0 - ONE_MINUTE_JD, &hrz_posn);
    angles[1] = hrz_posn.alt;
 
    ln_get_hrz_from_equ(&posn,
-                       observer,
-                       JD - 2.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
+         observer,
+         JD - 2.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
    angles[2] = hrz_posn.alt;
 
    for (int i = 0; i < (1440*3)+10; i++) {
@@ -940,7 +940,7 @@ void events_populate_anything_rst(double JD,
    }
 
    for (int j = 0; j < tent_spot; j++) {
-      again:
+again:
       get_equ_body_coords(tentative[j].jd, &posn);
 
       ln_get_hrz_from_equ(&posn,
@@ -1002,7 +1002,7 @@ void events_populate_anything_rst(double JD,
          angles[2] = angles[1];
          angles[1] = angles[0];
       }
-      carry_on:
+carry_on:
    }
 
    for (int i = 0; i < tent_spot; i++) {
@@ -1011,10 +1011,10 @@ void events_populate_anything_rst(double JD,
 }
 
 void events_populate_anything(double JD,
-                              struct ln_lnlat_posn *observer,
-                              void (*get_equ_body_coords)(double,
-                                                          struct ln_equ_posn *),
-                              double horizon, EventCategory category) {
+      struct ln_lnlat_posn *observer,
+      void (*get_equ_body_coords)(double,
+         struct ln_equ_posn *),
+      double horizon, EventCategory category) {
 
    events_populate_anything_updown(JD, observer, get_equ_body_coords, horizon, category);
    events_populate_anything_rst(JD, observer, get_equ_body_coords, horizon, category);
@@ -1022,31 +1022,31 @@ void events_populate_anything(double JD,
 
 void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-                            LN_SOLAR_ASTRONOMICAL_HORIZON, CAT_ASTRONOMICAL);
+         LN_SOLAR_ASTRONOMICAL_HORIZON, CAT_ASTRONOMICAL);
    events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-                            LN_SOLAR_NAUTIC_HORIZON, CAT_NAUTICAL);
+         LN_SOLAR_NAUTIC_HORIZON, CAT_NAUTICAL);
    events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-                            LN_SOLAR_CIVIL_HORIZON, CAT_CIVIL);
+         LN_SOLAR_CIVIL_HORIZON, CAT_CIVIL);
    events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-                            LN_SOLAR_STANDART_HORIZON, CAT_SOLAR);
+         LN_SOLAR_STANDART_HORIZON, CAT_SOLAR);
 }
 
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
-                            LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
+         LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
 }
 
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_mercury_equ_coords, 0.0,
-                            CAT_MERCURY);
+         CAT_MERCURY);
    events_populate_anything(JD, observer, ln_get_venus_equ_coords, 0.0,
-                            CAT_VENUS);
+         CAT_VENUS);
    events_populate_anything(JD, observer, ln_get_mars_equ_coords, 0.0,
-                            CAT_MARS);
+         CAT_MARS);
    events_populate_anything(JD, observer, ln_get_jupiter_equ_coords, 0.0,
-                            CAT_JUPITER);
+         CAT_JUPITER);
    events_populate_anything(JD, observer, ln_get_saturn_equ_coords, 0.0,
-                            CAT_SATURN);
+         CAT_SATURN);
 }
 
 /// @brief Populate the event list
@@ -1068,14 +1068,14 @@ double events_transit(double jd) {
    // any non pruned, non lunar, will do...
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
-          events[i].type == EVENT_TRANSIT && events[i].category < CAT_LUNAR) {
+            events[i].type == EVENT_TRANSIT && events[i].category < CAT_LUNAR) {
          return frac(events[i].jd);
       }
    }
    // non?  how about a lunar transit?
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
-          events[i].type == EVENT_TRANSIT && events[i].category == CAT_LUNAR) {
+            events[i].type == EVENT_TRANSIT && events[i].category == CAT_LUNAR) {
          return frac(events[i].jd);
       }
    }
@@ -1122,7 +1122,7 @@ void do_weather(Canvas * canvas) {
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE / 2 / 2 + SCALE(64),
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1130,28 +1130,28 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE / 2 / 2, COLOR_BLACK,
-                  COLOR_YELLOW, buffer, 1, 1);
+            COLOR_YELLOW, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - SCALE(104), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + SCALE(128), SIZE / 2 / 2,
-                  COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
+            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // desc
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE * 3 / 4 + SCALE(64),
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
@@ -1159,21 +1159,21 @@ void do_weather(Canvas * canvas) {
       remove_newlines(buffer);
       buffer[1] = 0;
       text_canvas(canvas, icons_128x128, SIZE / 2, SIZE * 3 / 4, COLOR_WHITE,
-                  COLOR_DARKBLUE, buffer, 1, 1);
+            COLOR_DARKBLUE, buffer, 1, 1);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // temp
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - 104, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       if (!fgets(buffer, sizeof(buffer) - 1, f)) {
          return;
       }                         // wind
       remove_newlines(buffer);
       text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + 128, SIZE * 3 / 4,
-                  COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
+            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
 
       fclose(f);
    }
@@ -1204,8 +1204,8 @@ int accumdrawnspot = 0;
 void replay_accum_memory(Canvas * canvas) {
    for (int i = 0; i < accumdrawnspot; i++) {
       text_canvas(canvas, FONT_BOLD_MED, accumdrawnmemory[i].x,
-                  accumdrawnmemory[i].y, accumdrawnmemory[i].fg,
-                  accumdrawnmemory[i].bg, accumdrawnmemory[i].str, 1, 3);
+            accumdrawnmemory[i].y, accumdrawnmemory[i].fg,
+            accumdrawnmemory[i].bg, accumdrawnmemory[i].str, 1, 3);
       free(accumdrawnmemory[i].str);
    }
    accumdrawnspot = 0;
@@ -1222,9 +1222,9 @@ void replay_accum_memory(Canvas * canvas) {
 /// @return void
 void
 accum_helper(Canvas * canvas,
-             double angle,
-             char *label,
-             double draw_angle, unsigned int fore, unsigned int back) {
+      double angle,
+      char *label,
+      double draw_angle, unsigned int fore, unsigned int back) {
 
    angle = angle * 24.0 / 360.0;
    int hours = (int)angle;
@@ -1246,9 +1246,9 @@ accum_helper(Canvas * canvas,
    //   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
    //   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-   x, y - SCALE(16), fore, back, strdup(buffer)};
+      x, y - SCALE(16), fore, back, strdup(buffer)};
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-   x, y + SCALE(16), fore, back, strdup(label)};
+      x, y + SCALE(16), fore, back, strdup(label)};
 }
 
 /// @brief A struct used to remember where something is drawn.
@@ -1318,7 +1318,7 @@ int check(int x, int y, int w, int h) {
 /// @return void
 void
 do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
-               double radius, unsigned int fg, unsigned int bg) {
+      double radius, unsigned int fg, unsigned int bg) {
 
    // get width and height by drawing offscreen
    int wh = do_xy_time(canvas, now, jd, -300, -300, fg, bg);
@@ -1339,7 +1339,7 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
    while (collision);
 
    timedrawnmemory[timedrawnspot++] = (TimeDrawnMemory) {
-   now, jd, x, y, w, h, fg, bg};
+      now, jd, x, y, w, h, fg, bg};
 
    // don't draw here, we'll get it when we replay
    // do_xy_time(canvas, now, jd, x, y, fg, bg);
@@ -1354,11 +1354,11 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
 void replayTimeDrawnMemory(Canvas * canvas) {
    for (int i = 0; i < timedrawnspot; i++) {
       do_xy_time(canvas,
-                 timedrawnmemory[i].now,
-                 timedrawnmemory[i].jd,
-                 timedrawnmemory[i].x,
-                 timedrawnmemory[i].y,
-                 timedrawnmemory[i].fg, timedrawnmemory[i].bg);
+            timedrawnmemory[i].now,
+            timedrawnmemory[i].jd,
+            timedrawnmemory[i].x,
+            timedrawnmemory[i].y,
+            timedrawnmemory[i].fg, timedrawnmemory[i].bg);
    }
 }
 
@@ -1404,10 +1404,10 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
                arcd = true;
                arc_canvas_shaded(canvas, canvas->w / 2,
-                                 canvas->h / 2,
-                                 canvas->w / 2 / 2,
-                                 canvas->h / 2 / 2, color, start_angle,
-                                 stop_angle);
+                     canvas->h / 2,
+                     canvas->w / 2 / 2,
+                     canvas->h / 2 / 2, color, start_angle,
+                     stop_angle);
 
                // accumulate angle_daylight and angle_darkness
                start_angle = normalize_angle(start_angle);
@@ -1437,7 +1437,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   times_written++;
                   // TODO FIX check size
                   do_tr_time_sun(canvas, now, last, start_angle,
-                                 (canvas->w / 3 - SCALE(32)), fore, back);
+                        (canvas->w / 3 - SCALE(32)), fore, back);
                }
 
                last = here;
@@ -1527,10 +1527,10 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    if (!arcd || start_angle != stop_angle) {
       arc_canvas_shaded(canvas,
-                        canvas->w / 2, canvas->h / 2,
-                        canvas->w / 2 / 2,
-                        canvas->h / 2 / 2,
-                        color, start_angle, stop_angle);
+            canvas->w / 2, canvas->h / 2,
+            canvas->w / 2 / 2,
+            canvas->h / 2 / 2,
+            color, start_angle, stop_angle);
    }
 
    // accumulate angle_daylight and angle_darkness
@@ -1559,58 +1559,58 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    if (times_written) {
       do_tr_time_sun(canvas, now, last, start_angle,
-                     canvas->w / 3 - SCALE(32), fore, back);
+            canvas->w / 3 - SCALE(32), fore, back);
    }
 
    if (transited != 0.0) {
       double angle = frac(transited) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(canvas, now, transited, angle,
-                     canvas->w / 3 - SCALE(32), transit_fore, transit_back);
+            canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }
 
    if (angle_daylight > one_minute) {
       accum_helper(canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
-                   COLOR_YELLOW);
+            COLOR_YELLOW);
    }
    else if (angle_civil > one_minute) {
       accum_helper(canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
-                   COLOR_ORANGE);
+            COLOR_ORANGE);
    }
    else if (angle_nautical > one_minute) {
       accum_helper(canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
-                   COLOR_LIGHTBLUE);
+            COLOR_LIGHTBLUE);
    }
    else if (angle_astronomical > one_minute) {
       accum_helper(canvas, angle_astronomical, "astronomical", 270.0,
-                   COLOR_WHITE, COLOR_BLUE);
+            COLOR_WHITE, COLOR_BLUE);
    }
    else if (angle_darkness > one_minute) {
       accum_helper(canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
-                   COLOR_DARKBLUE);
+            COLOR_DARKBLUE);
    }
 
    if (angle_darkness > one_minute) {
       if (angle_astronomical > one_minute) {
          accum_helper(canvas, angle_darkness, "darkness", 90.0,
-                      COLOR_WHITE, COLOR_DARKBLUE);
+               COLOR_WHITE, COLOR_DARKBLUE);
       }
    }
    else if (angle_astronomical > one_minute) {
       if (angle_nautical > one_minute) {
          accum_helper(canvas, angle_astronomical, "astronomical", 90.0,
-                      COLOR_WHITE, COLOR_BLUE);
+               COLOR_WHITE, COLOR_BLUE);
       }
    }
    else if (angle_nautical > one_minute) {
       if (angle_civil > one_minute) {
          accum_helper(canvas, angle_nautical, "nautical", 90.0,
-                      COLOR_WHITE, COLOR_LIGHTBLUE);
+               COLOR_WHITE, COLOR_LIGHTBLUE);
       }
    }
    else if (angle_civil > one_minute) {
       if (angle_daylight > one_minute) {
          accum_helper(canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
-                      COLOR_ORANGE);
+               COLOR_ORANGE);
       }
    }
 }
@@ -1704,7 +1704,7 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
 /// @param tzProvider Name of the timezone provider
 /// @return void
 void do_debug_info(Canvas * canvas, double JD, double offset,
-                   const char *tzProvider) {
+      const char *tzProvider) {
 
    // buffer for julian date
    char jd_buf[1024];
@@ -1726,10 +1726,10 @@ void do_debug_info(Canvas * canvas, double JD, double offset,
    struct tm *tm = localtime(&present);
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
       sprintf(abbrev_buf, "%s%s%s/%s%s%s",
-              tm->tm_isdst ? "" : "[",
-              tzname[0],
-              tm->tm_isdst ? "" : "]",
-              tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
+            tm->tm_isdst ? "" : "[",
+            tzname[0],
+            tm->tm_isdst ? "" : "]",
+            tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
    }
    else if (tzname[0] != NULL) {
       sprintf(abbrev_buf, "[%s]", tzname[0]);
@@ -1749,28 +1749,28 @@ void do_debug_info(Canvas * canvas, double JD, double offset,
    // probe our font
 #define TEST_STRING "A_gy"      // includes upercase and descenders
    int whn = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, TEST_STRING, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, TEST_STRING, 1, 3);
    int hn = whn & 0xFFFF;
 
    // get sizes of various pieces
    int wh0 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
    int w0 = wh0 >> 16;
 
    int wh1 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
    int w1 = wh1 >> 16;
 
    int wh2 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
    int w2 = wh2 >> 16;
 
    int wh3 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
    int w3 = wh3 >> 16;
 
    int wh4 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
    int w4 = wh4 >> 16;
 
    // find highest height
@@ -1780,20 +1780,20 @@ void do_debug_info(Canvas * canvas, double JD, double offset,
 
    // date side
    text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w0 / 2,
-               canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+         canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w1 / 2,
-               canvas->h - 5 - (h + 5) - h / 2, COLOR_YELLOW, COLOR_BLACK,
-               offset_buf, 1, 3);
+         canvas->h - 5 - (h + 5) - h / 2, COLOR_YELLOW, COLOR_BLACK,
+         offset_buf, 1, 3);
 
    // timezone side
    text_canvas(canvas, FONT_BOLD_MED, 5 + w2 / 2, canvas->h - 5 - h / 2,
-               COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
    text_canvas(canvas, FONT_BOLD_MED, 5 + w3 / 2,
-               canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
-               3);
+         canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
+         3);
    text_canvas(canvas, FONT_BOLD_MED, 5 + w4 / 2,
-               canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
-               tzProvider, 1, 3);
+         canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
+         tzProvider, 1, 3);
 }
 
 /// @brief Draw provider information
@@ -1805,11 +1805,11 @@ void do_debug_info(Canvas * canvas, double JD, double offset,
 /// @return void
 void do_provider_info(Canvas * canvas, const char *provider) {
    int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-                        COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
-               h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
+         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
 }
 
 void initialize_all(void) {
@@ -1916,7 +1916,7 @@ void set_italic_med(int width) {
 /// @param tz Name of timezone to be used
 /// @return A canvas that has been drawn upon
 Canvas *do_all(double lat, double lon, double offset, int width,
-               const char *provider, const char *tzprovider, const char *tz) {
+      const char *provider, const char *tzprovider, const char *tz) {
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
@@ -1935,11 +1935,11 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    set_bold_small(width);
    set_italic_med(width);
    /*
-      #define ASTRO_FONT astro_32_bdf
-      #define FONT_BOLD_BIG djsmb_50_bdf
-      #define FONT_BOLD_MED djsmb_20_bdf
-      #define FONT_BOLD_SMALL djsmb_16_bdf
-      #define FONT_ITALIC_MED djsmo_20_bdf
+#define ASTRO_FONT astro_32_bdf
+#define FONT_BOLD_BIG djsmb_50_bdf
+#define FONT_BOLD_MED djsmb_20_bdf
+#define FONT_BOLD_SMALL djsmb_16_bdf
+#define FONT_ITALIC_MED djsmo_20_bdf
     */
 
    initialize_all();

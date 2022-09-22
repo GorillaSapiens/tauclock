@@ -60,8 +60,13 @@ int main(int argc, char *argv[]) {
       offset += atof(argv[4]);
    }
 
+   char *provider = getenv("PROVIDER");
+   if (provider == NULL) {
+      provider = "provider";
+   }
+
    Canvas *canvas =
-      do_all(atof(argv[1]), atof(argv[2]), offset, 1024, "provider",
+      do_all(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
              "tzprovider", "timezone");
 
    dump_canvas(canvas, "out.bin");

@@ -1002,7 +1002,7 @@ again:
          angles[2] = angles[1];
          angles[1] = angles[0];
       }
-carry_on:
+carry_on:;
    }
 
    for (int i = 0; i < tent_spot; i++) {

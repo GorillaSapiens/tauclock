@@ -30,7 +30,8 @@ for ($i = $start; $i < ($length+$start); $i += $step) {
    print "=== $i $n\n";
    $file = sprintf("out_%06d.png", $n);
    $txt = sprintf("out_%06d.txt", $n);
+   $on = $n;
    $n++;
-   `PROVIDER=$n ./calcdata $lat $lon $i > $txt; convert -size 1024x1024 -depth 8 RGBA:out.bin $file`;
+   `PROVIDER=$on ./calcdata $lat $lon $i > $txt; convert -size 1024x1024 -depth 8 RGBA:out.bin $file`;
 }
 `ffmpeg -framerate $rate -pattern_type glob -i "out*.png" -c:v libx264 out.mp4`;

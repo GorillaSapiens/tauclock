@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <string.h>
 #include <unistd.h>
@@ -128,8 +129,8 @@ typedef enum EventType {
 
 typedef enum EventCategory {
    CAT_SOLAR,
-   CAT_NAUTICAL,
    CAT_CIVIL,
+   CAT_NAUTICAL,
    CAT_ASTRONOMICAL,
    CAT_LUNAR,                   // moon and planets from here on
    CAT_MERCURY,
@@ -870,17 +871,19 @@ void events_populate_anything_updown(double JD,
    struct ln_hrz_posn hrz_posn;
    double angle;
 
-   get_equ_body_coords(JD - 0.5 - ONE_MINUTE_JD * 2.0, &posn);
+   JD -= 1.0 + HALF_MINUTE_JD;
+
+   get_equ_body_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
                        observer,
-                       JD - 0.5 - ONE_MINUTE_JD * 2.0, &hrz_posn);
+                       JD, &hrz_posn);
    angle = hrz_posn.alt;
 
    if (angle < horizon) {
-      events[event_spot++] = (Event) { JD - 0.5 - ONE_MINUTE_JD, category, EVENT_DOWN};
+      events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }
    else {
-      events[event_spot++] = (Event) { JD - 0.5 - ONE_MINUTE_JD, category, EVENT_UP};
+      events[event_spot++] = (Event) { JD, category, EVENT_UP};
    }
 }
 
@@ -892,7 +895,7 @@ void events_populate_anything_rst(double JD,
                               void (*get_equ_body_coords)(double,
                                                           struct ln_equ_posn *),
                               double horizon, EventCategory category) {
-   Event tentative[16];
+   Event tentative[64];
    int tent_spot = 0;
 
    struct ln_equ_posn posn;
@@ -903,16 +906,16 @@ void events_populate_anything_rst(double JD,
 
    ln_get_hrz_from_equ(&posn,
                        observer,
-                       JD - 0.5 - ONE_MINUTE_JD, &hrz_posn);
+                       JD - 1.0 - ONE_MINUTE_JD, &hrz_posn);
    angles[1] = hrz_posn.alt;
 
    ln_get_hrz_from_equ(&posn,
                        observer,
-                       JD - 0.5 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
+                       JD - 1.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
    angles[2] = hrz_posn.alt;
 
-   for (int i = 0; i < 1440+1; i++) {
-      double when = JD - 0.5 + (double) i / 1440.0;
+   for (int i = 0; i < 2880+10; i++) {
+      double when = JD - 1.0 + (double) i / 1440.0;
       ln_get_hrz_from_equ(&posn, observer, when, &hrz_posn);
       angles[0] = hrz_posn.alt;
 
@@ -937,16 +940,16 @@ void events_populate_anything_rst(double JD,
 
       ln_get_hrz_from_equ(&posn,
             observer,
-            JD - 0.5 - ONE_MINUTE_JD, &hrz_posn);
+            JD - 1.0 - ONE_MINUTE_JD, &hrz_posn);
       angles[1] = hrz_posn.alt;
 
       ln_get_hrz_from_equ(&posn,
             observer,
-            JD - 0.5 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
+            JD - 1.0 - 2.0 * ONE_MINUTE_JD, &hrz_posn);
       angles[2] = hrz_posn.alt;
 
-      for (int i = 0; i < 1440+1; i++) {
-         double when = JD - 0.5 + (double) i / 1440.0;
+      for (int i = 0; i < 2880+10; i++) {
+         double when = JD - 1.0 + (double) i / 1440.0;
          ln_get_hrz_from_equ(&posn, observer, when, &hrz_posn);
          angles[0] = hrz_posn.alt;
 
@@ -1383,6 +1386,8 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
 
    int times_written = 0;
 
+   bool arcd = false;
+
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
       if (events[i].category < CAT_LUNAR) {
@@ -1392,11 +1397,13 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
                double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
 
+printf("acs %08x %lf %lf\n", color, start_angle, stop_angle);
                arc_canvas_shaded(canvas, canvas->w / 2,
                                  canvas->h / 2,
                                  canvas->w / 2 / 2,
                                  canvas->h / 2 / 2, color, start_angle,
                                  stop_angle);
+               arcd = true;
 
                // accumulate angle_daylight and angle_darkness
                start_angle = normalize_angle(start_angle);
@@ -1513,8 +1520,15 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    double here = now + 0.5;
    double start_angle = frac(last) * 360.0 - up_angle + 270.0;
    double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
-   arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2, canvas->w / 2 / 2,
-                     canvas->h / 2 / 2, color, start_angle, stop_angle);
+
+   if (!arcd || start_angle != stop_angle) {
+printf("acs2 %08x %lf %lf\n", color, start_angle, stop_angle);
+      arc_canvas_shaded(canvas,
+                        canvas->w / 2, canvas->h / 2,
+                        canvas->w / 2 / 2,
+                        canvas->h / 2 / 2,
+                        color, start_angle, stop_angle);
+   }
 
    // accumulate angle_daylight and angle_darkness
    start_angle = normalize_angle(start_angle);
@@ -1933,6 +1947,9 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
+JD=2459856.275915;
+
+   printf("JD=%lf\n", JD);
 
    // local time
    my_get_local_date(JD, &now);

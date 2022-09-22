@@ -849,28 +849,18 @@ void events_dump(void) {
    }
 }
 
-/// @brief One hour of Julian Date.
-#define ONE_HOUR_JD (1.0/(24.0))
-
 /// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
 /// @brief One half minute of Julian Date.
 #define HALF_MINUTE_JD (1.0/(24.0*60.0*2.0))
 
-/// @brief One second of Julian Date.
-#define ONE_SECOND_JD (1.0/(24.0*60.0*60.0))
-
-/// @brief One half second of Julian Date.
-#define HALF_SECOND_JD (1.0/(24.0*60.0*60.0*2.0))
-
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
 void events_populate_anything_updown(double JD,
       struct ln_lnlat_posn *observer,
-      void (*get_equ_body_coords)(double,
-         struct ln_equ_posn *),
+      Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
@@ -878,7 +868,7 @@ void events_populate_anything_updown(double JD,
 
    JD -= 2.0 + HALF_MINUTE_JD;
 
-   get_equ_body_coords(JD, &posn);
+   get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
          observer,
          JD, &hrz_posn);
@@ -897,8 +887,7 @@ void events_populate_anything_updown(double JD,
 
 void events_populate_anything_rst(double JD,
       struct ln_lnlat_posn *observer,
-      void (*get_equ_body_coords)(double,
-         struct ln_equ_posn *),
+      Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
    Event tentative[64];
    int tent_spot = 0;
@@ -907,7 +896,7 @@ void events_populate_anything_rst(double JD,
    struct ln_hrz_posn hrz_posn;
    double angles[3];
 
-   get_equ_body_coords(JD, &posn);
+   get_equ_coords(JD, &posn);
 
    ln_get_hrz_from_equ(&posn,
          observer,
@@ -941,7 +930,7 @@ void events_populate_anything_rst(double JD,
 
    for (int j = 0; j < tent_spot; j++) {
 again:
-      get_equ_body_coords(tentative[j].jd, &posn);
+      get_equ_coords(tentative[j].jd, &posn);
 
       ln_get_hrz_from_equ(&posn,
             observer,
@@ -1012,12 +1001,11 @@ carry_on:;
 
 void events_populate_anything(double JD,
       struct ln_lnlat_posn *observer,
-      void (*get_equ_body_coords)(double,
-         struct ln_equ_posn *),
+      Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
 
-   events_populate_anything_updown(JD, observer, get_equ_body_coords, horizon, category);
-   events_populate_anything_rst(JD, observer, get_equ_body_coords, horizon, category);
+   events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
+   events_populate_anything_rst(JD, observer, get_equ_coords, horizon, category);
 }
 
 void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {

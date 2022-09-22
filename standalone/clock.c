@@ -855,6 +855,9 @@ void events_dump(void) {
 /// @brief One half minute of Julian Date.
 #define HALF_MINUTE_JD (1.0/(24.0*60.0*2.0))
 
+/// @brief Ten seconds of Julian Date.
+#define TEN_SECONDS_JD (1.0/(24.0*60.0*6.0))
+
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
@@ -885,13 +888,12 @@ void events_populate_anything_updown(double JD,
 #define CLOSEENOUGH(a,b) (fabs((a)-(b)) < (ONE_MINUTE_JD * 1.5))
 #define WITHINHALF(a,b) (fabs((a)-(b)) < 0.5)
 
-void events_populate_anything_rst(double JD,
+void events_populate_anything_rst_firstpass(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
-      double horizon, EventCategory category) {
-   Event tentative[64];
-   int tent_spot = 0;
-
+      double horizon, EventCategory category,
+      Event *tentative,
+      int *tent_spotp) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
    double angles[3];
@@ -914,21 +916,32 @@ void events_populate_anything_rst(double JD,
       angles[0] = hrz_posn.alt;
 
       if (angles[1] < horizon && angles[0] >= horizon) {
-         tentative[tent_spot++] = (Event) { when, category, EVENT_RISE };
+         tentative[(*tent_spotp)++] = (Event) { when, category, EVENT_RISE };
       }
       if (angles[1] > angles[0] && angles[1] > angles[2]) {
          if (angles[1] > horizon || category == CAT_SOLAR) {
-            tentative[tent_spot++] = (Event) { when - ONE_MINUTE_JD, category, EVENT_TRANSIT };
+            tentative[(*tent_spotp)++] = (Event) { when - ONE_MINUTE_JD, category, EVENT_TRANSIT };
          }
       }
       if (angles[0] < horizon && angles[1] >= horizon) {
-         tentative[tent_spot++] = (Event) { when, category, EVENT_SET };
+         tentative[(*tent_spotp)++] = (Event) { when, category, EVENT_SET };
       }
       angles[2] = angles[1];
       angles[1] = angles[0];
    }
+}
 
-   for (int j = 0; j < tent_spot; j++) {
+void events_populate_anything_rst_secondpass(double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords,
+      double horizon, EventCategory category,
+      Event *tentative,
+      int *tent_spotp) {
+   struct ln_equ_posn posn;
+   struct ln_hrz_posn hrz_posn;
+   double angles[3];
+
+   for (int j = 0; j < *tent_spotp; j++) {
 again:
       get_equ_coords(tentative[j].jd, &posn);
 
@@ -993,6 +1006,162 @@ again:
       }
 carry_on:;
    }
+}
+
+void events_populate_anything_rst_thirdpass(double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords,
+      double horizon, EventCategory category,
+      Event *tentative,
+      int *tent_spotp) {
+   struct ln_equ_posn posn;
+   struct ln_hrz_posn hrz_posn;
+   double angles[3];
+
+   for (int i = 0; i < *tent_spotp; i++) {
+      if (tentative[i].type == EVENT_RISE) {
+         get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+         angles[1] = hrz_posn.alt;
+
+         get_equ_coords(tentative[i].jd, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd, &hrz_posn);
+         angles[0] = hrz_posn.alt;
+
+         while (angles[0] >= horizon && angles[1] >= horizon) {
+            angles[0] = angles[1];
+            tentative[i].jd -= TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+            angles[1] = hrz_posn.alt;
+         }
+         while (angles[0] < horizon && angles[1] < horizon) {
+            angles[1] = angles[0];
+            tentative[i].jd += TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd, &hrz_posn);
+            angles[0] = hrz_posn.alt;
+         }
+      }
+      else if (tentative[i].type == EVENT_TRANSIT) {
+         get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+         angles[2] = hrz_posn.alt;
+
+         get_equ_coords(tentative[i].jd, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd, &hrz_posn);
+         angles[1] = hrz_posn.alt;
+
+         get_equ_coords(tentative[i].jd + TEN_SECONDS_JD, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd + TEN_SECONDS_JD, &hrz_posn);
+         angles[0] = hrz_posn.alt;
+
+         while (angles[2] > angles[1]) {
+            angles[0] = angles[1];
+            angles[1] = angles[2];
+            tentative[i].jd -= TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+            angles[2] = hrz_posn.alt;
+         }
+         while (angles[0] > angles[1]) {
+            angles[2] = angles[1];
+            angles[1] = angles[0];
+            tentative[i].jd += TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd, &hrz_posn);
+            angles[0] = hrz_posn.alt;
+         }
+      }
+      else if (tentative[i].type == EVENT_SET) {
+         get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+         angles[1] = hrz_posn.alt;
+
+         get_equ_coords(tentative[i].jd, &posn);
+         ln_get_hrz_from_equ(&posn,
+             observer,
+             tentative[i].jd, &hrz_posn);
+         angles[0] = hrz_posn.alt;
+
+         while (angles[0] < horizon && angles[1] < horizon) {
+            angles[0] = angles[1];
+            tentative[i].jd -= TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd - TEN_SECONDS_JD, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd - TEN_SECONDS_JD, &hrz_posn);
+            angles[1] = hrz_posn.alt;
+         }
+         while (angles[0] >= horizon && angles[1] >= horizon) {
+            angles[1] = angles[0];
+            tentative[i].jd += TEN_SECONDS_JD;
+
+            get_equ_coords(tentative[i].jd, &posn);
+            ln_get_hrz_from_equ(&posn,
+                  observer,
+                  tentative[i].jd, &hrz_posn);
+            angles[0] = hrz_posn.alt;
+         }
+      }
+   }
+}
+
+void events_populate_anything_rst(double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords,
+      double horizon, EventCategory category) {
+   Event tentative[64];
+   int tent_spot = 0;
+
+   events_populate_anything_rst_firstpass(JD,
+                                          observer,
+                                          get_equ_coords,
+                                          horizon,
+                                          category,
+                                          tentative,
+                                          &tent_spot);
+
+   events_populate_anything_rst_secondpass(JD,
+                                           observer,
+                                           get_equ_coords,
+                                           horizon,
+                                           category,
+                                           tentative,
+                                           &tent_spot);
+
+   events_populate_anything_rst_thirdpass(JD,
+                                          observer,
+                                          get_equ_coords,
+                                          horizon,
+                                          category,
+                                          tentative,
+                                          &tent_spot);
 
    for (int i = 0; i < tent_spot; i++) {
       events[event_spot++] = tentative[i];
@@ -1025,15 +1194,20 @@ void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
 }
 
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
-   events_populate_anything(JD, observer, ln_get_mercury_equ_coords, 0.0,
+   events_populate_anything(JD, observer,
+         ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MERCURY);
-   events_populate_anything(JD, observer, ln_get_venus_equ_coords, 0.0,
+   events_populate_anything(JD, observer,
+         ln_get_venus_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_VENUS);
-   events_populate_anything(JD, observer, ln_get_mars_equ_coords, 0.0,
+   events_populate_anything(JD, observer,
+         ln_get_mars_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MARS);
-   events_populate_anything(JD, observer, ln_get_jupiter_equ_coords, 0.0,
+   events_populate_anything(JD, observer,
+         ln_get_jupiter_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_JUPITER);
-   events_populate_anything(JD, observer, ln_get_saturn_equ_coords, 0.0,
+   events_populate_anything(JD, observer,
+         ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_SATURN);
 }
 
@@ -1893,6 +2067,16 @@ void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
+double to_the_minute(double jd) {
+   double whole = (double) ((int) jd);
+   double fraction = jd - whole;
+   fraction *= 24*60;
+   fraction = (double)((int) fraction);
+   fraction /= 24*60;
+
+   return whole + fraction;
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -1941,6 +2125,8 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    if (offset > 2000000.0) {
       JD = offset;
    }
+
+   JD = to_the_minute(JD);
 
    printf("JD=%lf\n", JD);
 

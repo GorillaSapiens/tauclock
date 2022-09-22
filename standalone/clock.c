@@ -1705,7 +1705,7 @@ void do_debug_info(Canvas * canvas, double JD, double offset,
 
    // buffer for julian date
    char jd_buf[1024];
-   sprintf(jd_buf, "JD=%0.2f", JD);
+   sprintf(jd_buf, "JD=%0.6f", JD);
 
    // buffer for offset
    char offset_buf[1024];

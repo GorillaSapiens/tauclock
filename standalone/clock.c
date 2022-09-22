@@ -590,6 +590,8 @@ do_planet_band(Canvas * canvas, double up, double now,
    double up_angle = frac(up) * 360.0;
    int need_character = mode & 2;       // draw characters at ticks
 
+   bool arcd = false;
+
    char sym[2] = { 0, 0 };
    sym[0] = 'B' + (category - CAT_LUNAR);
 
@@ -618,6 +620,8 @@ do_planet_band(Canvas * canvas, double up, double now,
                   double stop_angle =
                      frac(events[i].jd) * 360.0 - up_angle + 270.0;
                   if (mode & 1) {
+printf("acs %d %lf %lf\n", category, start_angle, stop_angle);
+                     arcd = true;
                      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
                                        radius, SCALE(5), color, start_angle,
                                        stop_angle);
@@ -634,8 +638,11 @@ do_planet_band(Canvas * canvas, double up, double now,
       double start_angle = frac(last) * 360.0 - up_angle + 270.0;
       double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
       if (mode & 1) {
-         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                           radius, SCALE(5), color, start_angle, stop_angle);
+printf("acs2 %d %lf %lf\n", category, start_angle, stop_angle);
+         if (!arcd || start_angle != stop_angle) {
+            arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                              radius, SCALE(5), color, start_angle, stop_angle);
+         }
       }
    }
 
@@ -1945,6 +1952,9 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
+   if (offset > 2000000.0) {
+      JD = offset;
+   }
 
    printf("JD=%lf\n", JD);
 

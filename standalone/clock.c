@@ -1947,7 +1947,6 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // get Julian day from local time
    JD = ln_get_julian_from_sys() + offset;
-JD=2459856.275915;
 
    printf("JD=%lf\n", JD);
 

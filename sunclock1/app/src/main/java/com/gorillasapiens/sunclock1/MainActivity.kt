@@ -12,6 +12,7 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageView
@@ -129,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 catch (e: Exception) {
                     // do nothing
-                    tzname = "(error...)"
+                    tzname = "(initializing...)"
                 }
             }
             else if (mTimeZoneProvider == "manual") {
@@ -144,15 +145,20 @@ class MainActivity : AppCompatActivity() {
                     // do nothing
                 }
             }
-            val something = doAll(
-                mLastLocation?.latitude ?: -181.0,
-                mLastLocation?.longitude ?: -181.0,
-                offset,
-                min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                displayProvider, mTimeZoneProvider, tzname
-            )
-            mSunClockDrawable?.setThing(something)
-            mImageView?.invalidate()
+            try {
+                val something = doAll(
+                    mLastLocation?.latitude ?: -181.0,
+                    mLastLocation?.longitude ?: -181.0,
+                    offset,
+                    min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                    displayProvider, mTimeZoneProvider, tzname
+                )
+                mSunClockDrawable?.setThing(something)
+                mImageView?.invalidate()
+            }
+            catch (e: Exception) {
+                Log.d("debug", e.toString())
+            }
         }
 
         mImageView?.invalidate()
@@ -305,9 +311,10 @@ class MainActivity : AppCompatActivity() {
         editor.putString("offset", mOffset)
         editor.putString("manual_offset", mManualOffset)
 
-        editor.apply()
+        editor.commit()
     }
 
+    private var mUsed :Long = 0
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -332,6 +339,9 @@ class MainActivity : AppCompatActivity() {
         mLocationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager?
 
         mHandler.post(runVeryOften)
+
+        //val runtime = Runtime.getRuntime()
+        //mUsed = (runtime.totalMemory() - runtime.freeMemory()) / 1048576
 
         GlobalScope.launch(Dispatchers.IO) {
             mTimeZoneEngine = TimeZoneEngine.initialize()

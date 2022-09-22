@@ -67,7 +67,7 @@ void dump_canvas(Canvas * canvas, const char *fname) {
    }
 
    int ret = write(fd, canvas->data,
-                   sizeof(unsigned int) * canvas->w * canvas->h);
+         sizeof(unsigned int) * canvas->w * canvas->h);
    if (ret != sizeof(unsigned int) * canvas->w * canvas->h) {
       fprintf(stderr, "%s BAD WRITE %d\n", __FUNCTION__, ret);
       exit(-1);
@@ -119,7 +119,7 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
 /// @return void
 void
 conditional_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,
-                        unsigned int old) {
+      unsigned int old) {
    if (0 <= x && x < canvas->w) {
       if (0 <= y && y < canvas->h) {
          if (canvas->data[y * canvas->w + x] == old) {
@@ -249,7 +249,7 @@ static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
 /// @return An integer encoding the text width and height
 int
 text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
-            unsigned int bg, const char *p, int mult, int gap) {
+      unsigned int bg, const char *p, int mult, int gap) {
    int outline = 2;
 
    int encoded;
@@ -314,10 +314,10 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
                   for (int mx = 0; mx < mult; mx++) {
                      for (int my = 0; my < mult; my++) {
                         for (int dx =
-                             -mult * outline; dx <= mult * outline; dx++) {
+                              -mult * outline; dx <= mult * outline; dx++) {
                            for (int
-                                dy
-                                = -mult * outline; dy <= mult * outline; dy++) {
+                                 dy
+                                 = -mult * outline; dy <= mult * outline; dy++) {
                               poke_canvas
                                  (canvas,
                                   x + w * mult + mx + dx + glyph.dx * mult,
@@ -346,8 +346,8 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
                for (int mx = 0; mx < mult; mx++) {
                   for (int my = 0; my < mult; my++) {
                      poke_canvas(canvas,
-                                 x + w * mult + mx + glyph.dx * mult,
-                                 y + h * mult + my + glyph.dy * mult, fg);
+                           x + w * mult + mx + glyph.dx * mult,
+                           y + h * mult + my + glyph.dy * mult, fg);
                   }
                }
             }
@@ -390,7 +390,7 @@ blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color, int blur) {
 /// @return void
 void
 line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
-            unsigned int color) {
+      unsigned int color) {
    blur_poke_canvas(canvas, x1, y1, color, 1);
    blur_poke_canvas(canvas, x2, y2, color, 1);
 
@@ -418,16 +418,16 @@ line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @return void
 void
 thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
-                  unsigned int color, int thickness) {
+      unsigned int color, int thickness) {
    for (int i = -thickness; i < thickness; i++) {
       line_canvas(canvas, x1 + i, y1 + thickness, x2 + i,
-                  y2 + thickness, color);
+            y2 + thickness, color);
       line_canvas(canvas, x1 + i, y1 - thickness, x2 + i,
-                  y2 - thickness, color);
+            y2 - thickness, color);
       line_canvas(canvas, x1 + thickness, y1 + i, x2 + thickness,
-                  y2 + i, color);
+            y2 + i, color);
       line_canvas(canvas, x1 - thickness, y1 + i, x2 - thickness,
-                  y2 + i, color);
+            y2 + i, color);
    }
 }
 
@@ -449,9 +449,9 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @return void
 void
 arc_canvas(Canvas * canvas,
-           int center_x, int center_y, int radius,
-           int strokewidth, unsigned int strokecolor,
-           double begin_deg, double end_deg) {
+      int center_x, int center_y, int radius,
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg) {
    float theta;
 
    if (end_deg <= begin_deg) {
@@ -462,16 +462,16 @@ arc_canvas(Canvas * canvas,
       for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
          int x1, y1, x2, y2;
          x1 = center_x + ((float)radius -
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             cos(theta * M_PI / 180.0);
          y1 = center_y + ((float)radius -
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             sin(theta * M_PI / 180.0);
          x2 = center_x + ((float)radius +
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             cos(theta * M_PI / 180.0);
          y2 = center_y + ((float)radius +
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             sin(theta * M_PI / 180.0);
          line_canvas(canvas, x1, y1, x2, y2, strokecolor);
       }
@@ -493,12 +493,12 @@ unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
    int g = 0xFF & (color >> 8);
    int b = 0xFF & (color);
 
-   int d = ((x-cx)*(x-cx)+(y-cy)*(y-cy));
+   int d = ((x - cx) * (x - cx) + (y - cy) * (y - cy));
    l = l * l / 4;
 
-   r = r * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
-   g = g * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
-   b = b * (.8 + .2 * (1.0 - (2.0*(double)d/(double)l)));
+   r = r * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
+   g = g * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
+   b = b * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
 
    return (mask << 24) | (r << 16) | (g << 8) | b;
 }
@@ -519,7 +519,7 @@ unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
 /// @return void
 void
 line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
-            unsigned int color, int cx, int cy, int l) {
+      unsigned int color, int cx, int cy, int l) {
    blur_poke_canvas(canvas, x1, y1, shade(color, x1, y1, cx, cy, l), 1);
    blur_poke_canvas(canvas, x2, y2, shade(color, x2, y2, cx, cy, l), 1);
 
@@ -548,9 +548,9 @@ line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @return void
 void
 arc_canvas_shaded(Canvas * canvas,
-           int center_x, int center_y, int radius,
-           int strokewidth, unsigned int strokecolor,
-           double begin_deg, double end_deg) {
+      int center_x, int center_y, int radius,
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg) {
    float theta;
 
    if (end_deg <= begin_deg) {
@@ -561,20 +561,21 @@ arc_canvas_shaded(Canvas * canvas,
       for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
          int x1, y1, x2, y2;
          x1 = center_x + ((float)radius -
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             cos(theta * M_PI / 180.0);
          y1 = center_y + ((float)radius -
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             sin(theta * M_PI / 180.0);
          x2 = center_x + ((float)radius +
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             cos(theta * M_PI / 180.0);
          y2 = center_y + ((float)radius +
-                          ((float)strokewidth) / 2.0) *
+               ((float)strokewidth) / 2.0) *
             sin(theta * M_PI / 180.0);
          line_canvas_shaded(canvas, x1, y1, x2, y2, strokecolor,
-			 (x1 + x2) / 2, (y1 + y2) / 2,
-			 sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)));
+               (x1 + x2) / 2, (y1 + y2) / 2,
+               sqrt((x1 - x2) * (x1 - x2) +
+                  (y1 - y2) * (y1 - y2)));
       }
    }
 }

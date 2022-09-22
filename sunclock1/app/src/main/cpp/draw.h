@@ -84,21 +84,21 @@ void dump_canvas(Canvas * canvas, const char *fname);
 void xor_canvas(Canvas * mask, Canvas * target);
 void poke_canvas(Canvas * canvas, int x, int y, unsigned int c);
 void conditional_poke_canvas(Canvas * canvas, int x, int y,
-                             unsigned int color, unsigned int old);
+      unsigned int color, unsigned int old);
 unsigned int peek_canvas(Canvas * canvas, int x, int y);
 int text_canvas(Canvas * canvas, uint8_t * font, int x, int y,
-                unsigned int fg, unsigned int bg, const char *p, int mult,
-                int gap);
+      unsigned int fg, unsigned int bg, const char *p, int mult,
+      int gap);
 void blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,
-                      int blur);
+      int blur);
 void line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
-                 unsigned int color);
+      unsigned int color);
 void thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
-                       unsigned int color, int thickness);
+      unsigned int color, int thickness);
 void arc_canvas(Canvas * canvas, int center_x, int center_y, int radius,
-                int strokewidth, unsigned int strokecolor,
-                double begin_deg, double end_deg);
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg);
 void arc_canvas_shaded(Canvas * canvas, int center_x, int center_y, int radius,
-                int strokewidth, unsigned int strokecolor,
-                double begin_deg, double end_deg);
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg);
 #endif

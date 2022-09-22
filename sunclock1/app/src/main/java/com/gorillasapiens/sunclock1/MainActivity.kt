@@ -250,12 +250,12 @@ class MainActivity : AppCompatActivity() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
 
         var tmp = sharedPreferences.getString("provider", "")
-        if (tmp != null && tmp.length > 0) {
+        if (tmp != null && tmp.isNotEmpty()) {
             mProviderName = tmp
         }
         if (mProviderName == "manual") {
             tmp = sharedPreferences.getString("manual_location", "")
-            if (tmp != null && tmp.length > 0) {
+            if (tmp != null && tmp.isNotEmpty()) {
                 val pattern : Pattern = Pattern.compile("^([^,]+),(.+)$")
                 val matcher : Matcher = pattern.matcher(tmp)
                 val isMatch = matcher.matches()
@@ -275,20 +275,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         tmp = sharedPreferences.getString("timezone", "")
-        if (tmp != null && tmp.length > 0) {
+        if (tmp != null && tmp.isNotEmpty()) {
             mTimeZoneProvider = tmp
         }
         tmp = sharedPreferences.getString("manual_timezone", "")
-        if (tmp != null && tmp.length > 0) {
+        if (tmp != null && tmp.isNotEmpty()) {
             mManualTimeZone = tmp
         }
 
         tmp = sharedPreferences.getString("offset", "")
-        if (tmp != null && tmp.length > 0) {
+        if (tmp != null && tmp.isNotEmpty()) {
             mOffset = tmp
         }
         tmp = sharedPreferences.getString("manual_offset", "")
-        if (tmp != null && tmp.length > 0) {
+        if (tmp != null && tmp.isNotEmpty()) {
             mManualOffset = tmp
         }
     }
@@ -314,7 +314,6 @@ class MainActivity : AppCompatActivity() {
         editor.commit()
     }
 
-    private var mUsed :Long = 0
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

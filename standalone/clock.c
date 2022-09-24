@@ -318,7 +318,6 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       ya = y + (r - SCALE(30)) * sin(DEG2RAD(angle - up_angle + 270.0));
       char buf[32];
       sprintf(buf, "%02d", hour);
-printf("HOUR %lf %lf '%s'\n", xa, ya, buf);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
             COLOR_BLACK, COLOR_NONE, buf, 1, 3);
    }

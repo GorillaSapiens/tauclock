@@ -286,6 +286,19 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       double when = JD - 0.5 + HALFHOUR + (double)i / 24.0;
       struct ln_zonedate zonedate;
       my_get_local_date(when, &zonedate);
+
+      // account for some rounding errors
+      if (zonedate.minutes % 10 == 9) {
+         zonedate.minutes++;
+         if (zonedate.minutes == 60) {
+            zonedate.minutes = 0;
+            zonedate.hours++;
+            if (zonedate.hours == 24) {
+               zonedate.hours = 0;
+            }
+         }
+      }
+
       int hour = zonedate.hours;
 
       double mark = when - (float)zonedate.minutes / (24.0 * 60.0);
@@ -305,6 +318,7 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       ya = y + (r - SCALE(30)) * sin(DEG2RAD(angle - up_angle + 270.0));
       char buf[32];
       sprintf(buf, "%02d", hour);
+printf("HOUR %lf %lf '%s'\n", xa, ya, buf);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
             COLOR_BLACK, COLOR_NONE, buf, 1, 3);
    }

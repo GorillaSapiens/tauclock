@@ -871,20 +871,34 @@ void events_populate_anything_updown(double JD,
       double horizon, EventCategory category) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
-   double angle;
-
-   JD -= 2.0 + HALF_MINUTE_JD;
+   double angle[2];
 
    get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
          observer,
          JD, &hrz_posn);
-   angle = hrz_posn.alt;
+   angle[1] = hrz_posn.alt;
 
-   if (angle < horizon) {
+   JD -= 1.0 + HALF_MINUTE_JD;
+
+   get_equ_coords(JD, &posn);
+   ln_get_hrz_from_equ(&posn,
+         observer,
+         JD, &hrz_posn);
+   angle[0] = hrz_posn.alt;
+
+   if (angle[0] < horizon && angle[1] < horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }
-   else {
+   else if (angle[0] < horizon && angle[1] >= horizon) {
+      events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
+      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_RISE};
+   }
+   else if (angle[0] >= horizon && angle[1] < horizon) {
+      events[event_spot++] = (Event) { JD, category, EVENT_UP};
+      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_SET};
+   }
+   else if (angle[0] >= horizon && angle[1] >= horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_UP};
    }
 }
@@ -1543,7 +1557,7 @@ void events_populate_anything_rst(double JD,
    }
 }
 
-void events_populate_anything(double JD,
+void events_populate_anything_old(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
@@ -1552,15 +1566,164 @@ void events_populate_anything(double JD,
    events_populate_anything_rst(JD, observer, get_equ_coords, horizon, category);
 }
 
+struct ECH {
+   EventCategory category;
+   double horizon;
+};
+
+void events_populate_anything_array(double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords,
+      int ech_count, struct ECH *echs) {
+
+   double whole = (double)((int) JD);
+   double fraction = JD - whole;
+   fraction = (double)((int) (fraction * 24.0 * 60.0));
+   fraction /= 24.0*60.0;
+   JD = whole + fraction + (1.0/(24.0*60.0*2.0));
+
+   struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
+   bool valid[2880] = { false };  // compiler should fill array w/ false
+   struct ln_hrz_posn hrz_posn[2880];
+
+   get_equ_coords(JD - 1440.0 * ONE_MINUTE_JD, posn);
+   valid[0] = true;
+
+   get_equ_coords(JD, posn + 1440);
+   valid[1440] = true;
+
+   get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, posn + 2879);
+   valid[2879] = true;
+
+   for (int i = 0; i < 2880; i += 15) {
+      if (!valid[i]) {
+         get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+         valid[i] = true;
+      }
+   }
+
+   for (int k = 0; k < ech_count; k++) {
+      EventCategory category = echs[k].category;
+      double horizon = echs[k].horizon;
+
+      events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
+
+      int ret;
+      struct ln_rst_time rst;
+
+      ret = ln_get_body_next_rst_horizon(JD - 1.0, observer, get_equ_coords, horizon, &rst);
+      if (ret == 0) {
+         int i;
+         i = (int)((rst.rise - JD) * (24.0 * 60.0)) + 1440;
+         if (i >= 0 && i < 2880 && !valid[i]) {
+            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+            valid[i] = true;
+         }
+         i = (int)((rst.transit - JD) * (24.0 * 60.0)) + 1440;
+         if (i >= 0 && i < 2880 && !valid[i]) {
+            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+            valid[i] = true;
+         }
+         i = (int)((rst.set - JD) * (24.0 * 60.0)) + 1440;
+         if (i >= 0 && i < 2880 && !valid[i]) {
+            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+            valid[i] = true;
+         }
+      }
+
+      bool done = false;
+      do {
+         for (int i = 0; i < 2880; i++) {
+            struct ln_equ_posn *posnp = posn;
+            int close = 0;
+            for (int j = 0; j < 2880; j++) {
+               if (valid[j]) {
+                  if (abs(j-i) < abs(j-close)) {
+                     close = j;
+                     posnp = posn + j;
+                  }
+               }
+            }
+
+            ln_get_hrz_from_equ(posnp,
+                  observer,
+                  JD + ((double) i - 1440.0) * ONE_MINUTE_JD, hrz_posn + i);
+         }
+         done = true;
+         for (int i = 0; i < 2879; i++) {
+            bool need = false;
+            if ((hrz_posn[i].alt >= horizon && hrz_posn[i+1].alt <= horizon) ||
+                  (hrz_posn[i].alt <= horizon && hrz_posn[i+1].alt >= horizon)) {
+               // possible rise or set
+               need = true;
+            }
+            if (i > 0) {
+               if ((hrz_posn[i].alt >= hrz_posn[i+1].alt &&
+                        hrz_posn[i].alt >= hrz_posn[i-1].alt) ||
+                     (hrz_posn[i].alt <= hrz_posn[i+1].alt &&
+                      hrz_posn[i].alt <= hrz_posn[i-1].alt)) {
+                  // possible minima or maxima
+                  need = true;
+               }
+            }
+
+            if (need) {
+               if (i > 0 && !valid[i]) {
+                  done = false;
+                  get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+                  valid[i] = true;
+               }
+               if (!valid[i]) {
+                  done = false;
+                  get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+                  valid[i] = true;
+               }
+               if (!valid[i+1]) {
+                  done = false;
+                  get_equ_coords(JD + ((double) (i+1) - 1440.0) * ONE_MINUTE_JD, posn + (i+1));
+                  valid[(i+1)] = true;
+               }
+            }
+         }
+      } while (!done);
+
+      for (int i = 0; i < 2879; i++) {
+         if (hrz_posn[i].alt <= horizon && hrz_posn[i+1].alt >= horizon) {
+            events[event_spot++] =
+               (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_RISE};
+         }
+         if (hrz_posn[i].alt >= horizon && hrz_posn[i+1].alt <= horizon) {
+            events[event_spot++] =
+               (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_SET};
+         }
+         if (i > 0 &&
+               (hrz_posn[i].alt >= hrz_posn[i+1].alt) &&
+               (hrz_posn[i].alt >= hrz_posn[i-1].alt) &&
+               (hrz_posn[i].alt >= horizon)) {
+            events[event_spot++] =
+               (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_TRANSIT};
+         }
+      }
+   }
+}
+
+void events_populate_anything(double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords,
+      double horizon, EventCategory category) {
+   struct ECH ech = (struct ECH) { category, horizon };
+   events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech);
+}
+
 void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
-   events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-         LN_SOLAR_ASTRONOMICAL_HORIZON, CAT_ASTRONOMICAL);
-   events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-         LN_SOLAR_NAUTIC_HORIZON, CAT_NAUTICAL);
-   events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-         LN_SOLAR_CIVIL_HORIZON, CAT_CIVIL);
-   events_populate_anything(JD, observer, ln_get_solar_equ_coords,
-         LN_SOLAR_STANDART_HORIZON, CAT_SOLAR);
+   struct ECH echs[] = {
+      (struct ECH) { CAT_ASTRONOMICAL, LN_SOLAR_ASTRONOMICAL_HORIZON },
+      (struct ECH) { CAT_NAUTICAL,     LN_SOLAR_NAUTIC_HORIZON },
+      (struct ECH) { CAT_CIVIL,        LN_SOLAR_CIVIL_HORIZON },
+      (struct ECH) { CAT_SOLAR,        LN_SOLAR_STANDART_HORIZON },
+   };
+   events_populate_anything_array(JD, observer, ln_get_solar_equ_coords,
+         4, echs);
 }
 
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
@@ -1609,6 +1772,13 @@ double events_transit(double jd) {
          return frac(events[i].jd);
       }
    }
+   // hrm, how about a pruned solar transit?
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].type == EVENT_TRANSIT && events[i].category < CAT_LUNAR) {
+         return frac(events[i].jd);
+      }
+   }
+   // non?  how about a lunar transit?
    // non?  how about a lunar transit?
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
@@ -1908,6 +2078,8 @@ void replayTimeDrawnMemory(Canvas * canvas) {
 void do_sun_bands(Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
+
+   // we begin in darkness...
    unsigned int color = COLOR_DARKBLUE;
    unsigned int fore = COLOR_WHITE;
    unsigned int back = COLOR_DARKBLUE;
@@ -1924,14 +2096,73 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    double up_angle = frac(up) * 360.0;
 
    int started = 0;
+   int lockstart = 0;
    double transited = 0.0;
 
    int times_written = 0;
 
    bool arcd = false;
 
+#if 0
+   // pick a starting color
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].prune) {
+         if (events[i].category < CAT_LUNAR) {
+            if (events[i].type == EVENT_UP ||
+                events[i].type == EVENT_RISE) {
+               switch(events[i].category) {
+                  case CAT_ASTRONOMICAL:
+                     color = back = COLOR_BLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_NAUTICAL:
+                     color = back = COLOR_LIGHTBLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_CIVIL:
+                     color = back = COLOR_ORANGE;
+                     fore = COLOR_BLACK;
+                     break;
+                  case CAT_SOLAR:
+                     color = back = COLOR_YELLOW;
+                     fore = COLOR_BLACK;
+                     break;
+               }
+            }
+            else if (events[i].type == EVENT_SET) {
+               switch(events[i].category) {
+                  case CAT_ASTRONOMICAL:
+                     color = back = COLOR_DARKBLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_NAUTICAL:
+                     color = back = COLOR_BLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_CIVIL:
+                     color = back = COLOR_LIGHTBLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_SOLAR:
+                     color = back = COLOR_ORANGE;
+                     fore = COLOR_BLACK;
+                     break;
+               }
+            }
+         }
+      }
+      else {
+         break;
+      }
+   }
+#endif
+
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
+      if (events[i].prune == 0) {
+         lockstart = 1;
+      }
+
       if (events[i].category < CAT_LUNAR) {
          if (events[i].type != EVENT_TRANSIT) {
             if (events[i].prune == 0) {
@@ -1994,65 +2225,67 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
             }
          }
 
-         if (events[i].type == EVENT_UP || events[i].type == EVENT_RISE) {
-            switch (events[i].category) {
-               case CAT_ASTRONOMICAL:
-                  color = back = COLOR_BLUE;
-                  fore = COLOR_WHITE;
-                  break;
-               case CAT_NAUTICAL:
-                  color = back = COLOR_LIGHTBLUE;
-                  fore = COLOR_WHITE;
-                  break;
-               case CAT_CIVIL:
-                  color = back = COLOR_ORANGE;
-                  fore = COLOR_BLACK;
-                  break;
-               case CAT_SOLAR:
-                  color = back = COLOR_YELLOW;
-                  fore = COLOR_BLACK;
-                  break;
-               case CAT_LUNAR:
-               case CAT_MERCURY:
-               case CAT_VENUS:
-               case CAT_MARS:
-               case CAT_JUPITER:
-               case CAT_SATURN:
-                  // do nothing
-                  break;
+         if (!lockstart || !events[i].prune) {
+            if (events[i].type == EVENT_UP || events[i].type == EVENT_RISE) {
+               switch (events[i].category) {
+                  case CAT_ASTRONOMICAL:
+                     color = back = COLOR_BLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_NAUTICAL:
+                     color = back = COLOR_LIGHTBLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_CIVIL:
+                     color = back = COLOR_ORANGE;
+                     fore = COLOR_BLACK;
+                     break;
+                  case CAT_SOLAR:
+                     color = back = COLOR_YELLOW;
+                     fore = COLOR_BLACK;
+                     break;
+                  case CAT_LUNAR:
+                  case CAT_MERCURY:
+                  case CAT_VENUS:
+                  case CAT_MARS:
+                  case CAT_JUPITER:
+                  case CAT_SATURN:
+                     // do nothing
+                     break;
+               }
             }
-         }
 
-         if (events[i].type == EVENT_SET) {
-            switch (events[i].category) {
-               case CAT_ASTRONOMICAL:
-                  back = color;
-                  color = COLOR_DARKBLUE;
-                  fore = COLOR_WHITE;
-                  break;
-               case CAT_NAUTICAL:
-                  back = color;
-                  color = COLOR_BLUE;
-                  fore = COLOR_WHITE;
-                  break;
-               case CAT_CIVIL:
-                  back = color;
-                  color = COLOR_LIGHTBLUE;
-                  fore = COLOR_BLACK;
-                  break;
-               case CAT_SOLAR:
-                  back = color;
-                  color = COLOR_ORANGE;
-                  fore = COLOR_BLACK;
-                  break;
-               case CAT_LUNAR:
-               case CAT_MERCURY:
-               case CAT_VENUS:
-               case CAT_MARS:
-               case CAT_JUPITER:
-               case CAT_SATURN:
-                  // do nothing
-                  break;
+            if (events[i].type == EVENT_SET) {
+               switch (events[i].category) {
+                  case CAT_ASTRONOMICAL:
+                     back = color;
+                     color = COLOR_DARKBLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_NAUTICAL:
+                     back = color;
+                     color = COLOR_BLUE;
+                     fore = COLOR_WHITE;
+                     break;
+                  case CAT_CIVIL:
+                     back = color;
+                     color = COLOR_LIGHTBLUE;
+                     fore = COLOR_BLACK;
+                     break;
+                  case CAT_SOLAR:
+                     back = color;
+                     color = COLOR_ORANGE;
+                     fore = COLOR_BLACK;
+                     break;
+                  case CAT_LUNAR:
+                  case CAT_MERCURY:
+                  case CAT_VENUS:
+                  case CAT_MARS:
+                  case CAT_JUPITER:
+                  case CAT_SATURN:
+                     // do nothing
+                     break;
+               }
             }
          }
       }

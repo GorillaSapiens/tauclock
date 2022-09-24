@@ -939,6 +939,7 @@ struct ECH {
    double horizon;
 };
 
+#define PRESTEP 15 // seems to be around the sweet spot
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -946,7 +947,7 @@ void events_populate_anything_array(double JD,
 
    double whole = (double)((int) JD);
    double fraction = JD - whole;
-   fraction = (double)((int) (fraction * 24.0 * 60.0));
+   fraction = (double)((int) (fraction * 24.0 * 10.0));
    fraction /= 24.0*60.0;
    JD = whole + fraction + (1.0/(24.0*60.0*2.0));
 
@@ -963,7 +964,7 @@ void events_populate_anything_array(double JD,
    get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, posn + 2879);
    valid[2879] = true;
 
-   for (int i = 0; i < 2880; i += 15) {
+   for (int i = 0; i < 2880; i += PRESTEP) {
       if (!valid[i]) {
          get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
          valid[i] = true;
@@ -1005,8 +1006,8 @@ void events_populate_anything_array(double JD,
             struct ln_equ_posn *posnp = posn;
             int close = 0;
             for (int j = 0; j < 2880; j++) {
-               if (valid[j]) {
-                  if (abs(j-i) < abs(j-close)) {
+               if (abs(j-i) < abs(j-close)) {
+                  if (valid[j]) {
                      close = j;
                      posnp = posn + j;
                   }
@@ -1036,10 +1037,10 @@ void events_populate_anything_array(double JD,
             }
 
             if (need) {
-               if (i > 0 && !valid[i]) {
+               if (i > 0 && !valid[i-1]) {
                   done = false;
-                  get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-                  valid[i] = true;
+                  get_equ_coords(JD + ((double) (i-1) - 1440.0) * ONE_MINUTE_JD, posn + (i-1));
+                  valid[i-1] = true;
                }
                if (!valid[i]) {
                   done = false;

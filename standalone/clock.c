@@ -119,6 +119,9 @@ const char *weekdays[] = {
    "Saturday"
 };
 
+/// @brief enumeration type for events
+///
+/// Order is important, as it is used when sorting
 typedef enum EventType {
    EVENT_UP,
    EVENT_DOWN,
@@ -127,6 +130,7 @@ typedef enum EventType {
    EVENT_SET
 } EventType;
 
+/// @brief enumeration type for event categories
 typedef enum EventCategory {
    CAT_SOLAR,
    CAT_CIVIL,
@@ -831,10 +835,6 @@ void events_sort(void) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
 
-void tent_sort(Event *tentative, int tent_spot) {
-   qsort(tentative, tent_spot, sizeof(Event), event_compar);
-}
-
 /// @brief Uniq the events list
 ///
 /// Uses the event_compar function
@@ -883,6 +883,14 @@ void events_dump(void) {
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
+/// @brief Find up and down events
+///
+/// @param JD The current Julian Date
+/// @param observer latitude and logitude of observer
+/// @param get_equ_coords Function pointer to get the body coordinates
+/// @param horizon The horizon used for events
+/// @param category The EventCategory to use
+/// @return void
 void events_populate_anything_updown(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -908,30 +916,23 @@ printf("UPDOWN %lf %lf\n", horizon, angle);
    }
 }
 
-#define CLOSEENOUGH(a,b) (fabs((a)-(b)) < (ONE_MINUTE_JD * 1.5))
-#define WITHINHALF(a,b) (fabs((a)-(b)) < 0.5)
-
-static inline
-double getangle(double JD,
-                struct ln_lnlat_posn *observer,
-                Get_Equ_Coords get_equ_coords) {
-   struct ln_equ_posn posn;
-   struct ln_hrz_posn hrz_posn;
-
-   get_equ_coords(JD, &posn);
-
-   ln_get_hrz_from_equ(&posn,
-         observer,
-         JD, &hrz_posn);
-   return hrz_posn.alt;
-}
-
+///@brief Structure used fro events_populate_anything_array on multiple horizons
 struct ECH {
    EventCategory category;
    double horizon;
 };
 
+/// @brief initial rough time gap [minutes] for finding events
 #define PRESTEP 15 // seems to be around the sweet spot
+
+/// @brief given an ECH array, create events
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @param get_equ_coords Function pointer to get body coordinates
+/// @param ech_count Size of echs array
+/// @param echs An array of ECH
+/// @return void
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -940,6 +941,8 @@ void events_populate_anything_array(double JD,
    struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
    bool valid[2880] = { false };  // compiler should fill array w/ false
    struct ln_hrz_posn hrz_posn[2880];
+
+   // start, mid, and end approximations
 
    get_equ_coords(JD - 1440.0 * ONE_MINUTE_JD, posn);
    valid[0] = true;
@@ -950,6 +953,8 @@ void events_populate_anything_array(double JD,
    get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, posn + 2879);
    valid[2879] = true;
 
+   // prepopulate approximations
+
    for (int i = 0; i < 2880; i += PRESTEP) {
       if (!valid[i]) {
          get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
@@ -957,12 +962,16 @@ void events_populate_anything_array(double JD,
       }
    }
 
+   // create up/down events
+
    for (int k = 0; k < ech_count; k++) {
       EventCategory category = echs[k].category;
       double horizon = echs[k].horizon;
 
       events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
    }
+
+   // begin looking for rise / set / transit events
 
    for (int k = 0; k < ech_count; k++) {
       EventCategory category = echs[k].category;
@@ -1071,6 +1080,16 @@ void events_populate_anything_array(double JD,
    }
 }
 
+/// @brief Like events_populate_anything_array, but for single category / horizon
+///
+/// This just creates a tmp array and calls events_populate_anything_array
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @param get_equ_coords Function pointer to get body coordinates
+/// @param horizon Horizon to use
+/// @param category EventCategory to use
+/// @return void
 void events_populate_anything(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -1079,6 +1098,13 @@ void events_populate_anything(double JD,
    events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech);
 }
 
+/// @brief Create rise/transit/set events for all things solar
+///
+/// This just creates a tmp array and calls events_populate_anything_array
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
    struct ECH echs[] = {
       (struct ECH) { CAT_ASTRONOMICAL, LN_SOLAR_ASTRONOMICAL_HORIZON },
@@ -1090,11 +1116,25 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
          4, echs);
 }
 
+/// @brief Create rise/transit/set events for all things lunar
+///
+/// This just events_populate_anything
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
          LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
 }
 
+/// @brief Create rise/transit/set events for all planets
+///
+/// This just events_populate_anything for each planet
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
@@ -1143,7 +1183,6 @@ double events_transit(double jd) {
       }
    }
    // non?  how about a lunar transit?
-   // non?  how about a lunar transit?
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
             events[i].type == EVENT_TRANSIT && events[i].category == CAT_LUNAR) {
@@ -1172,84 +1211,6 @@ double events_transit(double jd) {
    }
    return frac(ret);
 }
-
-#if 0
-/// @brief Read the weather.txt file, and add details to the clock
-///
-/// This is dead code.
-///
-/// @param canvas The Canvas to draw on
-/// @return void
-void do_weather(Canvas * canvas) {
-   FILE *f = fopen("weather.txt", "r");
-   if (f) {
-      char buffer[128];
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         //location
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // desc
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE / 2 / 2 + SCALE(64),
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // icon
-      remove_newlines(buffer);
-      buffer[1] = 0;
-      text_canvas(canvas, icons_128x128, SIZE / 2, SIZE / 2 / 2, COLOR_BLACK,
-            COLOR_YELLOW, buffer, 1, 1);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // temp
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - SCALE(104), SIZE / 2 / 2,
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // wind
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + SCALE(128), SIZE / 2 / 2,
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // desc
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE * 3 / 4 + SCALE(64),
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // icon
-      remove_newlines(buffer);
-      buffer[1] = 0;
-      text_canvas(canvas, icons_128x128, SIZE / 2, SIZE * 3 / 4, COLOR_WHITE,
-            COLOR_DARKBLUE, buffer, 1, 1);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // temp
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - 104, SIZE * 3 / 4,
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // wind
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + 128, SIZE * 3 / 4,
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      fclose(f);
-   }
-}
-#endif
 
 /// @brief A struct used to remember where something is drawn.
 typedef struct AccumDrawnMemory {

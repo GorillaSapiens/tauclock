@@ -1,3 +1,4 @@
+#pragma GCC optimize("Ofast")
 /* $Id: utility.c,v 1.18 2009-04-20 07:17:00 pkubanek Exp $
  **
  * Copyright (C) 1999, 2000 Juan Carlos Remis

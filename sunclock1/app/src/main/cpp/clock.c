@@ -119,14 +119,18 @@ const char *weekdays[] = {
    "Saturday"
 };
 
+/// @brief enumeration type for events
+///
+/// Order is important, as it is used when sorting
 typedef enum EventType {
+   EVENT_UP,
    EVENT_DOWN,
    EVENT_RISE,
    EVENT_TRANSIT,
-   EVENT_SET,
-   EVENT_UP
+   EVENT_SET
 } EventType;
 
+/// @brief enumeration type for event categories
 typedef enum EventCategory {
    CAT_SOLAR,
    CAT_CIVIL,
@@ -152,7 +156,7 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
 #define COLOR_SATURN    COLOR_LIGHTBLUE // RGB(0xea, 0xd6, 0xb8)
 
 /// @brief Human readable names for the EVENT_* defines
-const char *typenames[] = { "down", "rise", "transit", "set", "up" };
+const char *typenames[] = { "up", "down", "rise", "transit", "set" };
 
 /// @brief A structure denoting a up/down/rise/transit/set event.
 typedef struct {
@@ -602,6 +606,8 @@ do_planet_band(Canvas * canvas, double up, double now,
       int mode) {
    double up_angle = frac(up) * 360.0;
    int need_character = mode & 2;       // draw characters at ticks
+   double need_x = 0.0;
+   double need_y = 0.0;
 
    bool arcd = false;
 
@@ -714,23 +720,32 @@ do_planet_band(Canvas * canvas, double up, double now,
                   break;
             }
          }
+         else if (events[i].type == EVENT_TRANSIT) {
+            if (need_character && need_x == 0.0 && need_y == 0.0) {
+               double angle = frac(events[i].jd) * 360.0 - up_angle + 270.0;
+               need_x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
+               need_y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
+            }
+         }
       }
    }
+
    if (need_character && is_up) {
       // shazbat!
-      double x =
-         (canvas->w / 2) + (radius +
-               15) * cos(DEG2RAD((int)(category - CAT_LUNAR) *
-                     (360 / 6)));
-      double y =
-         (canvas->h / 2) + (radius +
-               15) * sin(DEG2RAD((int)(category - CAT_LUNAR) *
-                     (360 / 6)));
-      if (transit_x != 0.0) {
-         x = transit_x;
-         y = transit_y;
+
+      if (need_x == 0.0 && need_y == 0.0) {
+         need_x = (canvas->w / 2) +
+            (radius + 15) * cos(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+         need_y = (canvas->h / 2) +
+            (radius + 15) * sin(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
       }
-      text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
+
+      if (transit_x != 0.0 || transit_y != 0.0) {
+         need_x = transit_x;
+         need_y = transit_y;
+      }
+
+      text_canvas(canvas, ASTRO_FONT, need_x, need_y, color, COLOR_BLACK, sym, 1, 1);
    }
 }
 
@@ -820,10 +835,6 @@ void events_sort(void) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
 
-void tent_sort(Event *tentative, int tent_spot) {
-   qsort(tentative, tent_spot, sizeof(Event), event_compar);
-}
-
 /// @brief Uniq the events list
 ///
 /// Uses the event_compar function
@@ -869,91 +880,69 @@ void events_dump(void) {
 /// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
-/// @brief One half minute of Julian Date.
-#define HALF_MINUTE_JD (1.0/(24.0*60.0*2.0))
-
-/// @brief Ten seconds of Julian Date.
-#define TEN_SECONDS_JD (1.0/(24.0*60.0*6.0))
-
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
+/// @brief Find up and down events
+///
+/// @param JD The current Julian Date
+/// @param observer latitude and logitude of observer
+/// @param get_equ_coords Function pointer to get the body coordinates
+/// @param horizon The horizon used for events
+/// @param category The EventCategory to use
+/// @return void
 void events_populate_anything_updown(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
-   double angle[2];
+   double angle;
+
+   JD -= 1.0;
 
    get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
          observer,
          JD, &hrz_posn);
-   angle[1] = hrz_posn.alt;
+   angle = hrz_posn.alt;
 
-   JD -= 1.0 + HALF_MINUTE_JD;
-
-   get_equ_coords(JD, &posn);
-   ln_get_hrz_from_equ(&posn,
-         observer,
-         JD, &hrz_posn);
-   angle[0] = hrz_posn.alt;
-
-   if (angle[0] < horizon && angle[1] < horizon) {
+printf("UPDOWN %lf %lf\n", horizon, angle);
+   if (angle < horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }
-   else if (angle[0] < horizon && angle[1] >= horizon) {
-      events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
-      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_RISE};
-   }
-   else if (angle[0] >= horizon && angle[1] < horizon) {
-      events[event_spot++] = (Event) { JD, category, EVENT_UP};
-      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_SET};
-   }
-   else if (angle[0] >= horizon && angle[1] >= horizon) {
+   else {
       events[event_spot++] = (Event) { JD, category, EVENT_UP};
    }
 }
 
-#define CLOSEENOUGH(a,b) (fabs((a)-(b)) < (ONE_MINUTE_JD * 1.5))
-#define WITHINHALF(a,b) (fabs((a)-(b)) < 0.5)
-
-static inline
-double getangle(double JD,
-                struct ln_lnlat_posn *observer,
-                Get_Equ_Coords get_equ_coords) {
-   struct ln_equ_posn posn;
-   struct ln_hrz_posn hrz_posn;
-
-   get_equ_coords(JD, &posn);
-
-   ln_get_hrz_from_equ(&posn,
-         observer,
-         JD, &hrz_posn);
-   return hrz_posn.alt;
-}
-
+///@brief Structure used fro events_populate_anything_array on multiple horizons
 struct ECH {
    EventCategory category;
    double horizon;
 };
 
+/// @brief initial rough time gap [minutes] for finding events
 #define PRESTEP 15 // seems to be around the sweet spot
+
+/// @brief given an ECH array, create events
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @param get_equ_coords Function pointer to get body coordinates
+/// @param ech_count Size of echs array
+/// @param echs An array of ECH
+/// @return void
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       int ech_count, struct ECH *echs) {
 
-   double whole = (double)((int) JD);
-   double fraction = JD - whole;
-   fraction = (double)((int) (fraction * 24.0 * 10.0));
-   fraction /= 24.0*60.0;
-   JD = whole + fraction + (1.0/(24.0*60.0*2.0));
-
    struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
    bool valid[2880] = { false };  // compiler should fill array w/ false
    struct ln_hrz_posn hrz_posn[2880];
+
+   // start, mid, and end approximations
 
    get_equ_coords(JD - 1440.0 * ONE_MINUTE_JD, posn);
    valid[0] = true;
@@ -964,6 +953,8 @@ void events_populate_anything_array(double JD,
    get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, posn + 2879);
    valid[2879] = true;
 
+   // prepopulate approximations
+
    for (int i = 0; i < 2880; i += PRESTEP) {
       if (!valid[i]) {
          get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
@@ -971,32 +962,44 @@ void events_populate_anything_array(double JD,
       }
    }
 
+   // create up/down events
+
    for (int k = 0; k < ech_count; k++) {
       EventCategory category = echs[k].category;
       double horizon = echs[k].horizon;
 
       events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
+   }
+
+   // begin looking for rise / set / transit events
+
+   for (int k = 0; k < ech_count; k++) {
+      EventCategory category = echs[k].category;
+      double horizon = echs[k].horizon;
 
       int ret;
       struct ln_rst_time rst;
 
-      ret = ln_get_body_next_rst_horizon(JD - 1.0, observer, get_equ_coords, horizon, &rst);
-      if (ret == 0) {
-         int i;
-         i = (int)((rst.rise - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
-         }
-         i = (int)((rst.transit - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
-         }
-         i = (int)((rst.set - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
+      for (int offset = -2; offset < 3; offset++) {
+         ret = ln_get_body_next_rst_horizon(JD + ((double) offset), observer, get_equ_coords, horizon, &rst);
+         if (ret == 0) {
+            int i;
+
+            i = (int)((rst.rise - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
+            i = (int)((rst.transit - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
+            i = (int)((rst.set - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
          }
       }
 
@@ -1067,15 +1070,26 @@ void events_populate_anything_array(double JD,
          }
          if (i > 0 &&
                (hrz_posn[i].alt >= hrz_posn[i+1].alt) &&
-               (hrz_posn[i].alt >= hrz_posn[i-1].alt) &&
-               (hrz_posn[i].alt >= horizon)) {
-            events[event_spot++] =
-               (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_TRANSIT};
+               (hrz_posn[i].alt >= hrz_posn[i-1].alt)) {
+            if (hrz_posn[i].alt >= horizon || category < CAT_LUNAR) {
+               events[event_spot++] =
+                  (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_TRANSIT};
+            }
          }
       }
    }
 }
 
+/// @brief Like events_populate_anything_array, but for single category / horizon
+///
+/// This just creates a tmp array and calls events_populate_anything_array
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @param get_equ_coords Function pointer to get body coordinates
+/// @param horizon Horizon to use
+/// @param category EventCategory to use
+/// @return void
 void events_populate_anything(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -1084,6 +1098,13 @@ void events_populate_anything(double JD,
    events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech);
 }
 
+/// @brief Create rise/transit/set events for all things solar
+///
+/// This just creates a tmp array and calls events_populate_anything_array
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
    struct ECH echs[] = {
       (struct ECH) { CAT_ASTRONOMICAL, LN_SOLAR_ASTRONOMICAL_HORIZON },
@@ -1095,11 +1116,25 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
          4, echs);
 }
 
+/// @brief Create rise/transit/set events for all things lunar
+///
+/// This just events_populate_anything
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
          LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
 }
 
+/// @brief Create rise/transit/set events for all planets
+///
+/// This just events_populate_anything for each planet
+///
+/// @param JD The Julian Date
+/// @param observer Observer position
+/// @return void
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
@@ -1148,7 +1183,6 @@ double events_transit(double jd) {
       }
    }
    // non?  how about a lunar transit?
-   // non?  how about a lunar transit?
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
             events[i].type == EVENT_TRANSIT && events[i].category == CAT_LUNAR) {
@@ -1177,84 +1211,6 @@ double events_transit(double jd) {
    }
    return frac(ret);
 }
-
-#if 0
-/// @brief Read the weather.txt file, and add details to the clock
-///
-/// This is dead code.
-///
-/// @param canvas The Canvas to draw on
-/// @return void
-void do_weather(Canvas * canvas) {
-   FILE *f = fopen("weather.txt", "r");
-   if (f) {
-      char buffer[128];
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         //location
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // desc
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE / 2 / 2 + SCALE(64),
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // icon
-      remove_newlines(buffer);
-      buffer[1] = 0;
-      text_canvas(canvas, icons_128x128, SIZE / 2, SIZE / 2 / 2, COLOR_BLACK,
-            COLOR_YELLOW, buffer, 1, 1);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // temp
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - SCALE(104), SIZE / 2 / 2,
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // wind
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + SCALE(128), SIZE / 2 / 2,
-            COLOR_BLACK, COLOR_YELLOW, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // desc
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, SIZE * 3 / 4 + SCALE(64),
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // icon
-      remove_newlines(buffer);
-      buffer[1] = 0;
-      text_canvas(canvas, icons_128x128, SIZE / 2, SIZE * 3 / 4, COLOR_WHITE,
-            COLOR_DARKBLUE, buffer, 1, 1);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // temp
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 - 104, SIZE * 3 / 4,
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      if (!fgets(buffer, sizeof(buffer) - 1, f)) {
-         return;
-      }                         // wind
-      remove_newlines(buffer);
-      text_canvas(canvas, FONT_BOLD_MED, SIZE / 2 + 128, SIZE * 3 / 4,
-            COLOR_WHITE, COLOR_DARKBLUE, buffer, 1, 3);
-
-      fclose(f);
-   }
-}
-#endif
 
 /// @brief A struct used to remember where something is drawn.
 typedef struct AccumDrawnMemory {
@@ -2051,7 +2007,7 @@ double to_the_minute(double jd) {
    fraction = (double)((int) fraction);
    fraction /= 24*60;
 
-   return whole + fraction;
+   return whole + fraction + (1.0/(24.0*60.0*2.0));
 }
 
 /// @brief Do all of the things

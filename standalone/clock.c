@@ -939,7 +939,7 @@ struct ECH {
    double horizon;
 };
 
-#define PRESTEP 15 // seems to be around the sweet spot
+#define PRESTEP 6 // seems to be around the sweet spot
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
@@ -947,7 +947,7 @@ void events_populate_anything_array(double JD,
 
    double whole = (double)((int) JD);
    double fraction = JD - whole;
-   fraction = (double)((int) (fraction * 24.0 * 10.0));
+   fraction = (double)((int) (fraction * 24.0 * 60.0));
    fraction /= 24.0*60.0;
    JD = whole + fraction + (1.0/(24.0*60.0*2.0));
 
@@ -980,23 +980,26 @@ void events_populate_anything_array(double JD,
       int ret;
       struct ln_rst_time rst;
 
-      ret = ln_get_body_next_rst_horizon(JD - 1.0, observer, get_equ_coords, horizon, &rst);
-      if (ret == 0) {
-         int i;
-         i = (int)((rst.rise - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
-         }
-         i = (int)((rst.transit - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
-         }
-         i = (int)((rst.set - JD) * (24.0 * 60.0)) + 1440;
-         if (i >= 0 && i < 2880 && !valid[i]) {
-            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-            valid[i] = true;
+      for (int offset = -2; offset < 3; offset++) {
+         ret = ln_get_body_next_rst_horizon(JD + ((double) offset), observer, get_equ_coords, horizon, &rst);
+         if (ret == 0) {
+            int i;
+
+            i = (int)((rst.rise - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
+            i = (int)((rst.transit - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
+            i = (int)((rst.set - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
+            if (i >= 0 && i < 2880 && !valid[i]) {
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
+               valid[i] = true;
+            }
          }
       }
 

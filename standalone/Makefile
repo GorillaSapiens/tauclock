@@ -14,7 +14,7 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: fonts/.bdf calcdata libnova-0.15.0/doc/html doxygen
+all: fonts/.bdf calcdata calcrange libnova-0.15.0/doc/html doxygen
 
 doxygen:
 	doxygen doxygen.conf
@@ -35,6 +35,9 @@ icons:
 
 calcdata: main.c draw.c clock.c libnova.a
 	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
+
+calcrange: mainrange.c draw.c clock.c libnova.a
+	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c mainrange.c libnova.a -I libnova-0.15.0/src -lm -o calcrange
 
 libnova-0.15.0/doc/html:
 	(cd libnova-0.15.0/doc; doxygen doxyfile.in )

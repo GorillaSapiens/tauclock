@@ -892,7 +892,6 @@ void events_populate_anything_updown(double JD,
          JD, &hrz_posn);
    angle = hrz_posn.alt;
 
-printf("UPDOWN %lf %lf\n", horizon, angle);
    if (angle < horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }

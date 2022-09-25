@@ -231,22 +231,6 @@ double frac(double arg) {
    return modf(arg, &integer);
 }
 
-/// @brief Remove newlines in a string.
-///
-/// This routine is dumb, and simply terminates any string with nonprinting chars.
-///
-/// @param p Pointer to string
-/// @return void, the string is modified in place.
-void remove_newlines(char *p) {
-   while (*p) {
-      if (((unsigned char)*p) < ' ') {
-         *p = 0;
-         break;
-      }
-      p++;
-   }
-}
-
 /// @brief Draw a time at x,y coordinates
 ///
 /// @param canvas The Canvas to draw on

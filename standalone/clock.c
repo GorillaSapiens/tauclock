@@ -152,7 +152,7 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
 #define COLOR_SATURN    COLOR_LIGHTBLUE // RGB(0xea, 0xd6, 0xb8)
 
 /// @brief Human readable names for the EVENT_* defines
-const char *typenames[] = { "down", "rise", "transit", "set", "up" };
+const char *typenames[] = { "up", "down", "rise", "transit", "set" };
 
 /// @brief A structure denoting a up/down/rise/transit/set event.
 typedef struct {
@@ -894,6 +894,7 @@ void events_populate_anything_updown(double JD,
          JD, &hrz_posn);
    angle = hrz_posn.alt;
 
+printf("UPDOWN %lf %lf\n", horizon, angle);
    if (angle < horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }

@@ -886,13 +886,15 @@ void events_populate_anything_updown(double JD,
    struct ln_hrz_posn hrz_posn;
    double angle[2];
 
+   JD -= 1.0 + ONE_MINUTE_JD;
+
    get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
          observer,
          JD, &hrz_posn);
    angle[1] = hrz_posn.alt;
 
-   JD -= 1.0 + HALF_MINUTE_JD;
+   JD += HALF_MINUTE_JD;
 
    get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
@@ -904,12 +906,12 @@ void events_populate_anything_updown(double JD,
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }
    else if (angle[0] < horizon && angle[1] >= horizon) {
-      events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
-      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_RISE};
+      events[event_spot++] = (Event) { JD - HALF_MINUTE_JD, category, EVENT_DOWN};
+      events[event_spot++] = (Event) { JD, category, EVENT_RISE};
    }
    else if (angle[0] >= horizon && angle[1] < horizon) {
-      events[event_spot++] = (Event) { JD, category, EVENT_UP};
-      events[event_spot++] = (Event) { JD + HALF_MINUTE_JD, category, EVENT_SET};
+      events[event_spot++] = (Event) { JD - HALF_MINUTE_JD, category, EVENT_UP};
+      events[event_spot++] = (Event) { JD, category, EVENT_SET};
    }
    else if (angle[0] >= horizon && angle[1] >= horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_UP};

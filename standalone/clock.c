@@ -939,7 +939,7 @@ struct ECH {
    double horizon;
 };
 
-#define PRESTEP 6 // seems to be around the sweet spot
+#define PRESTEP 15 // seems to be around the sweet spot
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,

@@ -120,11 +120,11 @@ const char *weekdays[] = {
 };
 
 typedef enum EventType {
+   EVENT_UP,
    EVENT_DOWN,
    EVENT_RISE,
    EVENT_TRANSIT,
-   EVENT_SET,
-   EVENT_UP
+   EVENT_SET
 } EventType;
 
 typedef enum EventCategory {
@@ -884,36 +884,20 @@ void events_populate_anything_updown(double JD,
       double horizon, EventCategory category) {
    struct ln_equ_posn posn;
    struct ln_hrz_posn hrz_posn;
-   double angle[2];
+   double angle;
 
-   JD -= 1.0 + ONE_MINUTE_JD;
-
-   get_equ_coords(JD, &posn);
-   ln_get_hrz_from_equ(&posn,
-         observer,
-         JD, &hrz_posn);
-   angle[1] = hrz_posn.alt;
-
-   JD += HALF_MINUTE_JD;
+   JD -= 1.0;
 
    get_equ_coords(JD, &posn);
    ln_get_hrz_from_equ(&posn,
          observer,
          JD, &hrz_posn);
-   angle[0] = hrz_posn.alt;
+   angle = hrz_posn.alt;
 
-   if (angle[0] < horizon && angle[1] < horizon) {
+   if (angle < horizon) {
       events[event_spot++] = (Event) { JD, category, EVENT_DOWN};
    }
-   else if (angle[0] < horizon && angle[1] >= horizon) {
-      events[event_spot++] = (Event) { JD - HALF_MINUTE_JD, category, EVENT_DOWN};
-      events[event_spot++] = (Event) { JD, category, EVENT_RISE};
-   }
-   else if (angle[0] >= horizon && angle[1] < horizon) {
-      events[event_spot++] = (Event) { JD - HALF_MINUTE_JD, category, EVENT_UP};
-      events[event_spot++] = (Event) { JD, category, EVENT_SET};
-   }
-   else if (angle[0] >= horizon && angle[1] >= horizon) {
+   else {
       events[event_spot++] = (Event) { JD, category, EVENT_UP};
    }
 }
@@ -978,6 +962,11 @@ void events_populate_anything_array(double JD,
       double horizon = echs[k].horizon;
 
       events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
+   }
+
+   for (int k = 0; k < ech_count; k++) {
+      EventCategory category = echs[k].category;
+      double horizon = echs[k].horizon;
 
       int ret;
       struct ln_rst_time rst;

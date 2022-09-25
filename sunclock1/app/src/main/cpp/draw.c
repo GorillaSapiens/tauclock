@@ -1,3 +1,4 @@
+#pragma GCC optimize("Ofast")
 //  Sunclock, draw a clock with local solar and lunar information
 //  Copyright (C) 2022 Adam Wozniak / GorillaSapiens
 //

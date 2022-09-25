@@ -1,3 +1,4 @@
+#pragma GCC optimize("Ofast")
 //
 // Created by gorilla on 4/5/2022.
 //

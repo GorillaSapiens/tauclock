@@ -602,6 +602,8 @@ do_planet_band(Canvas * canvas, double up, double now,
       int mode) {
    double up_angle = frac(up) * 360.0;
    int need_character = mode & 2;       // draw characters at ticks
+   double need_x = 0.0;
+   double need_y = 0.0;
 
    bool arcd = false;
 
@@ -714,23 +716,32 @@ do_planet_band(Canvas * canvas, double up, double now,
                   break;
             }
          }
+         else if (events[i].type == EVENT_TRANSIT) {
+            if (need_character && need_x == 0.0 && need_y == 0.0) {
+               double angle = frac(events[i].jd) * 360.0 - up_angle + 270.0;
+               need_x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
+               need_y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
+            }
+         }
       }
    }
+
    if (need_character && is_up) {
       // shazbat!
-      double x =
-         (canvas->w / 2) + (radius +
-               15) * cos(DEG2RAD((int)(category - CAT_LUNAR) *
-                     (360 / 6)));
-      double y =
-         (canvas->h / 2) + (radius +
-               15) * sin(DEG2RAD((int)(category - CAT_LUNAR) *
-                     (360 / 6)));
-      if (transit_x != 0.0) {
-         x = transit_x;
-         y = transit_y;
+
+      if (need_x == 0.0 && need_y == 0.0) {
+         need_x = (canvas->w / 2) +
+            (radius + 15) * cos(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+         need_y = (canvas->h / 2) +
+            (radius + 15) * sin(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
       }
-      text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
+
+      if (transit_x != 0.0 || transit_y != 0.0) {
+         need_x = transit_x;
+         need_y = transit_y;
+      }
+
+      text_canvas(canvas, ASTRO_FONT, need_x, need_y, color, COLOR_BLACK, sym, 1, 1);
    }
 }
 
@@ -869,12 +880,6 @@ void events_dump(void) {
 /// @brief One minute of Julian Date.
 #define ONE_MINUTE_JD (1.0/(24.0*60.0))
 
-/// @brief One half minute of Julian Date.
-#define HALF_MINUTE_JD (1.0/(24.0*60.0*2.0))
-
-/// @brief Ten seconds of Julian Date.
-#define TEN_SECONDS_JD (1.0/(24.0*60.0*6.0))
-
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
@@ -931,12 +936,6 @@ void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       int ech_count, struct ECH *echs) {
-
-   double whole = (double)((int) JD);
-   double fraction = JD - whole;
-   fraction = (double)((int) (fraction * 24.0 * 60.0));
-   fraction /= 24.0*60.0;
-   JD = whole + fraction + (1.0/(24.0*60.0*2.0));
 
    struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
    bool valid[2880] = { false };  // compiler should fill array w/ false
@@ -1062,10 +1061,11 @@ void events_populate_anything_array(double JD,
          }
          if (i > 0 &&
                (hrz_posn[i].alt >= hrz_posn[i+1].alt) &&
-               (hrz_posn[i].alt >= hrz_posn[i-1].alt) &&
-               (hrz_posn[i].alt >= horizon)) {
-            events[event_spot++] =
-               (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_TRANSIT};
+               (hrz_posn[i].alt >= hrz_posn[i-1].alt)) {
+            if (hrz_posn[i].alt >= horizon || category < CAT_LUNAR) {
+               events[event_spot++] =
+                  (Event) { JD + ((double)i - 1440.0) * ONE_MINUTE_JD, category, EVENT_TRANSIT};
+            }
          }
       }
    }
@@ -2046,7 +2046,7 @@ double to_the_minute(double jd) {
    fraction = (double)((int) fraction);
    fraction /= 24*60;
 
-   return whole + fraction;
+   return whole + fraction + (1.0/(24.0*60.0*2.0));
 }
 
 /// @brief Do all of the things

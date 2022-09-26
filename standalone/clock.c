@@ -545,9 +545,6 @@ do_moon_draw(Canvas * canvas,
       }
    }
 
-   // outline
-   arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_DARKGRAY, 0, 360.0);
-
    int is_up = -1;
    for (int i = 0; i < event_spot; i++) {
       if (events[i].jd > now) {
@@ -569,9 +566,14 @@ do_moon_draw(Canvas * canvas,
          }
       }
    }
+   // outline
    if (is_up == 1) {
       arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_WHITE, 0, 360.0);
       arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_WHITE, 0, 360.0);
+   }
+   else {
+      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_BLACK, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_BLACK, 0, 360.0);
    }
 }
 

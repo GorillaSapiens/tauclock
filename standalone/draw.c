@@ -433,7 +433,7 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 }
 
 /// @brief A step value used by arc_canvas()
-#define THETA_STEP 0.10
+#define THETA_STEP(x) (180.0/(((double)(x)) * 2.0 * M_PI))
 
 /// @brief Draw an arc on the canvas
 ///
@@ -460,7 +460,7 @@ arc_canvas(Canvas * canvas,
    }
 
    if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
+      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP(radius+strokewidth)) {
          int x1, y1, x2, y2;
          x1 = center_x + ((float)radius -
                ((float)strokewidth) / 2.0) *
@@ -559,7 +559,7 @@ arc_canvas_shaded(Canvas * canvas,
    }
 
    if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP) {
+      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP(radius+strokewidth)) {
          int x1, y1, x2, y2;
          x1 = center_x + ((float)radius -
                ((float)strokewidth) / 2.0) *

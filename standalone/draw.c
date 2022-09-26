@@ -455,7 +455,7 @@ arc_canvas(Canvas * canvas,
       double begin_deg, double end_deg) {
    float theta;
 
-   if (end_deg <= begin_deg) {
+   while (end_deg < begin_deg) {
       end_deg += 360.0;
    }
 
@@ -554,7 +554,7 @@ arc_canvas_shaded(Canvas * canvas,
       double begin_deg, double end_deg) {
    float theta;
 
-   if (end_deg <= begin_deg) {
+   if (end_deg < begin_deg) {
       end_deg += 360.0;
    }
 

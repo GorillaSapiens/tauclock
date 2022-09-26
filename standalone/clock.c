@@ -587,6 +587,8 @@ do_moon_draw(Canvas * canvas,
 void
 do_planet_band(Canvas * canvas, double up, double now,
       unsigned int color, double radius, EventCategory category) {
+
+   double base = (double)((int)(now - 0.5));
    double up_angle = frac(up) * 360.0;
    char sym[2] = { 0, 0 };
    sym[0] = 'B' + (category - CAT_LUNAR);
@@ -618,7 +620,7 @@ do_planet_band(Canvas * canvas, double up, double now,
       if (events[i].prune == 0 && events[i].category == category) {
 
          double angle =
-            frac(events[i].jd) * 360.0 - up_angle + 270.0;
+            (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
          switch (events[i].type) {
             case EVENT_UP:
@@ -628,11 +630,9 @@ do_planet_band(Canvas * canvas, double up, double now,
             case EVENT_DOWN:
             case EVENT_TRANSIT:
             case EVENT_SET:
-               double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-               if (start_angle != angle) {
-                  arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                     radius, SCALE(5), color, start_angle, angle);
-               }
+               double start_angle = (last - base) * 360.0 - up_angle + 270.0;
+               arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                  radius, SCALE(5), color, start_angle, angle);
                if (events[i].type == EVENT_SET) {
                   last = 0.0;
                }
@@ -657,14 +657,12 @@ do_planet_band(Canvas * canvas, double up, double now,
 
    if (last != 0.0) {
       double start_angle =
-         frac(last) * 360.0 - up_angle + 270.0;
+         (last - base) * 360.0 - up_angle + 270.0;
       double stop_angle =
-         frac(now + .5) * 360.0 - up_angle + 270.0;
+         (now + .5 - base) * 360.0 - up_angle + 270.0;
 
-      if ((now + .5 - last) != 0.0) {
-         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-            radius, SCALE(5), color, start_angle, stop_angle);
-      }
+      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+         radius, SCALE(5), color, start_angle, stop_angle);
    }
 
    // draw characters at ticks
@@ -676,7 +674,7 @@ do_planet_band(Canvas * canvas, double up, double now,
             double offset = (events[i].type == EVENT_SET) ? 3.0 : -3.0;
             double x, y;
             double angle =
-               frac(events[i].jd) * 360.0 - up_angle + 270.0;
+               (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
             x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + offset));
             y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + offset));
@@ -693,7 +691,7 @@ do_planet_band(Canvas * canvas, double up, double now,
             if (events[i].type == EVENT_TRANSIT) {
                double x, y;
                double angle =
-                  frac(events[i].jd) * 360.0 - up_angle + 270.0;
+                  (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
                x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
                y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
@@ -710,7 +708,7 @@ do_planet_band(Canvas * canvas, double up, double now,
             if (events[i].type == EVENT_TRANSIT) {
                double x, y;
                double angle =
-                  frac(events[i].jd) * 360.0 - up_angle + 270.0;
+                  (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
                x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
                y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
@@ -1490,6 +1488,7 @@ void replayTimeDrawnMemory(Canvas * canvas) {
 void do_sun_bands(Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
+   double base = (double)((int)(last));
 
    // we begin in darkness...
    unsigned int color = COLOR_DARKBLUE;
@@ -1579,8 +1578,8 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
          if (events[i].type != EVENT_TRANSIT) {
             if (events[i].prune == 0) {
                double here = events[i].jd;
-               double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-               double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
+               double start_angle = (last-base) * 360.0 - up_angle + 270.0;
+               double stop_angle = (here-base) * 360.0 - up_angle + 270.0;
 
                arcd = true;
                arc_canvas_shaded(canvas, canvas->w / 2,
@@ -1704,8 +1703,8 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 
    double here = now + 0.5;
-   double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-   double stop_angle = frac(here) * 360.0 - up_angle + 270.0;
+   double start_angle = (last-base) * 360.0 - up_angle + 270.0;
+   double stop_angle = (here-base) * 360.0 - up_angle + 270.0;
 
    if (!arcd || start_angle != stop_angle) {
       arc_canvas_shaded(canvas,
@@ -1745,7 +1744,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 
    if (transited != 0.0) {
-      double angle = frac(transited) * 360.0 - up_angle + 270.0;
+      double angle = (transited-base) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(canvas, now, transited, angle,
             canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }

@@ -629,8 +629,10 @@ do_planet_band(Canvas * canvas, double up, double now,
             case EVENT_TRANSIT:
             case EVENT_SET:
                double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-               arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                  radius, SCALE(5), color, start_angle, angle);
+               if (start_angle != angle) {
+                  arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                     radius, SCALE(5), color, start_angle, angle);
+               }
                if (events[i].type == EVENT_SET) {
                   last = 0.0;
                }

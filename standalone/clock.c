@@ -570,8 +570,8 @@ do_moon_draw(Canvas * canvas,
       }
    }
    if (is_up == 1) {
-      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_MOONBAND, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_MOONBAND, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_WHITE, 0, 360.0);
    }
 }
 

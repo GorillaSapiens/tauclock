@@ -624,6 +624,8 @@ do_planet_band(Canvas * canvas, double up, double now,
          double angle =
             (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
+         double start_angle;
+
          switch (events[i].type) {
             case EVENT_UP:
             case EVENT_RISE:
@@ -632,7 +634,7 @@ do_planet_band(Canvas * canvas, double up, double now,
             case EVENT_DOWN:
             case EVENT_TRANSIT:
             case EVENT_SET:
-               double start_angle = (last - base) * 360.0 - up_angle + 270.0;
+               start_angle = (last - base) * 360.0 - up_angle + 270.0;
                arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
                   radius, SCALE(5), color, start_angle, angle);
                if (events[i].type == EVENT_SET) {

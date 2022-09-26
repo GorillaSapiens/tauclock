@@ -583,154 +583,148 @@ do_moon_draw(Canvas * canvas,
 /// @param color The color to use when drawing
 /// @param radius The radius at which to draw the band
 /// @param category The planet category
-/// @param mode 1=draw band, 2=draw tick, 3=draw both
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
-      unsigned int color, double radius, EventCategory category,
-      int mode) {
+      unsigned int color, double radius, EventCategory category) {
    double up_angle = frac(up) * 360.0;
-   int need_character = mode & 2;       // draw characters at ticks
-   double need_x = 0.0;
-   double need_y = 0.0;
-
-   bool arcd = false;
-
    char sym[2] = { 0, 0 };
    sym[0] = 'B' + (category - CAT_LUNAR);
+   int is_up = 0;
 
-   double last = now - .5;
-   int is_up = -1;
+   // find initial state
+
    for (int i = 0; i < event_spot; i++) {
-      if (events[i].jd > now + .5) {
+      if (events[i].prune == 0) {
          break;
       }
       if (events[i].category == category) {
+         switch(events[i].type) {
+            case EVENT_DOWN:
+            case EVENT_SET:
+               is_up = 0;
+               break;
+            default:
+               is_up = 1;
+               break;
+         }
+      }
+   }
+
+   // draw arcs and ticks
+
+   double last = is_up ? (now - .5) : 0.0;
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].prune == 0 && events[i].category == category) {
+
+         double angle =
+            frac(events[i].jd) * 360.0 - up_angle + 270.0;
+
          switch (events[i].type) {
             case EVENT_UP:
             case EVENT_RISE:
-            case EVENT_TRANSIT:
-               if (is_up == 0) {
-                  if (events[i].jd > last) {
-                     last = events[i].jd;
-                  }
-               }
-               is_up = 1;
+               last = events[i].jd;
                break;
             case EVENT_DOWN:
+            case EVENT_TRANSIT:
             case EVENT_SET:
-               if (events[i].jd > last && is_up == 1) {
-                  double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-                  double stop_angle =
-                     frac(events[i].jd) * 360.0 - up_angle + 270.0;
-                  if (mode & 1) {
-                     arcd = true;
-                     arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                           radius, SCALE(5), color, start_angle,
-                           stop_angle);
-                  }
-
+               double start_angle = frac(last) * 360.0 - up_angle + 270.0;
+               arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                  radius, SCALE(5), color, start_angle, angle);
+               if (events[i].type == EVENT_SET) {
+                  last = 0.0;
+               }
+               else {
                   last = events[i].jd;
                }
-               is_up = 0;
                break;
          }
-      }
-   }
-   if (is_up == 1) {
-      double start_angle = frac(last) * 360.0 - up_angle + 270.0;
-      double stop_angle = frac(now + .5) * 360.0 - up_angle + 270.0;
-      if (mode & 1) {
-         if (!arcd || start_angle != stop_angle) {
-            arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                  radius, SCALE(5), color, start_angle, stop_angle);
-         }
+         // always do a tick, regardless of type
+         double x1, y1, x2, y2;
+
+         x1 = canvas->w / 2 + (radius - 16) * cos(DEG2RAD(angle));
+         y1 = canvas->h / 2 + (radius - 16) * sin(DEG2RAD(angle));
+         x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
+         y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
+
+         line_canvas(canvas, x1, y1, x2, y2, color);
       }
    }
 
-   double transit_x = 0.0;
-   double transit_y = 0.0;
+   // finish the arc
 
+   if (last != 0.0) {
+      double start_angle =
+         frac(last) * 360.0 - up_angle + 270.0;
+      double stop_angle =
+         frac(now + .5) * 360.0 - up_angle + 270.0;
+
+      if ((now + .5 - last) != 0.0) {
+         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+            radius, SCALE(5), color, start_angle, stop_angle);
+      }
+   }
+
+   // draw characters at ticks
+
+   bool drawn = false;
    for (int i = 0; i < event_spot; i++) {
-      if (events[i].category == category) {
-         if (!events[i].prune) {
-            switch (events[i].type) {
-               case EVENT_UP:
-               case EVENT_DOWN:
-                  // do nothing
-                  break;
-               case EVENT_RISE:
-                  {
-                     double x, y;
-                     double angle =
-                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
+      if (events[i].prune == 0 && events[i].category == category) {
+         if (events[i].type == EVENT_RISE || events[i].type == EVENT_SET) {
+            double offset = (events[i].type == EVENT_SET) ? 3.0 : -3.0;
+            double x, y;
+            double angle =
+               frac(events[i].jd) * 360.0 - up_angle + 270.0;
 
-                     x = (canvas->w / 2) + radius * cos(DEG2RAD(angle - 3));
-                     y = (canvas->h / 2) + radius * sin(DEG2RAD(angle - 3));
-                     text_canvas(canvas, ASTRO_FONT, x, y, color,
-                           COLOR_BLACK, sym, 1, 1);
-                     need_character = 0;
-                  }
-                  // fallthrough
-               case EVENT_TRANSIT:
-               case EVENT_SET:
-                  {
-                     double x1, y1, x2, y2;
-                     double angle =
-                        frac(events[i].jd) * 360.0 - up_angle + 270.0;
-
-                     x1 = canvas->w / 2 + (radius - 16) * cos(DEG2RAD(angle));
-                     y1 = canvas->h / 2 + (radius - 16) * sin(DEG2RAD(angle));
-                     x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
-                     y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
-
-                     double x =
-                        (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
-                     double y =
-                        (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
-
-                     if (mode & 2) {
-                        line_canvas(canvas, x1, y1, x2, y2, color);
-                     }
-                     if (events[i].type == EVENT_SET) {
-                        text_canvas(canvas, ASTRO_FONT, x, y, color,
-                              COLOR_BLACK, sym, 1, 1);
-                        need_character = 0;
-                     }
-                     else {
-                        transit_x = x;
-                        transit_y = y;
-                     }
-                  }
-                  break;
-            }
+            x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + offset));
+            y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + offset));
+            text_canvas(canvas, ASTRO_FONT, x, y, color,
+                  COLOR_BLACK, sym, 1, 1);
+            drawn = true;
          }
-         else if (events[i].type == EVENT_TRANSIT) {
-            if (need_character && need_x == 0.0 && need_y == 0.0) {
-               double angle = frac(events[i].jd) * 360.0 - up_angle + 270.0;
-               need_x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3));
-               need_y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3));
+      }
+   }
+
+   if (is_up && !drawn) {
+      for (int i = 0; i < event_spot; i++) {
+         if (events[i].prune == 0 && events[i].category == category) {
+            if (events[i].type == EVENT_TRANSIT) {
+               double x, y;
+               double angle =
+                  frac(events[i].jd) * 360.0 - up_angle + 270.0;
+
+               x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
+               y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
+               text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
+               drawn = true;
             }
          }
       }
    }
 
-   if (need_character && is_up) {
-      // shazbat!
+   if (is_up && !drawn) {
+      for (int i = 0; i < event_spot; i++) {
+         if (events[i].category == category) {
+            if (events[i].type == EVENT_TRANSIT) {
+               double x, y;
+               double angle =
+                  frac(events[i].jd) * 360.0 - up_angle + 270.0;
 
-      if (need_x == 0.0 && need_y == 0.0) {
-         need_x = (canvas->w / 2) +
-            (radius + 15) * cos(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
-         need_y = (canvas->h / 2) +
-            (radius + 15) * sin(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+               x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
+               y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
+               text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
+               drawn = true;
+            }
+         }
       }
+   }
 
-      if (transit_x != 0.0 || transit_y != 0.0) {
-         need_x = transit_x;
-         need_y = transit_y;
-      }
-
-      text_canvas(canvas, ASTRO_FONT, need_x, need_y, color, COLOR_BLACK, sym, 1, 1);
+   if (is_up && !drawn) { // shazbat
+      double x = (canvas->w / 2) +
+         (radius + 15) * cos(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+      double y = (canvas->h / 2) +
+         (radius + 15) * sin(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+      text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
    }
 }
 
@@ -907,7 +901,22 @@ struct ECH {
 };
 
 /// @brief initial rough time gap [minutes] for finding events
-#define PRESTEP 15 // seems to be around the sweet spot
+#define SOLUN_PRESTEP 15 // seems to be around the sweet spot
+#define PLANET_PRESTEP 9999 // seems to be around the sweet spot
+
+struct Cache {
+   double JD;
+   struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
+   bool valid[2880];  // compiler should fill array w/ false
+};
+
+struct Cache sun_cache;
+struct Cache moon_cache;
+struct Cache mercury_cache;
+struct Cache venus_cache;
+struct Cache mars_cache;
+struct Cache jupiter_cache;
+struct Cache saturn_cache;
 
 /// @brief given an ECH array, create events
 ///
@@ -920,29 +929,74 @@ struct ECH {
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
-      int ech_count, struct ECH *echs) {
+      int ech_count, struct ECH *echs,
+      struct Cache *cache) {
 
-   struct ln_equ_posn posn[2880]; // +/- 1 day from JD, JD at 1440
-   bool valid[2880] = { false };  // compiler should fill array w/ false
    struct ln_hrz_posn hrz_posn[2880];
+
+   // shift cache if necessary
+   int shift = (JD - cache->JD) * 1440.0 + 0.5;
+   if (shift >= 2880 || shift <= -2880) {
+      memset(cache, 0, sizeof(struct Cache));
+      cache->JD = JD;
+   }
+   else {
+      if (shift > 0) {
+         // positive moves left...
+         memmove(cache->posn, cache->posn + shift, (2880 - shift) * sizeof(cache->posn[0]));
+         memmove(cache->valid, cache->valid + shift, (2880 - shift) * sizeof(cache->valid[0]));
+         for (int i = 2880 - shift; i < 2880; i++) {
+            cache->valid[i] = false;
+         }
+      }
+      else if (shift < 0) {
+         // positive moves right...
+         shift = - shift;
+         memmove(cache->posn + shift, cache->posn, (2880 - shift) * sizeof(cache->posn[0]));
+         memmove(cache->valid + shift, cache->valid, (2880 - shift) * sizeof(cache->valid));
+         for (int i = 0; i < shift; i++) {
+            cache->valid[i] = false;
+         }
+      }
+      cache->JD = JD;
+   }
 
    // start, mid, and end approximations
 
-   get_equ_coords(JD - 1440.0 * ONE_MINUTE_JD, posn);
-   valid[0] = true;
+//printf("GEC %d\n", __LINE__);
+   if (!cache->valid[0]) {
+      get_equ_coords(JD - 1440.0 * ONE_MINUTE_JD, cache->posn);
+      cache->valid[0] = true;
+   }
 
-   get_equ_coords(JD, posn + 1440);
-   valid[1440] = true;
+//printf("GEC %d\n", __LINE__);
+   if (!cache->valid[1440]) {
+      get_equ_coords(JD, cache->posn + 1440);
+      cache->valid[1440] = true;
+   }
 
-   get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, posn + 2879);
-   valid[2879] = true;
+//printf("GEC %d\n", __LINE__);
+   if (!cache->valid[2879]) {
+      get_equ_coords(JD + 1439.0 * ONE_MINUTE_JD, cache->posn + 2879);
+      cache->valid[2879] = true;
+   }
 
    // prepopulate approximations
 
-   for (int i = 0; i < 2880; i += PRESTEP) {
-      if (!valid[i]) {
-         get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-         valid[i] = true;
+   int count = 0;
+   int prestep = echs[0].category <= CAT_LUNAR ? SOLUN_PRESTEP : PLANET_PRESTEP;
+   for (int i = 0; i < 2880; i++) {
+      if (!cache->valid[i]) {
+         count++;
+         if (count >= prestep) {
+//printf("GEC %d\n", __LINE__);
+            get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, cache->posn + i);
+            cache->valid[i] = true;
+            count = 0;
+         }
+      }
+      else {
+         count = 0;
       }
    }
 
@@ -970,19 +1024,22 @@ void events_populate_anything_array(double JD,
             int i;
 
             i = (int)((rst.rise - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
-            if (i >= 0 && i < 2880 && !valid[i]) {
-               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-               valid[i] = true;
+            if (i >= 0 && i < 2880 && !cache->valid[i]) {
+//printf("GEC %d\n", __LINE__);
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, cache->posn + i);
+               cache->valid[i] = true;
             }
             i = (int)((rst.transit - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
-            if (i >= 0 && i < 2880 && !valid[i]) {
-               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-               valid[i] = true;
+            if (i >= 0 && i < 2880 && !cache->valid[i]) {
+//printf("GEC %d\n", __LINE__);
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, cache->posn + i);
+               cache->valid[i] = true;
             }
             i = (int)((rst.set - JD + ((double) offset)) * (24.0 * 60.0)) + 1440;
-            if (i >= 0 && i < 2880 && !valid[i]) {
-               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-               valid[i] = true;
+            if (i >= 0 && i < 2880 && !cache->valid[i]) {
+//printf("GEC %d\n", __LINE__);
+               get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, cache->posn + i);
+               cache->valid[i] = true;
             }
          }
       }
@@ -990,13 +1047,19 @@ void events_populate_anything_array(double JD,
       bool done = false;
       do {
          for (int i = 0; i < 2880; i++) {
-            struct ln_equ_posn *posnp = posn;
-            int close = 0;
+            struct ln_equ_posn *posnp = cache->posn;
+
             for (int j = 0; j < 2880; j++) {
-               if (abs(j-i) < abs(j-close)) {
-                  if (valid[j]) {
-                     close = j;
-                     posnp = posn + j;
+               if (i-j >= 0 && i-j < 2880) {
+                  if (cache->valid[i-j]) {
+                     posnp = cache->posn + (i-j);
+                     break;
+                  }
+               }
+               if (i+j >= 0 && i+j < 2880) {
+                  if (cache->valid[i+j]) {
+                     posnp = cache->posn + (i+j);
+                     break;
                   }
                }
             }
@@ -1024,20 +1087,57 @@ void events_populate_anything_array(double JD,
             }
 
             if (need) {
-               if (i > 0 && !valid[i-1]) {
+               if (i > 0 && !cache->valid[i-1]) {
+                  int ii = i-1;
+                  while (!cache->valid[ii]) {
+                     ii--;
+                  }
+
+                  ii = (ii + i) / 2;
+                  if (ii == i) {
+                     ii--;
+                  }
+
                   done = false;
-                  get_equ_coords(JD + ((double) (i-1) - 1440.0) * ONE_MINUTE_JD, posn + (i-1));
-                  valid[i-1] = true;
+//printf("GEC %d\n", __LINE__);
+                  get_equ_coords(JD + ((double) (ii) - 1440.0) * ONE_MINUTE_JD, cache->posn + (ii));
+                  cache->valid[ii] = true;
+
+                  if (ii != i - 1) {
+                     ii = i - 1;
+                     get_equ_coords(JD + ((double) (ii) - 1440.0) * ONE_MINUTE_JD, cache->posn + (ii));
+                     cache->valid[ii] = true;
+                  }
                }
-               if (!valid[i]) {
+
+               if (!cache->valid[i]) {
                   done = false;
-                  get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, posn + i);
-                  valid[i] = true;
+//printf("GEC %d\n", __LINE__);
+                  get_equ_coords(JD + ((double) i - 1440.0) * ONE_MINUTE_JD, cache->posn + i);
+                  cache->valid[i] = true;
                }
-               if (!valid[i+1]) {
+
+               if (!cache->valid[i+1]) {
+                  int ii = i+1;
+                  while (!cache->valid[ii]) {
+                     ii++;
+                  }
+
+                  ii = (ii + i) / 2;
+                  if (ii == i) {
+                     ii++;
+                  }
+
                   done = false;
-                  get_equ_coords(JD + ((double) (i+1) - 1440.0) * ONE_MINUTE_JD, posn + (i+1));
-                  valid[(i+1)] = true;
+//printf("GEC %d\n", __LINE__);
+                  get_equ_coords(JD + ((double) (ii) - 1440.0) * ONE_MINUTE_JD, cache->posn + (ii));
+                  cache->valid[ii] = true;
+
+                  if (ii != i + 1) {
+                     ii = i + 1;
+                     get_equ_coords(JD + ((double) (ii) - 1440.0) * ONE_MINUTE_JD, cache->posn + (ii));
+                     cache->valid[ii] = true;
+                  }
                }
             }
          }
@@ -1077,9 +1177,10 @@ void events_populate_anything_array(double JD,
 void events_populate_anything(double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
-      double horizon, EventCategory category) {
+      double horizon, EventCategory category,
+      struct Cache *cache) {
    struct ECH ech = (struct ECH) { category, horizon };
-   events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech);
+   events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech, cache);
 }
 
 /// @brief Create rise/transit/set events for all things solar
@@ -1097,7 +1198,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
       (struct ECH) { CAT_SOLAR,        LN_SOLAR_STANDART_HORIZON },
    };
    events_populate_anything_array(JD, observer, ln_get_solar_equ_coords,
-         4, echs);
+         4, echs, &sun_cache);
 }
 
 /// @brief Create rise/transit/set events for all things lunar
@@ -1109,7 +1210,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
 /// @return void
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
-         LN_LUNAR_STANDART_HORIZON, CAT_LUNAR);
+         LN_LUNAR_STANDART_HORIZON, CAT_LUNAR, &moon_cache);
 }
 
 /// @brief Create rise/transit/set events for all planets
@@ -1122,19 +1223,19 @@ void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
-         CAT_MERCURY);
+         CAT_MERCURY, &mercury_cache);
    events_populate_anything(JD, observer,
          ln_get_venus_equ_coords, LN_STAR_STANDART_HORIZON,
-         CAT_VENUS);
+         CAT_VENUS, &venus_cache);
    events_populate_anything(JD, observer,
          ln_get_mars_equ_coords, LN_STAR_STANDART_HORIZON,
-         CAT_MARS);
+         CAT_MARS, &mars_cache);
    events_populate_anything(JD, observer,
          ln_get_jupiter_equ_coords, LN_STAR_STANDART_HORIZON,
-         CAT_JUPITER);
+         CAT_JUPITER, &jupiter_cache);
    events_populate_anything(JD, observer,
          ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
-         CAT_SATURN);
+         CAT_SATURN, &saturn_cache);
 }
 
 /// @brief Populate the event list
@@ -1747,30 +1848,17 @@ double get_moon_angle(double JD, double lunar_new) {
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER);
    r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
-
-   r -= SCALE(100);
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 2);
-   r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 2);
-   r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 2);
-   r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 2);
-   r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 2);
-   r += SCALE(20);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 2);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN);
 }
 
 /// @brief Draw debugging information

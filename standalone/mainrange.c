@@ -89,9 +89,12 @@ int main(int argc, char *argv[]) {
       int s = (delta / 1000000000);
       printf("###### %06d  %ds %03dms %03dus %03dns ######\n", i, s, ms, us, ns);
 
-      char buf[64];
-      sprintf(buf, "out_%06d.bin", i);
-      dump_canvas(canvas, buf);
+      dump_canvas(canvas, "out.bin");
+      delete_canvas(canvas);
+
+      char buf[1024];
+      sprintf(buf, "convert -size 1024x1024 -depth 8 RGBA:out.bin out_%06d.png", i);
+      system(buf);
    }
 
    printf("raw output written to out.bin\n");

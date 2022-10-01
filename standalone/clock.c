@@ -142,19 +142,21 @@ typedef enum EventCategory {
    CAT_VENUS,
    CAT_MARS,
    CAT_JUPITER,
-   CAT_SATURN
+   CAT_SATURN,
+   CAT_ARIES                   // the first point of aries
 } EventCategory;
 
 /// @brief Human readable names for the CAT_* defines
 const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
-   "lunar", "mercury", "venus", "mars", "jupiter", "saturn"
+   "lunar", "mercury", "venus", "mars", "jupiter", "saturn", "aries"
 };
 
 #define COLOR_MERCURY   COLOR_GRAY
 #define COLOR_VENUS     COLOR_WHITE
 #define COLOR_MARS      COLOR_RED
 #define COLOR_JUPITER   COLOR_ORANGE
-#define COLOR_SATURN    COLOR_LIGHTBLUE // RGB(0xea, 0xd6, 0xb8)
+#define COLOR_SATURN    COLOR_LIGHTBLUE
+#define COLOR_ARIES     COLOR_GREEN
 
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "up", "down", "rise", "transit", "set" };
@@ -594,6 +596,7 @@ do_planet_band(Canvas * canvas, double up, double now,
    double up_angle = frac(up) * 360.0;
    char sym[2] = { 0, 0 };
    sym[0] = 'B' + (category - CAT_LUNAR);
+   if (category == CAT_ARIES) { sym[0] = 'a'; }
    int is_up = 0;
 
    // find initial state
@@ -773,7 +776,8 @@ int event_compar(const void *a, const void *b) {
          CAT_VENUS,
          CAT_MARS,
          CAT_JUPITER,
-         CAT_SATURN
+         CAT_SATURN,
+         CAT_ARIES
       };
 
       static const EventCategory order_down[] = {       //"lscna"
@@ -783,6 +787,7 @@ int event_compar(const void *a, const void *b) {
          CAT_MARS,
          CAT_JUPITER,
          CAT_SATURN,
+         CAT_ARIES,
          CAT_SOLAR,
          CAT_CIVIL,
          CAT_NAUTICAL,
@@ -866,6 +871,11 @@ void events_dump(void) {
 /// @brief Typedef for functions returning Equ coordinates of object
 typedef void (*Get_Equ_Coords)(double, struct ln_equ_posn *);
 
+void ln_get_aries_equ_coords(double JD, struct ln_equ_posn *posn) {
+   posn->dec = 0.0;
+   posn->ra = 0.0;
+}
+
 /// @brief Find up and down events
 ///
 /// @param JD The current Julian Date
@@ -921,6 +931,7 @@ struct Cache venus_cache;
 struct Cache mars_cache;
 struct Cache jupiter_cache;
 struct Cache saturn_cache;
+struct Cache aries_cache;
 
 /// @brief given an ECH array, create events
 ///
@@ -1240,6 +1251,9 @@ void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    events_populate_anything(JD, observer,
          ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_SATURN, &saturn_cache);
+   events_populate_anything(JD, observer,
+         ln_get_aries_equ_coords, 0.0,
+         CAT_ARIES, &aries_cache);
 }
 
 /// @brief Populate the event list
@@ -1665,6 +1679,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   case CAT_MARS:
                   case CAT_JUPITER:
                   case CAT_SATURN:
+                  case CAT_ARIES:
                      // do nothing
                      break;
                }
@@ -1698,6 +1713,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                   case CAT_MARS:
                   case CAT_JUPITER:
                   case CAT_SATURN:
+                  case CAT_ARIES:
                      // do nothing
                      break;
                }
@@ -1854,16 +1870,18 @@ void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
    do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR);
-   r += SCALE(20);
+   r += SCALE(16);
    do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY);
-   r += SCALE(20);
+   r += SCALE(16);
    do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS);
-   r += SCALE(20);
+   r += SCALE(16);
    do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS);
-   r += SCALE(20);
+   r += SCALE(16);
    do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER);
-   r += SCALE(20);
+   r += SCALE(16);
    do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN);
+   r += SCALE(16);
+   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES);
 }
 
 /// @brief Draw debugging information

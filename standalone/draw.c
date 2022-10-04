@@ -149,43 +149,42 @@ unsigned int peek_canvas(Canvas * canvas, int x, int y) {
 ///
 /// @param p The string pointer
 /// @return The unicode value of the first character of the string
-static int utf8parse(const char *p) {
-   static const unsigned char *q;
+static int utf8parse(const char *p, const unsigned char **q) {
    int ret = 0;
 
    if (p != NULL) {
-      q = (unsigned char *)p;
+      *q = (unsigned char *)p;
    }
 
-   if (*q < 0x80) {
-      ret = *q++;
+   if (**q < 0x80) {
+      ret = *(*q)++;
       return ret;
    }
-   else if ((*q & 0xE0) == 0xC0) {
+   else if ((**q & 0xE0) == 0xC0) {
       // 110xxxxx 10xxxxxx
-      ret = *q++ & 0x1F;
+      ret = *(*q)++ & 0x1F;
       ret <<= 6;
-      ret |= *q++ & 0x3F;
+      ret |= *(*q)++ & 0x3F;
       return ret;
    }
-   else if ((*q & 0xF0) == 0xE0) {
+   else if ((**q & 0xF0) == 0xE0) {
       // 1110xxxx 10xxxxxx 10xxxxxx
-      ret = *q++ & 0x0F;
+      ret = *(*q)++ & 0x0F;
       ret <<= 6;
-      ret |= *q++ & 0x3F;
+      ret |= *(*q)++ & 0x3F;
       ret <<= 6;
-      ret |= *q++ & 0x3F;
+      ret |= *(*q)++ & 0x3F;
       return ret;
    }
-   else if ((*q & 0xF1) == 0xF0) {
+   else if ((**q & 0xF1) == 0xF0) {
       // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-      ret = *q++ & 0x07;
+      ret = *(*q)++ & 0x07;
       ret <<= 6;
-      ret = *q++ & 0x0F;
+      ret = *(*q)++ & 0x0F;
       ret <<= 6;
-      ret |= *q++ & 0x3F;
+      ret |= *(*q)++ & 0x3F;
       ret <<= 6;
-      ret |= *q++ & 0x3F;
+      ret |= *(*q)++ & 0x3F;
       return ret;
    }
    else {
@@ -251,6 +250,55 @@ static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
 int
 text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
+
+   // mad recursion for multilined strings
+   if (strchr(p, '\n')) {
+      char buf[1024];
+      strcpy(buf, p);
+      p = buf;
+      int wh[16];
+      int h[16];
+      int maxw;
+      char *ps[16];
+      int i = 0;
+      char *q;
+      do {
+         ps[i] = p;
+         q = strchr(p, '\n');
+         if (q != NULL) {
+            *q = 0;
+            q++;
+         }
+         wh[i++] =
+            text_canvas(canvas, font, -1000, -1000, fg, bg, p, mult, gap);
+         if ((wh[i-1] >> 16) > maxw) {
+            maxw = wh[i-1] >> 16;
+         }
+         h[i - 1] = wh[i - 1] & 0xFFFF;
+         p = q;
+      } while (p != NULL && strlen(p));
+
+      int ret;
+      int height = 0;
+      for (int j = 0; j < i; j++) {
+         height += h[j];
+      }
+      height += (gap*3*(i-1));
+      ret = (maxw << 16) | height;
+
+      // now put them where they go...
+      for (int j = 0; j < i; j++) {
+         int offset = - (height / 2);
+         for (int k = 0; k < j; k++) {
+            offset += h[k] + gap*3;
+         }
+         offset += h[j] / 2;
+         text_canvas(canvas, font, x, y + offset, fg, bg, ps[j], mult, gap);
+      }
+
+      return ret;
+   }
+
    int outline = 2;
 
    int encoded;
@@ -263,7 +311,12 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
    int fake_x = 0;
    int fake_y = 0;
 
-   for (encoded = utf8parse(p); encoded; encoded = utf8parse(NULL)) {
+   const unsigned char *context;
+
+   for (encoded = utf8parse(p, &context);
+        encoded;
+        encoded = utf8parse(NULL, &context)) {
+
       struct Glyph glyph = font_find_glyph(font, encoded);
       for (int h = 0; h < glyph.height; h++) {
          for (int w = 0; w < glyph.width; w++) {
@@ -305,7 +358,10 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
    int ox = x;
 
    if (bg != COLOR_NONE) {
-      for (encoded = utf8parse(p); encoded; encoded = utf8parse(NULL)) {
+      for (encoded = utf8parse(p, &context);
+           encoded;
+           encoded = utf8parse(NULL, &context)) {
+
          struct Glyph glyph = font_find_glyph(font, encoded);
          for (int h = 0; h < glyph.height; h++) {
             for (int w = 0; w < glyph.width; w++) {
@@ -337,7 +393,10 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
 
    x = ox;
 
-   for (encoded = utf8parse(p); encoded; encoded = utf8parse(NULL)) {
+   for (encoded = utf8parse(p, &context);
+        encoded;
+        encoded = utf8parse(NULL, &context)) {
+
       struct Glyph glyph = font_find_glyph(font, encoded);
       for (int h = 0; h < glyph.height; h++) {
          for (int w = 0; w < glyph.width; w++) {

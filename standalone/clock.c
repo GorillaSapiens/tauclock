@@ -590,7 +590,8 @@ do_moon_draw(Canvas * canvas,
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
-      unsigned int color, double radius, EventCategory category) {
+      unsigned int color, double radius, EventCategory category,
+      int sign_only) {
 
    double base = (double)((int)(now - 0.5));
    double up_angle = frac(up) * 360.0;
@@ -638,8 +639,10 @@ do_planet_band(Canvas * canvas, double up, double now,
             case EVENT_TRANSIT:
             case EVENT_SET:
                start_angle = (last - base) * 360.0 - up_angle + 270.0;
-               arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                  radius, SCALE(5), color, start_angle, angle);
+               if (!sign_only) {
+                  arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                     radius, SCALE(5), color, start_angle, angle);
+               }
                if (events[i].type == EVENT_SET) {
                   last = 0.0;
                }
@@ -668,8 +671,10 @@ do_planet_band(Canvas * canvas, double up, double now,
       double stop_angle =
          (now + .5 - base) * 360.0 - up_angle + 270.0;
 
-      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-         radius, SCALE(5), color, start_angle, stop_angle);
+      if (!sign_only) {
+         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+            radius, SCALE(5), color, start_angle, stop_angle);
+      }
    }
 
    // draw characters at ticks
@@ -968,7 +973,7 @@ void events_populate_anything_array(double JD,
          // positive moves right...
          shift = - shift;
          memmove(cache->posn + shift, cache->posn, (2880 - shift) * sizeof(cache->posn[0]));
-         memmove(cache->valid + shift, cache->valid, (2880 - shift) * sizeof(cache->valid));
+         memmove(cache->valid + shift, cache->valid, (2880 - shift) * sizeof(cache->valid[0]));
          for (int i = 0; i < shift; i++) {
             cache->valid[i] = false;
          }
@@ -1364,26 +1369,40 @@ accum_helper(Canvas * canvas,
    angle = angle * 24.0 / 360.0;
    int hours = (int)angle;
    int minutes = (angle - (double)hours) * 60.0;
-   char buffer[64];
+   char buffer[4096];
    if (minutes != 0) {
       if (hours != 0) {
-         sprintf(buffer, "%dh %dm", hours, minutes);
+         sprintf(buffer, "%dh %dm\n%s", hours, minutes, label);
       }
       else {
-         sprintf(buffer, "%dm", minutes);
+         sprintf(buffer, "%dm\n%s", minutes, label);
       }
    }
    else {
-      sprintf(buffer, "%dh", hours);
+      sprintf(buffer, "%dh\n%s", hours, label);
    }
-   double x = (canvas->w / 2) + (canvas->w * 4 / 16) * cos(DEG2RAD(draw_angle));
-   double y = (canvas->h / 2) + (canvas->h * 4 / 16) * sin(DEG2RAD(draw_angle));
-   //   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
-   //   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
+
+   double x;
+   double y;
+   int wh =
+      text_canvas(canvas, FONT_BOLD_MED, -1000, -1000, fore,back,buffer, 1, 3);
+   int w = wh >> 16;
+   int h = wh & 0xFFFF;
+
+   int collision;
+   int radius = (canvas->w / 4);
+   do {
+      x = (canvas->w / 2) + radius * cos(DEG2RAD(draw_angle));
+      y = (canvas->h / 2) + radius * sin(DEG2RAD(draw_angle));
+
+      collision = check(x, y, w, h);
+
+      radius--;
+   }
+   while (collision);
+
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y - SCALE(16), fore, back, strdup(buffer)};
-   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y + SCALE(16), fore, back, strdup(label)};
+      x, y, fore, back, strdup(buffer)};
 }
 
 /// @brief A struct used to remember where something is drawn.
@@ -1869,19 +1888,35 @@ double get_moon_angle(double JD, double lunar_new) {
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES);
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 0);
+
+   r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
+
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 1);
 }
 
 /// @brief Draw debugging information

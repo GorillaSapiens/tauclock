@@ -590,7 +590,8 @@ do_moon_draw(Canvas * canvas,
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
-      unsigned int color, double radius, EventCategory category) {
+      unsigned int color, double radius, EventCategory category,
+      int sign_only) {
 
    double base = (double)((int)(now - 0.5));
    double up_angle = frac(up) * 360.0;
@@ -638,8 +639,10 @@ do_planet_band(Canvas * canvas, double up, double now,
             case EVENT_TRANSIT:
             case EVENT_SET:
                start_angle = (last - base) * 360.0 - up_angle + 270.0;
-               arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-                  radius, SCALE(5), color, start_angle, angle);
+               if (!sign_only) {
+                  arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                     radius, SCALE(5), color, start_angle, angle);
+               }
                if (events[i].type == EVENT_SET) {
                   last = 0.0;
                }
@@ -668,8 +671,10 @@ do_planet_band(Canvas * canvas, double up, double now,
       double stop_angle =
          (now + .5 - base) * 360.0 - up_angle + 270.0;
 
-      arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
-         radius, SCALE(5), color, start_angle, stop_angle);
+      if (!sign_only) {
+         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+            radius, SCALE(5), color, start_angle, stop_angle);
+      }
    }
 
    // draw characters at ticks
@@ -1883,19 +1888,35 @@ double get_moon_angle(double JD, double lunar_new) {
 void do_planet_bands(Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN);
-   r += SCALE(16);
-   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES);
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 0);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 0);
+
+   r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
+
+   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
+   r += SCALE(15);
+   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 1);
 }
 
 /// @brief Draw debugging information

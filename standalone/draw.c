@@ -258,8 +258,8 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
       p = buf;
       int wh[16];
       int h[16];
-      int maxw;
-      char *ps[16];
+      int maxw = 0;
+      const char *ps[16];
       int i = 0;
       char *q;
       do {

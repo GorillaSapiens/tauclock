@@ -1351,6 +1351,9 @@ void replay_accum_memory(Canvas * canvas) {
    accumdrawnspot = 0;
 }
 
+// fwd declaration to appease the compiler gods
+int check(int x, int y, int w, int h);
+
 /// @brief Helper function to accumulate total sunlight/night/whatever hours
 ///
 /// @param canvas The Canvas to draw on

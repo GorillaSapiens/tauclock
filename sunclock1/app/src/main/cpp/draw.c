@@ -250,6 +250,55 @@ static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
 int
 text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
+
+   // mad recursion for multilined strings
+   if (strchr(p, '\n')) {
+      char buf[1024];
+      strcpy(buf, p);
+      p = buf;
+      int wh[16];
+      int h[16];
+      int maxw;
+      char *ps[16];
+      int i = 0;
+      char *q;
+      do {
+         ps[i] = p;
+         q = strchr(p, '\n');
+         if (q != NULL) {
+            *q = 0;
+            q++;
+         }
+         wh[i++] =
+            text_canvas(canvas, font, -1000, -1000, fg, bg, p, mult, gap);
+         if ((wh[i-1] >> 16) > maxw) {
+            maxw = wh[i-1] >> 16;
+         }
+         h[i - 1] = wh[i - 1] & 0xFFFF;
+         p = q;
+      } while (p != NULL && strlen(p));
+
+      int ret;
+      int height = 0;
+      for (int j = 0; j < i; j++) {
+         height += h[j];
+      }
+      height += (gap*3*(i-1));
+      ret = (maxw << 16) | height;
+
+      // now put them where they go...
+      for (int j = 0; j < i; j++) {
+         int offset = - (height / 2);
+         for (int k = 0; k < j; k++) {
+            offset += h[k] + gap*3;
+         }
+         offset += h[j] / 2;
+         text_canvas(canvas, font, x, y + offset, fg, bg, ps[j], mult, gap);
+      }
+
+      return ret;
+   }
+
    int outline = 2;
 
    int encoded;

@@ -968,7 +968,7 @@ void events_populate_anything_array(double JD,
          // positive moves right...
          shift = - shift;
          memmove(cache->posn + shift, cache->posn, (2880 - shift) * sizeof(cache->posn[0]));
-         memmove(cache->valid + shift, cache->valid, (2880 - shift) * sizeof(cache->valid));
+         memmove(cache->valid + shift, cache->valid, (2880 - shift) * sizeof(cache->valid[0]));
          for (int i = 0; i < shift; i++) {
             cache->valid[i] = false;
          }
@@ -1364,26 +1364,40 @@ accum_helper(Canvas * canvas,
    angle = angle * 24.0 / 360.0;
    int hours = (int)angle;
    int minutes = (angle - (double)hours) * 60.0;
-   char buffer[64];
+   char buffer[4096];
    if (minutes != 0) {
       if (hours != 0) {
-         sprintf(buffer, "%dh %dm", hours, minutes);
+         sprintf(buffer, "%dh %dm\n%s", hours, minutes, label);
       }
       else {
-         sprintf(buffer, "%dm", minutes);
+         sprintf(buffer, "%dm\n%s", minutes, label);
       }
    }
    else {
-      sprintf(buffer, "%dh", hours);
+      sprintf(buffer, "%dh\n%s", hours, label);
    }
-   double x = (canvas->w / 2) + (canvas->w * 4 / 16) * cos(DEG2RAD(draw_angle));
-   double y = (canvas->h / 2) + (canvas->h * 4 / 16) * sin(DEG2RAD(draw_angle));
-   //   text_canvas(canvas, FONT_BOLD_MED, x, y - SCALE(16), fore, back, buffer, 1, 3);
-   //   text_canvas(canvas, FONT_BOLD_MED, x, y + SCALE(16), fore, back, label, 1, 3);
+
+   double x;
+   double y;
+   int wh =
+      text_canvas(canvas, FONT_BOLD_MED, -1000, -1000, fore,back,buffer, 1, 3);
+   int w = wh >> 16;
+   int h = wh & 0xFFFF;
+
+   int collision;
+   int radius = (canvas->w / 4);
+   do {
+      x = (canvas->w / 2) + radius * cos(DEG2RAD(draw_angle));
+      y = (canvas->h / 2) + radius * sin(DEG2RAD(draw_angle));
+
+      collision = check(x, y, w, h);
+
+      radius--;
+   }
+   while (collision);
+
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y - SCALE(16), fore, back, strdup(buffer)};
-   accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y + SCALE(16), fore, back, strdup(label)};
+      x, y, fore, back, strdup(buffer)};
 }
 
 /// @brief A struct used to remember where something is drawn.

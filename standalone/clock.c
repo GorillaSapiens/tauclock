@@ -254,7 +254,7 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
    my_get_local_date(jd, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    return text_canvas(canvas, jd < now ? FONT_ITALIC_MED : FONT_BOLD_MED, x, y,
-         fg, bg, time, 1, 3);
+         fg, COLOR_NONE, time, 1, 3);
 }
 
 /// @brief Draw ticks every hour around the outside edge
@@ -589,6 +589,7 @@ do_moon_draw(Canvas * canvas,
 /// @param color The color to use when drawing
 /// @param radius The radius at which to draw the band
 /// @param category The planet category
+/// @param sign_only True indicates only planet sign to be drawn
 /// @return void
 void
 do_planet_band(Canvas * canvas, double up, double now,
@@ -887,7 +888,6 @@ void ln_get_aries_equ_coords(double JD, struct ln_equ_posn *posn) {
 #define CACHE_LIMIT 1.0
 
 struct CacheNode {
-   int uid;
    int critical;
    double JD;
    struct ln_equ_posn posn; // body position
@@ -915,13 +915,8 @@ struct Cache *new_cache(void) {
    return ret;
 }
 
-static int nodecount = 0;
-static int nodedelete = 0;
-
 struct CacheNode *new_cache_node(struct CacheNode *prev, struct CacheNode *next) {
    struct CacheNode *ret = (struct CacheNode *)calloc(1, sizeof(struct CacheNode));
-ret->uid = nodecount;
-printf("constructing %d\n", nodecount++);
    if (prev != NULL) {
       prev->next = ret;
    }
@@ -930,7 +925,6 @@ printf("constructing %d\n", nodecount++);
    }
    ret->prev = prev;
    ret->next = next;
-printf("new {%d} %p prev=%p next=%p\n", ret->uid, ret, ret->prev, ret->next);
    return ret;
 }
 
@@ -941,8 +935,6 @@ void delete_cache_node(struct CacheNode *p) {
    if (p->next != NULL) {
       p->next->prev = p->prev;
    }
-nodedelete++;
-printf("del {%d} %p total=%d\n", p->uid, p, nodecount - nodedelete);
    free(p);
 }
 
@@ -1014,7 +1006,6 @@ struct CacheNode *insert_between(struct CacheNode *a, struct CacheNode *b,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords) {
    struct CacheNode *q = new_cache_node(a, b);
-printf("new_cache_node %d\n", __LINE__);
    q->JD = (a->JD + b->JD) / 2.0;
    get_equ_coords(q->JD, &(q->posn));
    ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
@@ -1028,6 +1019,7 @@ printf("new_cache_node %d\n", __LINE__);
 /// @param get_equ_coords Function pointer to get body coordinates
 /// @param ech_count Size of echs array
 /// @param echs An array of ECH
+/// @param cache Pointer to the position cache for this object
 /// @return void
 void events_populate_anything_array(double JD,
       struct ln_lnlat_posn *observer,
@@ -1035,32 +1027,40 @@ void events_populate_anything_array(double JD,
       int ech_count, struct ECH *echs,
       struct Cache *cache) {
 
-   // affirm we have a head
-   if (cache->head == NULL) {
-      cache->head = new_cache_node(NULL, NULL);
-printf("new_cache_node %d\n", __LINE__);
-      cache->head->JD = JD - CACHE_LIMIT;
-      cache->head->critical = 1;
-      get_equ_coords(cache->head->JD, &(cache->head->posn));
-      ln_get_hrz_from_equ(&(cache->head->posn), observer, cache->head->JD, &(cache->head->hrz_posn));
-   }
+   do {
+      // affirm we have a head
+      if (cache->head == NULL) {
+         cache->head = new_cache_node(NULL, NULL);
+         printf("new_cache_node %d\n", __LINE__);
+         cache->head->JD = JD - CACHE_LIMIT;
+         cache->head->critical = 1;
+         get_equ_coords(cache->head->JD, &(cache->head->posn));
+         ln_get_hrz_from_equ(&(cache->head->posn),
+                             observer,
+                             cache->head->JD,
+                             &(cache->head->hrz_posn));
+      }
 
-   // affirm we have a tail != head
-   if (cache->head->next == NULL) {
-      struct CacheNode *tmp = new_cache_node(cache->head, NULL);
-printf("new_cache_node %d\n", __LINE__);
-      tmp->JD = JD + CACHE_LIMIT;
-      tmp->critical = 1;
-      get_equ_coords(tmp->JD, &(tmp->posn));
-      ln_get_hrz_from_equ(&(tmp->posn), observer, tmp->JD, &(tmp->hrz_posn));
-   }
+      // affirm we have a tail != head
+      if (cache->head->next == NULL) {
+         struct CacheNode *tmp = new_cache_node(cache->head, NULL);
+         printf("new_cache_node %d\n", __LINE__);
+         tmp->JD = JD + CACHE_LIMIT;
+         tmp->critical = 1;
+         get_equ_coords(tmp->JD, &(tmp->posn));
+         ln_get_hrz_from_equ(&(tmp->posn),
+                             observer,
+                             tmp->JD,
+                             &(tmp->hrz_posn));
+      }
 
-   // trim junk from beginning
-   while(cache->head != NULL && cache->head->JD < JD - CACHE_LIMIT) {
-      struct CacheNode *tmp = cache->head;
-      cache->head = cache->head->next;
-      delete_cache_node(tmp);
-   }
+      // trim junk from beginning
+      while(cache->head != NULL && cache->head->JD < JD - CACHE_LIMIT) {
+         struct CacheNode *tmp = cache->head;
+         cache->head = cache->head->next;
+         delete_cache_node(tmp);
+      }
+   } while (cache->head == NULL);
 
    double step = (echs[0].category <= CAT_LUNAR) ?
       ((double)SOLUN_PRESTEP / (24.0*60.0)) :
@@ -1069,12 +1069,12 @@ printf("new_cache_node %d\n", __LINE__);
    // affirm things in the middle, and proper end
    for (struct CacheNode *p = cache->head; p != NULL; p = p->next) {
       while (p->next && fabs(p->next->JD - p->JD) > step) {
-         struct CacheNode *tmp = insert_between(p, p->next, observer, get_equ_coords);
+         struct CacheNode *tmp =
+            insert_between(p, p->next, observer, get_equ_coords);
          tmp->critical = true;
       }
       while (!p->next && (p->JD - JD) < CACHE_LIMIT) {
          struct CacheNode *q = new_cache_node(p, NULL);
-printf("new_cache_node %d\n", __LINE__);
          q->critical = 1;
          q->JD = p->JD + step;
          get_equ_coords(q->JD, &(q->posn));
@@ -1098,7 +1098,11 @@ printf("new_cache_node %d\n", __LINE__);
       EventCategory category = echs[k].category;
       double horizon = echs[k].horizon;
 
-      events_populate_anything_updown(JD, observer, get_equ_coords, horizon, category);
+      events_populate_anything_updown(JD,
+                                      observer,
+                                      get_equ_coords,
+                                      horizon,
+                                      category);
    }
 
    // begin looking for rise / set / transit events
@@ -1115,16 +1119,15 @@ printf("new_cache_node %d\n", __LINE__);
          // must do this BEFORE rise/set detection
          int minmax = 0;
          while (p->next != NULL && p->next->next != NULL &&
-                (minmax = /*assignment*/ transit_minima(p, p->next, p->next->next)) != 0) {
+                (minmax = /*assignment*/
+                 transit_minima(p, p->next, p->next->next)) != 0) {
             int flag = 0;
             if (fabs(p->next->JD - p->next->next->JD) * (24.0 * 60.0) >= 1.0) {
                insert_between(p->next, p->next->next, observer, get_equ_coords);
-printf("insert_between %d\n", __LINE__);
                flag = 1;
             }
             if (fabs(p->JD - p->next->JD) * (24.0 * 60.0) >= 1.0) {
                insert_between(p, p->next, observer, get_equ_coords);
-printf("insert_between %d\n", __LINE__);
                flag = 1;
             }
             if (flag == 0) {
@@ -1147,7 +1150,6 @@ printf("insert_between %d\n", __LINE__);
                 (riseset = /*assignment*/ rise_set(p, p->next, horizon)) != 0) {
             if (fabs(p->JD - p->next->JD) * (24.0 * 60.0) >= 1.0) {
                insert_between(p, p->next, observer, get_equ_coords);
-printf("insert_between %d riseset=%d\n", __LINE__, riseset);
             }
             else {
                p->critical = 1;
@@ -1189,6 +1191,7 @@ printf("insert_between %d riseset=%d\n", __LINE__, riseset);
 /// @param get_equ_coords Function pointer to get body coordinates
 /// @param horizon Horizon to use
 /// @param category EventCategory to use
+/// @param cache Pointer to the position cache for this object
 /// @return void
 void events_populate_anything(double JD,
       struct ln_lnlat_posn *observer,

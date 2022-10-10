@@ -17,7 +17,7 @@
 all: fonts/.bdf calcdata calcrange libnova-0.15.0/doc/html html/index.html
 
 html/index.html: doxygen.conf clock.c draw.c
-	doxygen doxygen.conf
+	doxygen doxygen.conf 1>/dev/null
 
 indent:
 	indent -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -nce -ci3 \

@@ -14,10 +14,10 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: fonts/.bdf calcdata calcrange libnova-0.15.0/doc/html doxygen
+all: fonts/.bdf calcdata calcrange libnova-0.15.0/doc/html html/index.html
 
-doxygen:
-	doxygen doxygen.conf
+html/index.html: doxygen.conf clock.c draw.c
+	doxygen doxygen.conf 1>/dev/null
 
 indent:
 	indent -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -nce -ci3 \
@@ -34,20 +34,21 @@ icons:
 	rm -rf weather-underground-icons
 
 calcdata: main.c draw.c clock.c libnova.a
-	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
+	gcc -g -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
 
 calcrange: mainrange.c draw.c clock.c libnova.a
-	gcc -g -Ofast -Wall -DSTANDALONE draw.c clock.c mainrange.c libnova.a -I libnova-0.15.0/src -lm -o calcrange
+	gcc -g -Wall -DSTANDALONE draw.c clock.c mainrange.c libnova.a -I libnova-0.15.0/src -lm -o calcrange
 
 libnova-0.15.0/doc/html:
 	(cd libnova-0.15.0/doc; doxygen doxyfile.in )
 
-libnova.a: libnova-0.15.0
+libnova.a: libnova-0.15.0/Makefile.am
 	(cd libnova-0.15.0/src; gcc -Ofast -c *.c -I.)
 	ar r libnova.a libnova-0.15.0/src/*.o
 
-libnova-0.15.0: libnova-0.15.0.tar.gz
+libnova-0.15.0/Makefile.am: libnova-0.15.0.tar.gz
 	tar -xzvf libnova-0.15.0.tar.gz
+	touch libnova-0.15.0/Makefile.am
 
 libnova-0.15.0.tar.gz:
 	wget https://sourceforge.net/projects/libnova/files/libnova/v%200.15.0/libnova-0.15.0.tar.gz/download -O libnova-0.15.0.tar.gz

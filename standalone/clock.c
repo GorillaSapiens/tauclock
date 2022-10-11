@@ -1418,7 +1418,7 @@ accum_helper(Canvas * canvas,
    double x;
    double y;
    int wh =
-      text_canvas(canvas, FONT_BOLD_MED, -1000, -1000, fore,back,buffer, 1, 3);
+      text_canvas(canvas, FONT_BOLD_MED, -1000, -1000, fore, back, buffer, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
 
@@ -1436,7 +1436,7 @@ accum_helper(Canvas * canvas,
 
    assert(accumdrawnspot < NUM_ACCUM);
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y, fore, back, strdup(buffer)};
+      x, y, fore, COLOR_NONE, strdup(buffer)};
 }
 
 /// @brief A struct used to remember where something is drawn.

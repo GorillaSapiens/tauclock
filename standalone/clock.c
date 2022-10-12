@@ -1012,6 +1012,26 @@ struct CacheNode *insert_between(struct CacheNode *a, struct CacheNode *b,
    return q;
 }
 
+struct CacheNode *insert_head(struct CacheNode *oldhead, double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords) {
+   struct CacheNode *q = new_cache_node(NULL, oldhead);
+   q->JD = JD;
+   get_equ_coords(q->JD, &(q->posn));
+   ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
+   return q;
+}
+
+struct CacheNode *insert_tail(struct CacheNode *oldtail, double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords) {
+   struct CacheNode *q = new_cache_node(oldtail, NULL);
+   q->JD = JD;
+   get_equ_coords(q->JD, &(q->posn));
+   ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
+   return q;
+}
+
 /// @brief given an ECH array, create events
 ///
 /// @param JD The Julian Date
@@ -1027,40 +1047,21 @@ void events_populate_anything_array(double JD,
       int ech_count, struct ECH *echs,
       struct Cache *cache) {
 
-   do {
-      // affirm we have a head
-      if (cache->head == NULL) {
-         cache->head = new_cache_node(NULL, NULL);
-         printf("new_cache_node %d\n", __LINE__);
-         cache->head->JD = JD - CACHE_LIMIT;
-         cache->head->critical = 1;
-         get_equ_coords(cache->head->JD, &(cache->head->posn));
-         ln_get_hrz_from_equ(&(cache->head->posn),
-                             observer,
-                             cache->head->JD,
-                             &(cache->head->hrz_posn));
-      }
+   // trim junk from beginning
+   while(cache->head != NULL && cache->head->JD < (JD - CACHE_LIMIT)) {
+      struct CacheNode *tmp = cache->head;
+      cache->head = cache->head->next;
+      delete_cache_node(tmp);
+   }
 
-      // affirm we have a tail != head
-      if (cache->head->next == NULL) {
-         struct CacheNode *tmp = new_cache_node(cache->head, NULL);
-         printf("new_cache_node %d\n", __LINE__);
-         tmp->JD = JD + CACHE_LIMIT;
-         tmp->critical = 1;
-         get_equ_coords(tmp->JD, &(tmp->posn));
-         ln_get_hrz_from_equ(&(tmp->posn),
-                             observer,
-                             tmp->JD,
-                             &(tmp->hrz_posn));
-      }
-
-      // trim junk from beginning
-      while(cache->head != NULL && cache->head->JD < JD - CACHE_LIMIT) {
-         struct CacheNode *tmp = cache->head;
-         cache->head = cache->head->next;
-         delete_cache_node(tmp);
-      }
-   } while (cache->head == NULL);
+   // affirm we have a head
+   if (cache->head == NULL || cache->head->JD > (JD - CACHE_LIMIT)) {
+      cache->head = insert_head(cache->head,
+                                JD - CACHE_LIMIT,
+                                observer,
+                                get_equ_coords);
+      cache->head->critical = true;
+   }
 
    double step = (echs[0].category <= CAT_LUNAR) ?
       ((double)SOLUN_PRESTEP / (24.0*60.0)) :
@@ -1068,19 +1069,20 @@ void events_populate_anything_array(double JD,
 
    // affirm things in the middle, and proper end
    for (struct CacheNode *p = cache->head; p != NULL; p = p->next) {
+      // must have a proper tail
+      if (p->next == NULL && p->JD < JD + CACHE_LIMIT) {
+         struct CacheNode *tmp =
+            insert_tail(p, JD + CACHE_LIMIT, observer, get_equ_coords);
+         tmp->critical = true;
+      }
+
       while (p->next && fabs(p->next->JD - p->JD) > step) {
          struct CacheNode *tmp =
             insert_between(p, p->next, observer, get_equ_coords);
          tmp->critical = true;
       }
-      while (!p->next && (p->JD - JD) < CACHE_LIMIT) {
-         struct CacheNode *q = new_cache_node(p, NULL);
-         q->critical = 1;
-         q->JD = p->JD + step;
-         get_equ_coords(q->JD, &(q->posn));
-         ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
-      }
-      while (p->next && (p->next->JD - JD) > CACHE_LIMIT) {
+
+      while (p->next && p->next->JD > (JD + CACHE_LIMIT)) {
          delete_cache_node(p->next);
       }
    }
@@ -1143,7 +1145,6 @@ void events_populate_anything_array(double JD,
             }
          }
 
-//if (p->next) printf("%d h=%lf p0=%lf,%lf p1=%lf,%lf\n", __LINE__, horizon, p->JD, p->hrz_posn.alt, p->next->JD,  p->next->hrz_posn.alt);
          // detect rise/set
          int riseset = 0;
          while (p->next != NULL &&

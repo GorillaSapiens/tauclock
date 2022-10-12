@@ -897,6 +897,7 @@ struct CacheNode {
 };
 
 struct Cache {
+   struct ln_lnlat_posn observer;
    struct CacheNode *head;
 };
 
@@ -909,9 +910,10 @@ struct Cache *jupiter_cache = NULL;
 struct Cache *saturn_cache = NULL;
 struct Cache *aries_cache = NULL;
 
-struct Cache *new_cache(void) {
+struct Cache *new_cache(struct ln_lnlat_posn *observer) {
    struct Cache *ret = (struct Cache *)malloc(sizeof(struct Cache));
    ret->head = NULL;
+   ret->observer = *observer;
    return ret;
 }
 
@@ -1088,10 +1090,14 @@ void events_populate_anything_array(double JD,
    }
 
    // now walk the list, setting positions
-   for (struct CacheNode *p = cache->head;
-        p != NULL;
-        p = p->next) {
-      ln_get_hrz_from_equ(&(p->posn), observer, p->JD, &(p->hrz_posn));
+   if (cache->observer.lat != observer->lat ||
+       cache->observer.lng != observer->lng) {
+      cache->observer = *observer;
+      for (struct CacheNode *p = cache->head;
+            p != NULL;
+            p = p->next) {
+         ln_get_hrz_from_equ(&(p->posn), observer, p->JD, &(p->hrz_posn));
+      }
    }
 
    // create up/down events
@@ -1173,6 +1179,7 @@ void events_populate_anything_array(double JD,
       }
    }
 
+#if 0
    for (struct CacheNode *p = cache->head;
         p != NULL;
         p = p->next) {
@@ -1181,6 +1188,7 @@ void events_populate_anything_array(double JD,
          delete_cache_node(p->next);
       }
    }
+#endif
 }
 
 /// @brief Like events_populate_anything_array, but for single category / horizon
@@ -1218,7 +1226,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
       (struct ECH) { CAT_SOLAR,        LN_SOLAR_STANDART_HORIZON },
    };
    if (sun_cache == NULL) {
-      sun_cache = new_cache();
+      sun_cache = new_cache(observer);
    }
    events_populate_anything_array(JD, observer, ln_get_solar_equ_coords,
          4, echs, sun_cache);
@@ -1233,7 +1241,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
 /// @return void
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    if (moon_cache == NULL) {
-      moon_cache = new_cache();
+      moon_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
          LN_LUNAR_STANDART_HORIZON, CAT_LUNAR, moon_cache);
@@ -1248,42 +1256,42 @@ void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
 /// @return void
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    if (mercury_cache == NULL) {
-      mercury_cache = new_cache();
+      mercury_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MERCURY, mercury_cache);
 
    if (venus_cache == NULL) {
-      venus_cache = new_cache();
+      venus_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_venus_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_VENUS, venus_cache);
 
    if (mars_cache == NULL) {
-      mars_cache = new_cache();
+      mars_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_mars_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MARS, mars_cache);
 
    if (jupiter_cache == NULL) {
-      jupiter_cache = new_cache();
+      jupiter_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_jupiter_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_JUPITER, jupiter_cache);
 
    if (saturn_cache == NULL) {
-      saturn_cache = new_cache();
+      saturn_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_SATURN, saturn_cache);
 
    if (aries_cache == NULL) {
-      aries_cache = new_cache();
+      aries_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_aries_equ_coords, 0.0,

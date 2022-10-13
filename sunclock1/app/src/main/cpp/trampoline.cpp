@@ -13,10 +13,15 @@ extern "C" {
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env, jobject thiz, jdouble lat,
-                                                     jdouble lon, jdouble offset,
-                                                     jint width, jstring provider,
-                                                     jstring tzprovider, jstring tz) {
+Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
+                                                     jobject thiz,
+                                                     jdouble lat,
+                                                     jdouble lon,
+                                                     jdouble offset,
+                                                     jint width,
+                                                     jstring provider,
+                                                     jstring tzprovider,
+                                                     jstring tz) {
     jboolean garbage = false;
     const char *ccProvider = env->GetStringUTFChars(provider, &garbage);
     garbage = false;

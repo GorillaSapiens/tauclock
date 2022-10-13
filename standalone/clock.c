@@ -2259,7 +2259,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    //events_dump();
 
    // get the transit time
-   up = events_transit(JD);
+   up = to_the_minute(events_transit(JD)); // rounding added to reduce jitter
 
    // lunar disk, phase and bright limb
    float lunar_phase = ln_get_lunar_phase(JD);  // 0 to 180

@@ -897,6 +897,7 @@ struct CacheNode {
 };
 
 struct Cache {
+   struct ln_lnlat_posn observer;
    struct CacheNode *head;
 };
 
@@ -909,11 +910,14 @@ struct Cache *jupiter_cache = NULL;
 struct Cache *saturn_cache = NULL;
 struct Cache *aries_cache = NULL;
 
-struct Cache *new_cache(void) {
+struct Cache *new_cache(struct ln_lnlat_posn *observer) {
    struct Cache *ret = (struct Cache *)malloc(sizeof(struct Cache));
    ret->head = NULL;
+   ret->observer = *observer;
    return ret;
 }
+
+int cnc = 0;
 
 struct CacheNode *new_cache_node(struct CacheNode *prev, struct CacheNode *next) {
    struct CacheNode *ret = (struct CacheNode *)calloc(1, sizeof(struct CacheNode));
@@ -925,6 +929,7 @@ struct CacheNode *new_cache_node(struct CacheNode *prev, struct CacheNode *next)
    }
    ret->prev = prev;
    ret->next = next;
+//cnc++;printf("cnc N=%d\n", cnc);
    return ret;
 }
 
@@ -936,6 +941,7 @@ void delete_cache_node(struct CacheNode *p) {
       p->next->prev = p->prev;
    }
    free(p);
+//cnc--;printf("cnc D=%d\n", cnc);
 }
 
 /// @brief Find up and down events
@@ -1012,6 +1018,26 @@ struct CacheNode *insert_between(struct CacheNode *a, struct CacheNode *b,
    return q;
 }
 
+struct CacheNode *insert_head(struct CacheNode *oldhead, double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords) {
+   struct CacheNode *q = new_cache_node(NULL, oldhead);
+   q->JD = JD;
+   get_equ_coords(q->JD, &(q->posn));
+   ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
+   return q;
+}
+
+struct CacheNode *insert_tail(struct CacheNode *oldtail, double JD,
+      struct ln_lnlat_posn *observer,
+      Get_Equ_Coords get_equ_coords) {
+   struct CacheNode *q = new_cache_node(oldtail, NULL);
+   q->JD = JD;
+   get_equ_coords(q->JD, &(q->posn));
+   ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
+   return q;
+}
+
 /// @brief given an ECH array, create events
 ///
 /// @param JD The Julian Date
@@ -1027,40 +1053,22 @@ void events_populate_anything_array(double JD,
       int ech_count, struct ECH *echs,
       struct Cache *cache) {
 
-   do {
-      // affirm we have a head
-      if (cache->head == NULL) {
-         cache->head = new_cache_node(NULL, NULL);
-         printf("new_cache_node %d\n", __LINE__);
-         cache->head->JD = JD - CACHE_LIMIT;
-         cache->head->critical = 1;
-         get_equ_coords(cache->head->JD, &(cache->head->posn));
-         ln_get_hrz_from_equ(&(cache->head->posn),
-                             observer,
-                             cache->head->JD,
-                             &(cache->head->hrz_posn));
-      }
+   // trim junk from beginning
+   while(cache->head != NULL && cache->head->JD < (JD - CACHE_LIMIT)) {
+      struct CacheNode *tmp = cache->head;
+      cache->head = cache->head->next;
+//      printf("delete [%d] %p JD=%lf before JD=%lf\n", __LINE__, tmp, tmp->JD, JD-CACHE_LIMIT);
+      delete_cache_node(tmp);
+   }
 
-      // affirm we have a tail != head
-      if (cache->head->next == NULL) {
-         struct CacheNode *tmp = new_cache_node(cache->head, NULL);
-         printf("new_cache_node %d\n", __LINE__);
-         tmp->JD = JD + CACHE_LIMIT;
-         tmp->critical = 1;
-         get_equ_coords(tmp->JD, &(tmp->posn));
-         ln_get_hrz_from_equ(&(tmp->posn),
-                             observer,
-                             tmp->JD,
-                             &(tmp->hrz_posn));
-      }
-
-      // trim junk from beginning
-      while(cache->head != NULL && cache->head->JD < JD - CACHE_LIMIT) {
-         struct CacheNode *tmp = cache->head;
-         cache->head = cache->head->next;
-         delete_cache_node(tmp);
-      }
-   } while (cache->head == NULL);
+   // affirm we have a head
+   if (cache->head == NULL || cache->head->JD > (JD - CACHE_LIMIT)) {
+//      printf("new head [%d] %p JD=%lf after JD=%lf\n", __LINE__, cache->head, cache->head ? cache->head->JD : -1.0, JD-CACHE_LIMIT);
+      cache->head = insert_head(cache->head,
+                                JD - CACHE_LIMIT,
+                                observer,
+                                get_equ_coords);
+   }
 
    double step = (echs[0].category <= CAT_LUNAR) ?
       ((double)SOLUN_PRESTEP / (24.0*60.0)) :
@@ -1068,28 +1076,32 @@ void events_populate_anything_array(double JD,
 
    // affirm things in the middle, and proper end
    for (struct CacheNode *p = cache->head; p != NULL; p = p->next) {
+      // must have a proper tail
+      if (p->next == NULL && p->JD < JD + CACHE_LIMIT) {
+//         printf("new tail after [%d] %p JD=%lf after JD=%lf\n", __LINE__, p, p->JD, JD+CACHE_LIMIT);
+         insert_tail(p, JD + CACHE_LIMIT, observer, get_equ_coords);
+      }
+
       while (p->next && fabs(p->next->JD - p->JD) > step) {
-         struct CacheNode *tmp =
-            insert_between(p, p->next, observer, get_equ_coords);
-         tmp->critical = true;
+//         printf("new middle between [%d] %p JD=%lf %p JD=%lf step=%lf\n", __LINE__, p, p->JD, p->next, p->next->JD, step);
+         insert_between(p, p->next, observer, get_equ_coords);
       }
-      while (!p->next && (p->JD - JD) < CACHE_LIMIT) {
-         struct CacheNode *q = new_cache_node(p, NULL);
-         q->critical = 1;
-         q->JD = p->JD + step;
-         get_equ_coords(q->JD, &(q->posn));
-         ln_get_hrz_from_equ(&(q->posn), observer, q->JD, &(q->hrz_posn));
-      }
-      while (p->next && (p->next->JD - JD) > CACHE_LIMIT) {
+
+      while (p->next && p->next->JD > (JD + CACHE_LIMIT)) {
+//         printf("delete hanger [%d] %p JD=%lf %lf\n", __LINE__, p->next, p->next->JD, JD + CACHE_LIMIT);
          delete_cache_node(p->next);
       }
    }
 
    // now walk the list, setting positions
-   for (struct CacheNode *p = cache->head;
-        p != NULL;
-        p = p->next) {
-      ln_get_hrz_from_equ(&(p->posn), observer, p->JD, &(p->hrz_posn));
+   if (cache->observer.lat != observer->lat ||
+       cache->observer.lng != observer->lng) {
+      cache->observer = *observer;
+      for (struct CacheNode *p = cache->head;
+            p != NULL;
+            p = p->next) {
+         ln_get_hrz_from_equ(&(p->posn), observer, p->JD, &(p->hrz_posn));
+      }
    }
 
    // create up/down events
@@ -1123,17 +1135,19 @@ void events_populate_anything_array(double JD,
                  transit_minima(p, p->next, p->next->next)) != 0) {
             int flag = 0;
             if (fabs(p->next->JD - p->next->next->JD) * (24.0 * 60.0) >= 1.0) {
+//               printf("insert between minmax [%d] %p JD=%lf %p JD=%lf\n", __LINE__, p->next, p->next->JD, p->next->next, p->next->next->JD);
                insert_between(p->next, p->next->next, observer, get_equ_coords);
                flag = 1;
             }
             if (fabs(p->JD - p->next->JD) * (24.0 * 60.0) >= 1.0) {
+//               printf("insert between minmax [%d] %p JD=%lf %p JD=%lf\n", __LINE__, p, p->JD, p->next, p->next->JD);
                insert_between(p, p->next, observer, get_equ_coords);
                flag = 1;
             }
             if (flag == 0) {
-               p->critical = 1;
-               p->next->critical = 1;
-               p->next->next->critical = 1;
+               p->critical = true;
+               p->next->critical = true;
+               p->next->next->critical = true;
                if (minmax > 0 && (p->next->hrz_posn.alt >= horizon || category < CAT_LUNAR)) {
                   assert(event_spot < NUM_EVENTS);
                   events[event_spot++] =
@@ -1143,17 +1157,17 @@ void events_populate_anything_array(double JD,
             }
          }
 
-//if (p->next) printf("%d h=%lf p0=%lf,%lf p1=%lf,%lf\n", __LINE__, horizon, p->JD, p->hrz_posn.alt, p->next->JD,  p->next->hrz_posn.alt);
          // detect rise/set
          int riseset = 0;
          while (p->next != NULL &&
                 (riseset = /*assignment*/ rise_set(p, p->next, horizon)) != 0) {
             if (fabs(p->JD - p->next->JD) * (24.0 * 60.0) >= 1.0) {
+//               printf("insert between riseset[%d] %p JD=%lf %p JD=%lf\n", __LINE__, p, p->JD, p->next, p->next->JD);
                insert_between(p, p->next, observer, get_equ_coords);
             }
             else {
-               p->critical = 1;
-               p->next->critical = 1;
+               p->critical = true;
+               p->next->critical = true;
                assert(event_spot < NUM_EVENTS);
                if (riseset > 0) {
                   events[event_spot++] =
@@ -1176,7 +1190,9 @@ void events_populate_anything_array(double JD,
         p != NULL;
         p = p->next) {
 
-      while (p->next != NULL && p->next->critical == 0) {
+      while (p->next != NULL && p->next->next != NULL && p->next->critical == 0 &&
+             (p->next->next->JD - p->JD) < step) {
+//         printf("delete noncritical [%d] %p JD=%lf\n", __LINE__, p->next, p->next->JD);
          delete_cache_node(p->next);
       }
    }
@@ -1217,7 +1233,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
       (struct ECH) { CAT_SOLAR,        LN_SOLAR_STANDART_HORIZON },
    };
    if (sun_cache == NULL) {
-      sun_cache = new_cache();
+      sun_cache = new_cache(observer);
    }
    events_populate_anything_array(JD, observer, ln_get_solar_equ_coords,
          4, echs, sun_cache);
@@ -1232,7 +1248,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
 /// @return void
 void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
    if (moon_cache == NULL) {
-      moon_cache = new_cache();
+      moon_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
          LN_LUNAR_STANDART_HORIZON, CAT_LUNAR, moon_cache);
@@ -1247,42 +1263,42 @@ void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
 /// @return void
 void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
    if (mercury_cache == NULL) {
-      mercury_cache = new_cache();
+      mercury_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MERCURY, mercury_cache);
 
    if (venus_cache == NULL) {
-      venus_cache = new_cache();
+      venus_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_venus_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_VENUS, venus_cache);
 
    if (mars_cache == NULL) {
-      mars_cache = new_cache();
+      mars_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_mars_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MARS, mars_cache);
 
    if (jupiter_cache == NULL) {
-      jupiter_cache = new_cache();
+      jupiter_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_jupiter_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_JUPITER, jupiter_cache);
 
    if (saturn_cache == NULL) {
-      saturn_cache = new_cache();
+      saturn_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_SATURN, saturn_cache);
 
    if (aries_cache == NULL) {
-      aries_cache = new_cache();
+      aries_cache = new_cache(observer);
    }
    events_populate_anything(JD, observer,
          ln_get_aries_equ_coords, 0.0,
@@ -2229,7 +2245,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    JD = to_the_minute(JD);
 
-   printf("JD=%lf\n", JD);
+   //printf("JD=%lf\n", JD);
 
    // local time
    my_get_local_date(JD, &now);
@@ -2240,10 +2256,10 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    events_sort();
    events_uniq();
    events_prune(JD);
-   events_dump();
+   //events_dump();
 
    // get the transit time
-   up = events_transit(JD);
+   up = to_the_minute(events_transit(JD)); // rounding added to reduce jitter
 
    // lunar disk, phase and bright limb
    float lunar_phase = ln_get_lunar_phase(JD);  // 0 to 180

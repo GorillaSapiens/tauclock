@@ -420,6 +420,15 @@ class MainActivity : AppCompatActivity() {
         val alarmsButton: Button = findViewById(R.id.alarmsButton)
         alarmsButton.setOnClickListener { v ->
             val switchActivityIntent = Intent(v!!.context, AlarmActivity::class.java)
+            val bundle : Bundle = Bundle()
+            try {
+                val value = java.lang.String.format("%.4f,%.4f", mLastLocation!!.latitude,mLastLocation!!.longitude )
+                bundle.putString("observer", value)
+            }
+            catch (e: Exception) {
+                // ignore it
+            }
+            switchActivityIntent.putExtras(bundle)
             startActivity(switchActivityIntent)
         }
 

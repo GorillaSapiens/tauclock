@@ -1,9 +1,9 @@
 package com.gorillasapiens.sunclock1
 
 import android.content.DialogInterface
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -12,7 +12,14 @@ import androidx.core.view.children
 
 class AlarmActivity : AppCompatActivity() {
     val fieldnames = arrayOf("name", "observer", "category", "type", "offset")
+    val categorynames = arrayOf(
+        "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
+        "LUNAR",                   // moon and planets from here on
+        "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
+        "ARIES")
+    val typenames = arrayOf("RISE","TRANSIT","SET")
     var alarmManager : AlarmManager? = null
+    var mObserver : String = "0.0000,0.0000"
 
     private fun addEditDelete(title: String, message: String, entry: Int) {
         val table = TableLayout(this)
@@ -37,11 +44,50 @@ class AlarmActivity : AppCompatActivity() {
             val tableRow = TableRow(this)
             val tableTextView = TextView(this)
             tableTextView.text = field
-            val tableEditText = EditText(this)
-            tableEditText.setText(values[i])
+            var tableEdit : View =
+                if (field == "category") {
+                    var tableEditSpinner = Spinner(this)
+                    val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categorynames)
+                    tableEditSpinner.adapter = arrayAdapter
+                    try {
+                        tableEditSpinner.setSelection(values[i]!!.toInt())
+                    }
+                    catch (e: Exception) {
+                        // ignore it
+                    }
+                    tableEditSpinner
+                }
+                else if (field == "type") {
+                    var tableEditSpinner = Spinner(this)
+                    val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, typenames)
+                    tableEditSpinner.adapter = arrayAdapter
+                    try {
+                        tableEditSpinner.setSelection(values[i]!!.toInt())
+                    }
+                    catch (e: Exception) {
+                        // ignore it
+                    }
+                    tableEditSpinner
+                }
+                else {
+                    val tableEditText = EditText(this)
+                    tableEditText.setText(values[i])
+
+                    // special case
+                    if (title.contains("Add")) {
+                        if (field == "observer") {
+                            tableEditText.setText(mObserver)
+                        }
+                        else if (field == "offset") {
+                            tableEditText.setText("0")
+                        }
+                    }
+
+                    tableEditText
+                }
             i++
             tableRow.addView(tableTextView)
-            tableRow.addView(tableEditText)
+            tableRow.addView(tableEdit)
             table.addView(tableRow)
         }
 
@@ -68,8 +114,14 @@ class AlarmActivity : AppCompatActivity() {
                     var i = 0
                     for (field in fieldnames) {
                         val row = table.getChildAt(i) as TableRow
-                        val editable = row.getChildAt(1) as EditText
-                        values += editable.text.toString()
+                        if (field == "category" || field == "type") {
+                            val spinner = row.getChildAt(1) as Spinner
+                            values += spinner.selectedItemPosition.toString()
+                        }
+                        else {
+                            val editable = row.getChildAt(1) as EditText
+                            values += editable.text.toString()
+                        }
                         i++
                     }
                     alarmManager!!.putSet(entry, values)
@@ -122,6 +174,14 @@ class AlarmActivity : AppCompatActivity() {
         val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
+
+
+        val b = intent.extras
+        var value : String? = "0.0000,0.0000"
+        if (b != null) value = b.getString("observer")
+        if (value != null) {
+            mObserver = value
+        }
 
         val backButton: Button = findViewById(R.id.backButton)
         backButton.setOnClickListener { v ->

@@ -360,6 +360,11 @@ class MainActivity : AppCompatActivity() {
                 override fun onClick(v: android.view.View?) {
                     chooseNewProvider()
                     Toast.makeText(v!!.context, java.lang.String.format("Location Provider set to '%s'", mProviderName), Toast.LENGTH_SHORT).show()
+
+                    if (mProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
+                        Toast.makeText(v!!.context, "Go to Android Settings to enable this Location Provider", Toast.LENGTH_LONG).show()
+                    }
+
                     updateDrawing()
                     exportSettings()
                 }

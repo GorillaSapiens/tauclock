@@ -8,24 +8,18 @@ class AlarmManager(context: Context, fields: Array<String>) {
     val members = fields // arrayOf("name", "observer", "category", "type", "offset")
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 
-    fun getCount(): Int {
-        return sharedPreferences.getInt("alarms", 0)
-    }
-
-    private fun getTuple(i:Int, s:String) : String {
+    private fun getTuple(i:Int, s:String) : String? {
         val key = java.lang.String.format("%d_%s", i, s)
-        val value = sharedPreferences.getString(key, "")
-        if (value == null) {
-            return ""
-        }
-        else {
-            return value
-        }
+        return sharedPreferences.getString(key, "")
     }
 
     private fun putTuple(editor:SharedPreferences.Editor, i:Int, s:String, value:String?) {
         val key = java.lang.String.format("%d_%s", i, s)
         editor.putString(key, value)
+    }
+
+    fun getCount(): Int {
+        return sharedPreferences.getInt("alarms", 0)
     }
 
     fun deleteSet(i:Int) {
@@ -45,9 +39,9 @@ class AlarmManager(context: Context, fields: Array<String>) {
         editor.commit()
     }
 
-    fun getSet(i:Int) : Array<String> {
+    fun getSet(i:Int) : Array<String?> {
         val max = getCount()
-        var ret : Array<String> = emptyArray()
+        var ret : Array<String?> = emptyArray()
 
         for (member in members) {
             val value = getTuple(i, member)
@@ -57,16 +51,22 @@ class AlarmManager(context: Context, fields: Array<String>) {
         return ret;
     }
 
-    fun addSet(values: Array<String>) {
+    fun putSet(n: Int, values: Array<String?>) {
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
         if (values.size != members.size) {
             throw Exception("size mismatch")
         }
-        val count = getCount();
-        for (i in 0..members.size) {
-            putTuple(editor, i, members[i], values[i])
+        var spot = n
+        if (n < 0 || n > getCount()) {
+            spot = getCount()
         }
-        editor.putInt("alarms", count + 1)
+        for (i in 0..members.size) {
+            putTuple(editor, spot, members[i], values[i])
+        }
+        if (spot == getCount()) {
+            editor.putInt("alarms", spot + 1)
+        }
         editor.commit()
     }
+
 }

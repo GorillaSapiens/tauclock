@@ -23,6 +23,10 @@ class AlarmManager(context: Context, fields: Array<String>) {
     }
 
     fun deleteSet(i:Int) {
+        if (i < 0 || i >= getCount()) {
+            throw Exception("size mismatch")
+        }
+
         val max = getCount();
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
 
@@ -40,7 +44,10 @@ class AlarmManager(context: Context, fields: Array<String>) {
     }
 
     fun getSet(i:Int) : Array<String?> {
-        val max = getCount()
+        if (i < 0 || i >= getCount()) {
+            throw Exception("size mismatch")
+        }
+
         var ret : Array<String?> = emptyArray()
 
         for (member in members) {

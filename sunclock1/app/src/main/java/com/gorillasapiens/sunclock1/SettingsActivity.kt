@@ -6,7 +6,6 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
-import com.wozniakconsulting.sunclock1.R
 import java.util.*
 
 class SettingsActivity : AppCompatActivity() {

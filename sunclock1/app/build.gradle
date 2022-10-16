@@ -40,7 +40,7 @@ android {
             version '3.18.1'
         }
     }
-    namespace 'com.wozniakconsulting.sunclock1'
+    namespace 'com.gorillasapiens.sunclock1'
 }
 
 dependencies {

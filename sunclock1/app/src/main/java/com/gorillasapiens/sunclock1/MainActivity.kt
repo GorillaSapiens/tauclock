@@ -1,8 +1,10 @@
 package com.gorillasapiens.sunclock1
 
-import android.Manifest
 //import android.R
+
+import android.Manifest
 import android.annotation.SuppressLint
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -16,9 +18,8 @@ import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
@@ -317,6 +318,50 @@ class MainActivity : AppCompatActivity() {
         editor.apply()
     }
 
+    private fun doEULA() {
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+        var yesEULA = sharedPreferences.getInt("EULA", 0)
+
+        if (yesEULA > 0) {
+            return
+        }
+
+        val checkBox = CheckBox(this)
+        checkBox.text = "Agree to terms"
+        val linearLayout = LinearLayout(this)
+        linearLayout.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.FILL_PARENT,
+            LinearLayout.LayoutParams.FILL_PARENT
+        )
+        linearLayout.orientation = 1
+        linearLayout.addView(checkBox)
+
+        val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+        alertDialogBuilder.setView(linearLayout)
+        alertDialogBuilder.setTitle("End User License Agreement")
+        alertDialogBuilder.setMessage(
+            "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR " +
+                    "IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, " +
+                    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL " +
+                    "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER " +
+                    "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING " +
+                    "FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER " +
+                    "DEALINGS IN THE SOFTWARE.")
+        alertDialogBuilder.setPositiveButton("Ok",
+            DialogInterface.OnClickListener { arg0, arg1 ->
+                if (!checkBox.isChecked()) {
+                    doEULA()
+                }
+                else {
+                    val editor: SharedPreferences.Editor = sharedPreferences.edit()
+                    editor.putInt("EULA", 1)
+                    editor.apply()
+                }
+            })
+        alertDialogBuilder.setCancelable(false)
+        alertDialogBuilder.show()
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -327,8 +372,7 @@ class MainActivity : AppCompatActivity() {
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
 
-        //actionBar?.hide();
-        //supportActionBar?.hide();
+        doEULA()
 
         mImageView = findViewById<View>(R.id.imageView) as ImageView
         mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->

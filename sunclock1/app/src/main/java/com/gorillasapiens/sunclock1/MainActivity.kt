@@ -359,6 +359,7 @@ class MainActivity : AppCompatActivity() {
             object : android.view.View.OnClickListener {
                 override fun onClick(v: android.view.View?) {
                     chooseNewProvider()
+                    Toast.makeText(v!!.context, java.lang.String.format("Location Provider set to '%s'", mProviderName), Toast.LENGTH_SHORT).show()
                     updateDrawing()
                     exportSettings()
                 }
@@ -369,10 +370,7 @@ class MainActivity : AppCompatActivity() {
         alarmsButton.setOnClickListener(
             object : android.view.View.OnClickListener {
                 override fun onClick(v: android.view.View?) {
-                    if (mOffset != "manual") {
-                        Toast.makeText(v!!.context, "Alarms not yet implemented", Toast.LENGTH_SHORT).show()
-                        return
-                    }
+                    Toast.makeText(v!!.context, "Alarms not yet implemented", Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -392,6 +390,7 @@ class MainActivity : AppCompatActivity() {
                             mTimeZoneProvider = "system"
                         }
                     }
+                    Toast.makeText(v!!.context, java.lang.String.format("Timezone Provider set to '%s'", mTimeZoneProvider), Toast.LENGTH_SHORT).show()
                     updateDrawing()
                     exportSettings()
                 }
@@ -413,7 +412,7 @@ class MainActivity : AppCompatActivity() {
             object : android.view.View.OnClickListener {
                 override fun onClick(v: android.view.View?) {
                     if (mOffset != "manual") {
-                        Toast.makeText(v!!.context, "Offset Provider is not 'manual'", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(v!!.context, "Offset Provider setting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
                     mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
@@ -428,7 +427,7 @@ class MainActivity : AppCompatActivity() {
             object : android.view.View.OnClickListener {
                 override fun onClick(v: android.view.View?) {
                     if (mOffset != "manual") {
-                        Toast.makeText(v!!.context, "Offset Provider is not 'manual'", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(v!!.context, "Offset Provider settting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
                     mManualOffset = (mManualOffset.toDouble() + 1.0).toString()

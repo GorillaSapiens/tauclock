@@ -376,11 +376,8 @@ class MainActivity : AppCompatActivity() {
 
         val alarmsButton: Button = findViewById(R.id.alarmsButton)
         alarmsButton.setOnClickListener { v ->
-            Toast.makeText(
-                v!!.context,
-                "Alarms not yet implemented",
-                Toast.LENGTH_SHORT
-            ).show()
+            val switchActivityIntent = Intent(v!!.context, AlarmActivity::class.java)
+            startActivity(switchActivityIntent)
         }
 
         val tzButton: Button = findViewById(R.id.tzButton)

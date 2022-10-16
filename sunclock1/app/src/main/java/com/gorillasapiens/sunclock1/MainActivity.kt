@@ -1,6 +1,7 @@
 package com.gorillasapiens.sunclock1
 
 import android.Manifest
+//import android.R
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
@@ -15,7 +16,9 @@ import android.os.Looper
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.preference.PreferenceManager
@@ -350,6 +353,90 @@ class MainActivity : AppCompatActivity() {
                 updateDrawing()
             }
         }
+
+        val locationButton: Button = findViewById(R.id.locationButton)
+        locationButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    chooseNewProvider()
+                    updateDrawing()
+                    exportSettings()
+                }
+            }
+        )
+
+        val alarmsButton: Button = findViewById(R.id.alarmsButton)
+        alarmsButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    if (mOffset != "manual") {
+                        Toast.makeText(v!!.context, "Alarms not yet implemented", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                }
+            }
+        )
+
+        val tzButton: Button = findViewById(R.id.tzButton)
+        tzButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    when (mTimeZoneProvider) {
+                        "system" -> {
+                            mTimeZoneProvider = "location"
+                        }
+                        "location" -> {
+                            mTimeZoneProvider = "manual"
+                        }
+                        "manual" -> {
+                            mTimeZoneProvider = "system"
+                        }
+                    }
+                    updateDrawing()
+                    exportSettings()
+                }
+            }
+        )
+
+        val settingsButton: Button = findViewById(R.id.settingsButton)
+        settingsButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    val switchActivityIntent = Intent(v!!.context, SettingsActivity::class.java)
+                    startActivity(switchActivityIntent)
+                }
+            }
+        )
+
+        val leftButton: Button = findViewById(R.id.leftButton)
+        leftButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    if (mOffset != "manual") {
+                        Toast.makeText(v!!.context, "Offset Provider is not 'manual'", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
+                    updateDrawing()
+                    exportSettings()
+                }
+            }
+        )
+
+        val rightButton: Button = findViewById(R.id.rightButton)
+        rightButton.setOnClickListener(
+            object : android.view.View.OnClickListener {
+                override fun onClick(v: android.view.View?) {
+                    if (mOffset != "manual") {
+                        Toast.makeText(v!!.context, "Offset Provider is not 'manual'", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    mManualOffset = (mManualOffset.toDouble() + 1.0).toString()
+                    updateDrawing()
+                    exportSettings()
+                }
+            }
+        )
     }
 
     override fun onStart() {
@@ -451,47 +538,6 @@ class MainActivity : AppCompatActivity() {
     private fun otl(motionEvent: MotionEvent) {
         val action = motionEvent.action and MotionEvent.ACTION_MASK
 
-        if (action == MotionEvent.ACTION_DOWN) {
-            if (isCloseToProvider(motionEvent)){
-                chooseNewProvider()
-                updateDrawing()
-                exportSettings()
-                return
-            }
-            else if (isCloseToTimeZone(motionEvent)) {
-                when (mTimeZoneProvider) {
-                    "system" -> {
-                        mTimeZoneProvider = "location"
-                    }
-                    "location" -> {
-                        mTimeZoneProvider = "manual"
-                    }
-                    "manual" -> {
-                        mTimeZoneProvider = "system"
-                    }
-                }
-                updateDrawing()
-                exportSettings()
-                return
-            }
-            else if (isCloseToSettings(motionEvent)) {
-                val switchActivityIntent = Intent(this, SettingsActivity::class.java)
-                startActivity(switchActivityIntent)
-                return
-            }
-            else if (isCloseToLeft(motionEvent) && mOffset == "manual") {
-                mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
-                updateDrawing()
-                exportSettings()
-                return
-            }
-            else if (isCloseToRight(motionEvent) && mOffset == "manual") {
-                mManualOffset = (mManualOffset.toDouble() + 1.0).toString()
-                updateDrawing()
-                exportSettings()
-                return
-            }
-        }
         if (mRealProviderName == "manual") {
             if (action == MotionEvent.ACTION_DOWN) {
                 if (isCloseToCenter(motionEvent)) {

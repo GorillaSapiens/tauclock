@@ -67,7 +67,7 @@ class AlarmManager(context: Context, fields: Array<String>) {
         if (n < 0 || n > getCount()) {
             spot = getCount()
         }
-        for (i in 0..members.size) {
+        for (i in 0..(members.size-1)) {
             putTuple(editor, spot, members[i], values[i])
         }
         if (spot == getCount()) {

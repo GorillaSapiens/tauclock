@@ -1,11 +1,13 @@
 package com.gorillasapiens.sunclock1
 
-import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.MenuItem
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
+
 
 class AlarmActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,6 +23,27 @@ class AlarmActivity : AppCompatActivity() {
         backButton.setOnClickListener { v ->
             finish()
         }
+
+        val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
+        for (i in 0..100) {
+            val tv = TextView(this)
+            tv.text = "Your string " + i.toString()
+            tv.setTextColor(0xFFFFFFFF.toInt())
+            tv.setTextSize(32.0f)
+
+            tv.setOnClickListener { v ->
+                val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
+                for (child in alarmLayout.children) {
+                    val tv = child as TextView
+                    tv.setTextColor(0xffffffff.toInt())
+                }
+                val tv = v as TextView
+                tv.setTextColor(0xffff00ff.toInt())
+            }
+
+            alarmLayout.addView(tv)
+        }
+
     }
 
 //    override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -33,3 +56,4 @@ class AlarmActivity : AppCompatActivity() {
 //       return super.onOptionsItemSelected(item)
 //   }
 }
+

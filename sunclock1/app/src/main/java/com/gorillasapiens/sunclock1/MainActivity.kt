@@ -124,16 +124,15 @@ class MainActivity : AppCompatActivity() {
             }
             var tzname : String = TimeZone.getDefault().toZoneId().toString()
             if (mTimeZoneProvider == "location") {
-                try {
+                tzname = try {
                     val zoneId = mTimeZoneEngine!!.query(
                         mLastLocation?.latitude ?: 0.0,
                         mLastLocation?.longitude ?: 0.0
                     )
-                    tzname = zoneId?.get()?.toString() ?: ""
-                }
-                catch (e: Exception) {
+                    zoneId?.get()?.toString() ?: ""
+                } catch (e: Exception) {
                     // do nothing
-                    tzname = "(initializing...)"
+                    "(initializing...)"
                 }
             }
             else if (mTimeZoneProvider == "manual") {
@@ -172,7 +171,8 @@ class MainActivity : AppCompatActivity() {
             if (mHasFocus) {
                 val current = LocalDateTime.now()
 
-                if (mLastLastLocation != mLastLocation ||
+                if (mNeedUpdate == true ||
+                    mLastLastLocation != mLastLocation ||
                     (current - Duration.ofMinutes(1)) > mLastTime ||
                     current.minute != mLastTime.minute) {
 
@@ -181,6 +181,7 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     updateDrawing()
+                    mNeedUpdate = false
 
                     mLastTime = current
                     mLastLastLocation = mLastLocation
@@ -314,7 +315,7 @@ class MainActivity : AppCompatActivity() {
         editor.putString("offset", mOffset)
         editor.putString("manual_offset", mManualOffset)
 
-        editor.commit()
+        editor.apply()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -350,78 +351,77 @@ class MainActivity : AppCompatActivity() {
             launch(Dispatchers.Main) {
                 mEngineDone = true
                 mNeedUpdate = true
-                updateDrawing()
             }
         }
 
         val locationButton: Button = findViewById(R.id.locationButton)
-        locationButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
-                    chooseNewProvider()
-                    Toast.makeText(v!!.context, java.lang.String.format("Location Provider set to '%s'", mProviderName), Toast.LENGTH_SHORT).show()
+        locationButton.setOnClickListener { v ->
+            chooseNewProvider()
+            Toast.makeText(
+                v!!.context,
+                java.lang.String.format("Location Provider set to '%s'", mProviderName),
+                Toast.LENGTH_SHORT
+            ).show()
 
-                    if (mProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
-                        Toast.makeText(v!!.context, "Go to Android Settings to enable this Location Provider", Toast.LENGTH_LONG).show()
-                    }
-
-                    updateDrawing()
-                    exportSettings()
-                }
+            if (mProviderName != "manual" && mLocationManager?.isProviderEnabled(mRealProviderName) == false) {
+                Toast.makeText(
+                    v.context,
+                    "Go to Android Settings to enable this Location Provider",
+                    Toast.LENGTH_LONG
+                ).show()
             }
-        )
+
+            mNeedUpdate = true
+            exportSettings()
+        }
 
         val alarmsButton: Button = findViewById(R.id.alarmsButton)
-        alarmsButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
-                    Toast.makeText(v!!.context, "Alarms not yet implemented", Toast.LENGTH_SHORT).show()
-                }
-            }
-        )
+        alarmsButton.setOnClickListener { v ->
+            Toast.makeText(
+                v!!.context,
+                "Alarms not yet implemented",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
         val tzButton: Button = findViewById(R.id.tzButton)
-        tzButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
-                    when (mTimeZoneProvider) {
-                        "system" -> {
-                            mTimeZoneProvider = "location"
-                        }
-                        "location" -> {
-                            mTimeZoneProvider = "manual"
-                        }
-                        "manual" -> {
-                            mTimeZoneProvider = "system"
-                        }
-                    }
-                    Toast.makeText(v!!.context, java.lang.String.format("Timezone Provider set to '%s'", mTimeZoneProvider), Toast.LENGTH_SHORT).show()
-                    updateDrawing()
-                    exportSettings()
+        tzButton.setOnClickListener { v ->
+            when (mTimeZoneProvider) {
+                "system" -> {
+                    mTimeZoneProvider = "location"
+                }
+                "location" -> {
+                    mTimeZoneProvider = "manual"
+                }
+                "manual" -> {
+                    mTimeZoneProvider = "system"
                 }
             }
-        )
+            Toast.makeText(
+                v!!.context,
+                java.lang.String.format("Timezone Provider set to '%s'", mTimeZoneProvider),
+                Toast.LENGTH_SHORT
+            ).show()
+            mNeedUpdate = true
+            exportSettings()
+        }
 
         val settingsButton: Button = findViewById(R.id.settingsButton)
-        settingsButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
-                    val switchActivityIntent = Intent(v!!.context, SettingsActivity::class.java)
-                    startActivity(switchActivityIntent)
-                }
-            }
-        )
+        settingsButton.setOnClickListener { v ->
+            val switchActivityIntent = Intent(v!!.context, SettingsActivity::class.java)
+            startActivity(switchActivityIntent)
+        }
 
         val leftButton: Button = findViewById(R.id.leftButton)
         leftButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
+            object : View.OnClickListener {
+                override fun onClick(v: View?) {
                     if (mOffset != "manual") {
                         Toast.makeText(v!!.context, "Offset Provider setting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
                     mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
-                    updateDrawing()
+                    mNeedUpdate = true
                     exportSettings()
                 }
             }
@@ -429,14 +429,14 @@ class MainActivity : AppCompatActivity() {
 
         val rightButton: Button = findViewById(R.id.rightButton)
         rightButton.setOnClickListener(
-            object : android.view.View.OnClickListener {
-                override fun onClick(v: android.view.View?) {
+            object : View.OnClickListener {
+                override fun onClick(v: View?) {
                     if (mOffset != "manual") {
                         Toast.makeText(v!!.context, "Offset Provider settting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
                     mManualOffset = (mManualOffset.toDouble() + 1.0).toString()
-                    updateDrawing()
+                    mNeedUpdate = true
                     exportSettings()
                 }
             }
@@ -449,6 +449,7 @@ class MainActivity : AppCompatActivity() {
             requestPermissions()
         }
     }
+
     override fun onResume() {
         super.onResume()
 
@@ -459,7 +460,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         mNeedUpdate = true
-        updateDrawing()
     }
 
     override fun onPause() {
@@ -489,56 +489,6 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun isCloseToLeft(motionEvent: MotionEvent) : Boolean {
-        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-
-        return isCloseToXY(motionEvent,
-           0.0,
-            (mImageView?.height ?: 1024) / 2.0,
-            (width/8).toDouble()
-        )
-    }
-
-    private fun isCloseToRight(motionEvent: MotionEvent) : Boolean {
-        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-
-        return isCloseToXY(motionEvent,
-            (mImageView?.width ?: 1024).toDouble(),
-            (mImageView?.height ?: 1024) / 2.0,
-            (width/8).toDouble()
-        )
-    }
-
-    private fun isCloseToProvider(motionEvent: MotionEvent) : Boolean {
-        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-
-        return isCloseToXY(motionEvent,
-            0.0,
-            (mImageView?.height ?: 1024) / 2.0 - width / 2.0,
-            (width/5).toDouble()
-        )
-    }
-
-    private fun isCloseToTimeZone(motionEvent: MotionEvent) : Boolean {
-        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-
-        return isCloseToXY(motionEvent,
-            0.0,
-            (mImageView?.height ?: 1024) / 2.0 + width / 2.0,
-            (width/5).toDouble()
-        )
-    }
-
-    private fun isCloseToSettings(motionEvent: MotionEvent) : Boolean {
-        val width = min(mImageView?.width ?: 1024, mImageView?.height ?: 1024)
-
-        return isCloseToXY(motionEvent,
-            (mImageView?.width ?: 1024) / 2.0 + width / 2.0,
-            (mImageView?.height ?: 1024) / 2.0 + width / 2.0,
-            (width/5).toDouble()
-        )
-    }
-
     private fun otl(motionEvent: MotionEvent) {
         val action = motionEvent.action and MotionEvent.ACTION_MASK
 
@@ -557,7 +507,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     mOtlDown = true
                     mOtlChanged = true
-                    updateDrawing()
+                    mNeedUpdate = true
                     return
                 }
             }
@@ -576,12 +526,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 MotionEvent.ACTION_UP -> {
                     mOtlDown = false
-                    updateDrawing()
+                    mNeedUpdate = true
                     exportSettings()
                 }
                 MotionEvent.ACTION_POINTER_UP -> {
                     mOtlDown = false
-                    updateDrawing()
+                    mNeedUpdate = true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val proposedLocation = Location("manual")
@@ -638,7 +588,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     mLastLocation = proposedLocation
-                    updateDrawing()
+                    mNeedUpdate = true
                 }
             }
         }

@@ -324,7 +324,6 @@ class MainActivity : AppCompatActivity() {
 
         val manager = this.packageManager
         val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
-
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
 

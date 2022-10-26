@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
 
-class AlarmManager(context: Context, fields: Array<String>) {
+class AlarmStorage(context: Context, fields: Array<String>) {
     val members = fields // arrayOf("name", "observer", "category", "type", "offset")
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 

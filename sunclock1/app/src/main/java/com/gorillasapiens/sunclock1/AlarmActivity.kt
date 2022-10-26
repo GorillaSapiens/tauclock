@@ -18,7 +18,7 @@ class AlarmActivity : AppCompatActivity() {
         "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
         "ARIES")
     val typenames = arrayOf("RISE","TRANSIT","SET")
-    var alarmManager : AlarmManager? = null
+    var alarmStorage : AlarmStorage? = null
     var mObserver : String = "0.0000,0.0000"
 
     private fun addEditDelete(title: String, message: String, entry: Int) {
@@ -33,7 +33,7 @@ class AlarmActivity : AppCompatActivity() {
         }
 
         val values = if (entry != -1) {
-            alarmManager!!.getSet(entry)
+            alarmStorage!!.getSet(entry)
         }
         else {
             fieldnames
@@ -106,7 +106,7 @@ class AlarmActivity : AppCompatActivity() {
                 }
 
                 if (title.contains("Del")) {
-                    alarmManager!!.deleteSet(entry)
+                    alarmStorage!!.deleteSet(entry)
                 }
                 else {
                     var values : Array<String?> = emptyArray()
@@ -124,7 +124,7 @@ class AlarmActivity : AppCompatActivity() {
                         }
                         i++
                     }
-                    alarmManager!!.putSet(entry, values)
+                    alarmStorage!!.putSet(entry, values)
                 }
                 repopulate()
             })
@@ -137,12 +137,12 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     private fun repopulate() {
-        val count = alarmManager!!.getCount()
+        val count = alarmStorage!!.getCount()
         val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
         alarmLayout.removeAllViews()
 
         for (i in 0..(count-1)) {
-            val values = alarmManager!!.getSet(i)
+            val values = alarmStorage!!.getSet(i)
 
             val tv = TextView(this)
             tv.text = values[0]
@@ -188,7 +188,7 @@ class AlarmActivity : AppCompatActivity() {
             finish()
         }
 
-        alarmManager = AlarmManager(this, fieldnames)
+        alarmStorage = AlarmStorage(this, fieldnames)
         val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
 
         val addButton: Button = findViewById(R.id.addButton)

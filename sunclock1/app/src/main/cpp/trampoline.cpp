@@ -14,21 +14,21 @@ extern "C" {
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doWhenIsIt(JNIEnv *env, jobject thiz, jdouble lat,
-                                                          jdouble lon, jint category, jint type) {
+                        jdouble lon, jint category, jint type) {
     return do_when_is_it(lat, lon, category, type);
 }
 
 extern "C"
 JNIEXPORT jintArray JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
-                                                     jobject thiz,
-                                                     jdouble lat,
-                                                     jdouble lon,
-                                                     jdouble offset,
-                                                     jint width,
-                                                     jstring provider,
-                                                     jstring tzprovider,
-                                                     jstring tz) {
+                     jobject thiz,
+                     jdouble lat,
+                     jdouble lon,
+                     jdouble offset,
+                     jint width,
+                     jstring provider,
+                     jstring tzprovider,
+                     jstring tz) {
     jboolean garbage = false;
     const char *ccProvider = env->GetStringUTFChars(provider, &garbage);
     garbage = false;

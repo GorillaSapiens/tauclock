@@ -36,6 +36,7 @@ import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
+    private var mSeenAlarmTime: Long = 0;
     private var mDrawableInitialized = false
     private val mPermissionID = 44
     private var mSunClockDrawable: SunclockDrawable? = null
@@ -498,6 +499,61 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun ponderAlarms() {
+        var wakeup = 12*60*60 // 12 hours from now
+        var alarmStorage = AlarmStorage(this, arrayOf("name", "observer", "category", "type", "offset"))
+        val categorynames = arrayOf(
+            "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
+            "LUNAR",                   // moon and planets from here on
+            "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
+            "ARIES")
+        val typenames = arrayOf("RISE","TRANSIT","SET")
+
+        for (i in 0..alarmStorage.getCount()-1) {
+            val values = alarmStorage.getSet(i)
+            val name = values[0];
+            val observer = values[1];
+            val category = values[2];
+            val type = values[3];
+            val offset = values[4];
+
+            val latlon = observer?.split(",")
+            val lat = latlon?.get(0)!!.toDouble()
+            val lon = latlon?.get(1)!!.toDouble()
+
+            val pondering = doWhenIsIt(lat, lon,
+                category!!.toInt(),type!!.toInt() + 2) + offset!!.toInt() * 60
+
+            val actual = System.currentTimeMillis() / 1000 + pondering;
+
+            if (pondering < 0) {
+                if (actual > mSeenAlarmTime) {
+                    val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+                    alertDialogBuilder.setTitle("ALARM: " + name)
+                    val plusminus = if (offset.toInt() >= 0) {
+                        "+"
+                    } else {
+                        ""
+                    }
+                    alertDialogBuilder.setMessage(observer + "\n" + categorynames[category!!.toInt()] + " " + typenames[type!!.toInt()] + " " + plusminus + offset + " minutes")
+                    alertDialogBuilder.setPositiveButton("Ok",
+                        DialogInterface.OnClickListener { arg0, arg1 ->
+                            mSeenAlarmTime = actual;
+                        })
+                    alertDialogBuilder.setCancelable(false)
+                    alertDialogBuilder.show()
+                }
+            }
+            else if (pondering < wakeup) {
+                wakeup = pondering
+            }
+        }
+
+       // AlarmManagerCompat.setExact(AlarmManager.RTC_WAKEUP,
+       //     System.currentTimeMillis() + wakeup * 1000,
+       //     null)
+    }
+
     override fun onResume() {
         super.onResume()
 
@@ -508,6 +564,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         mNeedUpdate = true
+
+        ponderAlarms()
     }
 
     override fun onPause() {
@@ -732,5 +790,5 @@ class MainActivity : AppCompatActivity() {
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tzprovider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
-    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, event:Int) : Int
+    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int) : Int
 }

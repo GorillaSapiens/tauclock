@@ -12,6 +12,13 @@ extern "C" {
 }
 
 extern "C"
+JNIEXPORT jint JNICALL
+Java_com_gorillasapiens_sunclock1_MainActivity_doWhenIsIt(JNIEnv *env, jobject thiz, jdouble lat,
+                                                          jdouble lon, jint category, jint type) {
+    return do_when_is_it(lat, lon, category, type);
+}
+
+extern "C"
 JNIEXPORT jintArray JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
                                                      jobject thiz,

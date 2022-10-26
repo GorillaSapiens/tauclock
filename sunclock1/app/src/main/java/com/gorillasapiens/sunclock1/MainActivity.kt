@@ -732,4 +732,5 @@ class MainActivity : AppCompatActivity() {
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tzprovider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
+    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, event:Int) : Int
 }

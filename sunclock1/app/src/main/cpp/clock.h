@@ -22,4 +22,6 @@
 Canvas *do_all(double lat, double lon, double offset, int width,
       const char *provider, const char *tzprovider, const char *tz);
 
+int do_when_is_it(double lat, double lon, int category, int type);
+
 #endif

@@ -2338,4 +2338,33 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    return canvas;
 }
 
+int do_when_is_it(double lat, double lon, int category, int type) {
+   struct ln_lnlat_posn observer;
+   observer.lat = lat;
+   observer.lng = lon;
+   double JD = ln_get_julian_from_sys();
+
+   initialize_all();
+
+   events_populate(JD, &observer);
+
+   for (int i = 0; i < event_spot; i++) {
+      if (events[i].category == category && events[i].type == type) {
+         if (events[i].jd < JD) {
+            if ((JD - events[i].jd) < (10.0 * ONE_MINUTE_JD)) {
+               // within the last 10 minutes
+               return (int) ((events[i].jd - JD) * 24.0 * 60.0 * 60.0);
+            }
+         }
+         else {
+            // in the future
+            return (int) ((events[i].jd - JD) * 24.0 * 60.0 * 60.0);
+         }
+      }
+   }
+
+   // hrm, not found...
+   return INT_MAX;
+}
+
 // vim: expandtab:noai:ts=3:sw=3

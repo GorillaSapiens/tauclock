@@ -3,11 +3,13 @@ package com.gorillasapiens.sunclock1
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
+import androidx.core.view.marginLeft
 
 
 class AlarmActivity : AppCompatActivity() {
@@ -44,6 +46,7 @@ class AlarmActivity : AppCompatActivity() {
             val tableRow = TableRow(this)
             val tableTextView = TextView(this)
             tableTextView.text = field
+            tableTextView.setPadding(32,0,32,0)
             var tableEdit : View =
                 if (field == "category") {
                     var tableEditSpinner = Spinner(this)
@@ -83,8 +86,15 @@ class AlarmActivity : AppCompatActivity() {
                         }
                     }
 
+                    if (field == "offset") {
+                        tableEditText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
+                    }
+
                     tableEditText
                 }
+            if (title.contains("Delete")) {
+                tableEdit.isEnabled = false
+            }
             i++
             tableRow.addView(tableTextView)
             tableRow.addView(tableEdit)

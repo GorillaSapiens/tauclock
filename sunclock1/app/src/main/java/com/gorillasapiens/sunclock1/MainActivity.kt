@@ -44,12 +44,12 @@ class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
     private val mPermissionID = 44
     private var mSunClockDrawable: SunclockDrawable? = null
-    var mHasFocus = false
-    var mLastTime = (LocalDateTime.now() - Duration.ofDays(1))!!
-    var mLastLocation : Location? = null
-    var mLastLastLocation : Location? = null
+    private var mHasFocus = false
+    private var mLastTime = (LocalDateTime.now() - Duration.ofDays(1))!!
+    private var mLastLocation : Location? = null
+    private var mLastLastLocation : Location? = null
     private var mImageView : ImageView? = null
-    var mNeedUpdate : Boolean = true
+    private var mNeedUpdate : Boolean = true
 
     private var mOtlDown : Boolean = false
     private var mOtlChanged : Boolean = false
@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
     private var mEngineDone = false
 
     private var mLocationManager : LocationManager? = null
-    var mProviderName: String = "best"
+    private var mProviderName: String = "best"
     private var mRealProviderName : String = "gps"
 
     private var mTimeZoneProvider : String = "system"
@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     private var mManualOffset : String = "0"
 
     // Create the Handler object (on the main thread by default)
-    var mHandler = Handler(Looper.getMainLooper())
+    private var mHandler = Handler(Looper.getMainLooper())
 
     companion object {
       init {

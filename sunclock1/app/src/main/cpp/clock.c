@@ -2338,7 +2338,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    return canvas;
 }
 
-int do_when_is_it(double lat, double lon, int category, int type) {
+int do_when_is_it(double lat, double lon, int category, int type, int offset_minutes) {
    struct ln_lnlat_posn observer;
    observer.lat = lat;
    observer.lng = lon;
@@ -2350,15 +2350,16 @@ int do_when_is_it(double lat, double lon, int category, int type) {
 
    for (int i = 0; i < event_spot; i++) {
       if (events[i].category == category && events[i].type == type) {
-         if (events[i].jd < JD) {
-            if ((JD - events[i].jd) < (10.0 * ONE_MINUTE_JD)) {
+         double event_jd = events[i].jd + ((double)offset_minutes * ONE_MINUTE_JD);
+         if (event_jd < JD) {
+            if ((JD - event_jd) < (10.0 * ONE_MINUTE_JD)) {
                // within the last 10 minutes
-               return (int) ((events[i].jd - JD) * 24.0 * 60.0 * 60.0);
+               return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);
             }
          }
          else {
             // in the future
-            return (int) ((events[i].jd - JD) * 24.0 * 60.0 * 60.0);
+            return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);
          }
       }
    }

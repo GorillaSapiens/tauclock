@@ -12,6 +12,9 @@ import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.media.Ringtone
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -36,7 +39,8 @@ import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
-    private var mSeenAlarmTime: Long = 0;
+    private var mRingtone: Ringtone? = null
+    private var mSeenAlarmTime_clock: Long = 0
     private var mDrawableInitialized = false
     private val mPermissionID = 44
     private var mSunClockDrawable: SunclockDrawable? = null
@@ -172,7 +176,7 @@ class MainActivity : AppCompatActivity() {
             if (mHasFocus) {
                 val current = LocalDateTime.now()
 
-                if (mNeedUpdate == true ||
+                if (mNeedUpdate ||
                     mLastLastLocation != mLastLocation ||
                     (current - Duration.ofMinutes(1)) > mLastTime ||
                     current.minute != mLastTime.minute) {
@@ -321,7 +325,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun doEULA() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
-        var yesEULA = sharedPreferences.getInt("EULA", 0)
+        val yesEULA = sharedPreferences.getInt("EULA", 0)
 
         if (yesEULA > 0) {
             return
@@ -334,7 +338,7 @@ class MainActivity : AppCompatActivity() {
             LinearLayout.LayoutParams.FILL_PARENT,
             LinearLayout.LayoutParams.FILL_PARENT
         )
-        linearLayout.orientation = 1
+        linearLayout.orientation = LinearLayout.VERTICAL
         linearLayout.addView(checkBox)
 
         val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -421,7 +425,7 @@ class MainActivity : AppCompatActivity() {
         val alarmsButton: Button = findViewById(R.id.alarmsButton)
         alarmsButton.setOnClickListener { v ->
             val switchActivityIntent = Intent(v!!.context, AlarmActivity::class.java)
-            val bundle : Bundle = Bundle()
+            val bundle = Bundle()
             try {
                 val value = java.lang.String.format("%.4f,%.4f", mLastLocation!!.latitude,mLastLocation!!.longitude )
                 bundle.putString("observer", value)
@@ -499,9 +503,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun ponderAlarms() {
-        var wakeup = 12*60*60 // 12 hours from now
-        var alarmStorage = AlarmStorage(this, arrayOf("name", "observer", "category", "type", "offset"))
+    private fun makeNoise() {
+        var alert: Uri? = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+
+        if (alert == null) {
+            // alert is null, using backup
+            alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+            // I can't see this ever being null (as always have a default notification)
+            // but just in case
+            if (alert == null) {
+                // alert backup is null, using 2nd backup
+                alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            }
+        }
+
+        if (alert != null ) {
+            mRingtone = RingtoneManager.getRingtone(applicationContext, alert)
+            mRingtone!!.play()
+        }
+    }
+
+    private fun stopNoise() {
+        if (mRingtone != null) {
+            mRingtone!!.stop()
+        }
+    }
+
+    private fun ponderAlarms() {
+        var wakeup_clock = System.currentTimeMillis() / 1000 + 12*60*60 // 12 hours from now
+        val alarmStorage = AlarmStorage(this, arrayOf("name", "observer", "category", "type", "offset"))
         val categorynames = arrayOf(
             "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
             "LUNAR",                   // moon and planets from here on
@@ -511,23 +542,25 @@ class MainActivity : AppCompatActivity() {
 
         for (i in 0..alarmStorage.getCount()-1) {
             val values = alarmStorage.getSet(i)
-            val name = values[0];
-            val observer = values[1];
-            val category = values[2];
-            val type = values[3];
-            val offset = values[4];
+            val name = values[0]
+            val observer = values[1]
+            val category = values[2]
+            val type = values[3]
+            val offset = values[4]
 
             val latlon = observer?.split(",")
             val lat = latlon?.get(0)!!.toDouble()
             val lon = latlon?.get(1)!!.toDouble()
 
-            val pondering = doWhenIsIt(lat, lon,
-                category!!.toInt(),type!!.toInt() + 2) + offset!!.toInt() * 60
+            val pondering_s = doWhenIsIt(lat, lon,
+                category!!.toInt(),type!!.toInt() + 2, offset!!.toInt())
 
-            val actual = System.currentTimeMillis() / 1000 + pondering;
+            val actual_clock = System.currentTimeMillis() / 1000 + pondering_s
 
-            if (pondering < 0) {
-                if (actual > mSeenAlarmTime) {
+            if (pondering_s < 60) {
+                if (actual_clock > mSeenAlarmTime_clock) {
+                    makeNoise()
+
                     val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
                     alertDialogBuilder.setTitle("ALARM: " + name)
                     val plusminus = if (offset.toInt() >= 0) {
@@ -538,20 +571,41 @@ class MainActivity : AppCompatActivity() {
                     alertDialogBuilder.setMessage(observer + "\n" + categorynames[category!!.toInt()] + " " + typenames[type!!.toInt()] + " " + plusminus + offset + " minutes")
                     alertDialogBuilder.setPositiveButton("Ok",
                         DialogInterface.OnClickListener { arg0, arg1 ->
-                            mSeenAlarmTime = actual;
+                            mSeenAlarmTime_clock = actual_clock
+                            stopNoise()
                         })
                     alertDialogBuilder.setCancelable(false)
                     alertDialogBuilder.show()
                 }
             }
-            else if (pondering < wakeup) {
-                wakeup = pondering
+            else if (actual_clock < wakeup_clock) {
+                wakeup_clock = actual_clock
             }
         }
 
-       // AlarmManagerCompat.setExact(AlarmManager.RTC_WAKEUP,
-       //     System.currentTimeMillis() + wakeup * 1000,
-       //     null)
+//        mAlarmService!!.startAlarm(wakeup_clock.toLong() * 1000)
+
+//        val intent = Intent(this, MainActivity::class.java)
+//        val pendingIntent = PendingIntent.getActivity(
+//            this,
+//            0,
+//            intent,
+//            PendingIntent.FLAG_UPDATE_CURRENT
+//        )
+//        val am = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+//        val ALARM_TYPE = AlarmManager.RTC_WAKEUP
+//        AlarmManagerCompat.setExact(am, ALARM_TYPE, wakeup_clock.toLong() * 1000, pendingIntent)
+
+        var sec = (wakeup_clock - (System.currentTimeMillis() / 1000))
+        val min = (sec / 60) % 60
+        val hour = sec / 3600
+        sec %= 60
+
+        Toast.makeText(
+            this,
+            java.lang.String.format("Next alarm check in %dh%02dm%02ds", hour, min, sec),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 
     override fun onResume() {
@@ -790,5 +844,5 @@ class MainActivity : AppCompatActivity() {
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tzprovider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
-    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int) : Int
+    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int, offset_minutes:Int) : Int
 }

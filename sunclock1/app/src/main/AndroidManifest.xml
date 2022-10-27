@@ -17,6 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Sunclock1"
         tools:ignore="HardcodedDebugMode">
+
         <activity
             android:name=".AlarmActivity"
             android:exported="false" />

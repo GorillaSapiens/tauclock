@@ -70,22 +70,6 @@ uint8_t *FONT_BOLD_MED;
 uint8_t *FONT_BOLD_SMALL;
 uint8_t *FONT_ITALIC_MED;
 #endif
-#ifdef ORIGx2
-#define SIZE 2048
-#define ASTRO_FONT astro_50_bdf
-#define FONT_BOLD_BIG djsmb_60_bdf
-#define FONT_BOLD_MED djsmb_40_bdf
-#define FONT_BOLD_SMALL djsmb_32_bdf
-#define FONT_ITALIC_MED djsmo_40_bdf
-#endif
-#ifdef SMALL
-#define SIZE 400
-#define ASTRO_FONT astro_24_bdf
-#define FONT_BOLD_BIG djsmb_24_bdf
-#define FONT_BOLD_MED djsmb_10_bdf
-#define FONT_BOLD_SMALL djsmb_8_bdf
-#define FONT_ITALIC_MED djsmo_10_bdf
-#endif
 
 #define SCALE(x) ((double)((double)(x) * SIZE / 1024))
 
@@ -174,11 +158,95 @@ typedef struct {
 /// @brief The size of the events array
 #define NUM_EVENTS 4096
 
-/// @brief An array containing events
-Event events[NUM_EVENTS];
+/// @brief JD bounds on cache
+#define CACHE_LIMIT 1.0
 
-/// @brief An integer denoting the next free slot in the events array
-int event_spot = 0;
+struct CacheNode {
+   int critical;
+   double JD;
+   struct ln_equ_posn posn; // body position
+   struct ln_hrz_posn hrz_posn; // observed position
+   struct CacheNode *prev;
+   struct CacheNode *next;
+};
+
+struct Cache {
+   struct ln_lnlat_posn observer;
+   struct CacheNode *head;
+};
+
+/// @brief A struct used to remember where something is drawn.
+typedef struct TimeDrawnMemory {
+   double now;
+   double jd;
+   int x;
+   int y;
+   int w;
+   int h;
+   unsigned int fg;
+   unsigned int bg;
+} TimeDrawnMemory;
+
+#define NUM_TIMEDRAWN 32
+
+/// @brief A struct used to remember where something is drawn.
+typedef struct AccumDrawnMemory {
+   int x;
+   int y;
+   unsigned int fg;
+   unsigned int bg;
+   char *str;
+} AccumDrawnMemory;
+
+#define NUM_ACCUM 8
+
+typedef struct {
+   /// @brief An array containing events
+   Event events[NUM_EVENTS];
+
+   /// @brief An integer denoting the next free slot in the events array
+   int event_spot;
+
+   /// @brief An array of things drawn
+   TimeDrawnMemory timedrawnmemory[NUM_TIMEDRAWN];
+
+   /// @brief The next open spot in the array
+   int timedrawnspot;
+
+   /// @brief An array of things drawn
+   AccumDrawnMemory accumdrawnmemory[NUM_ACCUM];
+
+/// @brief The next open spot in the array
+   int accumdrawnspot;
+
+   struct Cache *sun_cache;
+   struct Cache *moon_cache;
+   struct Cache *mercury_cache;
+   struct Cache *venus_cache;
+   struct Cache *mars_cache;
+   struct Cache *jupiter_cache;
+   struct Cache *saturn_cache;
+   struct Cache *aries_cache;
+} Context;
+
+#define events (context->events)
+#define event_spot (context->event_spot)
+#define timedrawnmemory (context->timedrawnmemory)
+#define timedrawnspot (context->timedrawnspot)
+#define accumdrawnmemory (context->accumdrawnmemory)
+#define accumdrawnspot (context->accumdrawnspot)
+#define sun_cache (context->sun_cache)
+#define moon_cache (context->moon_cache)
+#define mercury_cache (context->mercury_cache)
+#define venus_cache (context->venus_cache)
+#define mars_cache (context->mars_cache)
+#define jupiter_cache (context->jupiter_cache)
+#define saturn_cache (context->saturn_cache)
+#define aries_cache (context->aries_cache)
+
+void init_context(Context *context) {
+   memset(context,0, sizeof(Context));
+}
 
 /// @brief Get the true local date
 ///
@@ -460,6 +528,7 @@ void do_now_smalldate(Canvas * canvas, double now) {
 
 /// @brief Draw the moon
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param now The current Julian Date
 /// @param lunar_phase The current lunar_phase as returned by libnova
@@ -467,7 +536,7 @@ void do_now_smalldate(Canvas * canvas, double now) {
 /// @param where_angle The clock angle at which to draw the moon
 /// @return void
 void
-do_moon_draw(Canvas * canvas,
+do_moon_draw(Context *context, Canvas * canvas,
       double now,
       float lunar_phase, float lunar_bright_limb, double where_angle) {
 
@@ -592,7 +661,7 @@ do_moon_draw(Canvas * canvas,
 /// @param sign_only True indicates only planet sign to be drawn
 /// @return void
 void
-do_planet_band(Canvas * canvas, double up, double now,
+do_planet_band(Context *context, Canvas * canvas, double up, double now,
       unsigned int color, double radius, EventCategory category,
       int sign_only) {
 
@@ -744,7 +813,7 @@ do_planet_band(Canvas * canvas, double up, double now,
 }
 
 /// @brief Clear the events list
-void events_clear(void) {
+void events_clear(Context *context) {
    event_spot = 0;
 }
 
@@ -827,14 +896,14 @@ int event_compar(const void *a, const void *b) {
 /// @brief Sort the events list
 ///
 /// Uses the event_compar function
-void events_sort(void) {
+void events_sort(Context *context) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
 
 /// @brief Uniq the events list
 ///
 /// Uses the event_compar function
-void events_uniq(void) {
+void events_uniq(Context *context) {
    int i = 0;
    while (i < event_spot - 1) {
       if (!event_compar(events + i, events + (i + 1))) {
@@ -855,14 +924,14 @@ void events_uniq(void) {
 ///
 /// @param jd The curren Julian Date
 /// @return void
-void events_prune(double jd) {
+void events_prune(Context *context, double jd) {
    for (int i = 0; i < event_spot; i++) {
       events[i].prune = (fabs(events[i].jd - jd) > 0.5) ? 1 : 0;
    }
 }
 
 /// @brief For debugging, print the events list
-void events_dump(void) {
+void events_dump(Context *context) {
    struct ln_zonedate zonedate;
 
    for (int i = 0; i < event_spot; i++) {
@@ -884,31 +953,6 @@ void ln_get_aries_equ_coords(double JD, struct ln_equ_posn *posn) {
    posn->dec = 0.0;
    posn->ra = 0.0;
 }
-
-#define CACHE_LIMIT 1.0
-
-struct CacheNode {
-   int critical;
-   double JD;
-   struct ln_equ_posn posn; // body position
-   struct ln_hrz_posn hrz_posn; // observed position
-   struct CacheNode *prev;
-   struct CacheNode *next;
-};
-
-struct Cache {
-   struct ln_lnlat_posn observer;
-   struct CacheNode *head;
-};
-
-struct Cache *sun_cache = NULL;
-struct Cache *moon_cache = NULL;
-struct Cache *mercury_cache = NULL;
-struct Cache *venus_cache = NULL;
-struct Cache *mars_cache = NULL;
-struct Cache *jupiter_cache = NULL;
-struct Cache *saturn_cache = NULL;
-struct Cache *aries_cache = NULL;
 
 struct Cache *new_cache(struct ln_lnlat_posn *observer) {
    struct Cache *ret = (struct Cache *)malloc(sizeof(struct Cache));
@@ -952,7 +996,7 @@ void delete_cache_node(struct CacheNode *p) {
 /// @param horizon The horizon used for events
 /// @param category The EventCategory to use
 /// @return void
-void events_populate_anything_updown(double JD,
+void events_populate_anything_updown(Context *context, double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category) {
@@ -1047,7 +1091,7 @@ struct CacheNode *insert_tail(struct CacheNode *oldtail, double JD,
 /// @param echs An array of ECH
 /// @param cache Pointer to the position cache for this object
 /// @return void
-void events_populate_anything_array(double JD,
+void events_populate_anything_array(Context *context, double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       int ech_count, struct ECH *echs,
@@ -1110,7 +1154,8 @@ void events_populate_anything_array(double JD,
       EventCategory category = echs[k].category;
       double horizon = echs[k].horizon;
 
-      events_populate_anything_updown(JD,
+      events_populate_anything_updown(context,
+                                      JD,
                                       observer,
                                       get_equ_coords,
                                       horizon,
@@ -1209,13 +1254,13 @@ void events_populate_anything_array(double JD,
 /// @param category EventCategory to use
 /// @param cache Pointer to the position cache for this object
 /// @return void
-void events_populate_anything(double JD,
+void events_populate_anything(Context *context, double JD,
       struct ln_lnlat_posn *observer,
       Get_Equ_Coords get_equ_coords,
       double horizon, EventCategory category,
       struct Cache *cache) {
    struct ECH ech = (struct ECH) { category, horizon };
-   events_populate_anything_array( JD, observer, get_equ_coords, 1, &ech, cache);
+   events_populate_anything_array(context, JD, observer, get_equ_coords, 1, &ech, cache);
 }
 
 /// @brief Create rise/transit/set events for all things solar
@@ -1225,7 +1270,7 @@ void events_populate_anything(double JD,
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
-void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
+void events_populate_solar(Context *context, double JD, struct ln_lnlat_posn *observer) {
    struct ECH echs[] = {
       (struct ECH) { CAT_ASTRONOMICAL, LN_SOLAR_ASTRONOMICAL_HORIZON },
       (struct ECH) { CAT_NAUTICAL,     LN_SOLAR_NAUTIC_HORIZON },
@@ -1235,7 +1280,7 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
    if (sun_cache == NULL) {
       sun_cache = new_cache(observer);
    }
-   events_populate_anything_array(JD, observer, ln_get_solar_equ_coords,
+   events_populate_anything_array(context, JD, observer, ln_get_solar_equ_coords,
          4, echs, sun_cache);
 }
 
@@ -1246,11 +1291,11 @@ void events_populate_solar(double JD, struct ln_lnlat_posn *observer) {
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
-void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
+void events_populate_lunar(Context *context, double JD, struct ln_lnlat_posn *observer) {
    if (moon_cache == NULL) {
       moon_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer, ln_get_lunar_equ_coords,
+   events_populate_anything(context, JD, observer, ln_get_lunar_equ_coords,
          LN_LUNAR_STANDART_HORIZON, CAT_LUNAR, moon_cache);
 }
 
@@ -1261,46 +1306,46 @@ void events_populate_lunar(double JD, struct ln_lnlat_posn *observer) {
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
-void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
+void events_populate_planets(Context *context, double JD, struct ln_lnlat_posn *observer) {
    if (mercury_cache == NULL) {
       mercury_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_mercury_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MERCURY, mercury_cache);
 
    if (venus_cache == NULL) {
       venus_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_venus_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_VENUS, venus_cache);
 
    if (mars_cache == NULL) {
       mars_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_mars_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_MARS, mars_cache);
 
    if (jupiter_cache == NULL) {
       jupiter_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_jupiter_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_JUPITER, jupiter_cache);
 
    if (saturn_cache == NULL) {
       saturn_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_saturn_equ_coords, LN_STAR_STANDART_HORIZON,
          CAT_SATURN, saturn_cache);
 
    if (aries_cache == NULL) {
       aries_cache = new_cache(observer);
    }
-   events_populate_anything(JD, observer,
+   events_populate_anything(context, JD, observer,
          ln_get_aries_equ_coords, 0.0,
          CAT_ARIES, aries_cache);
 }
@@ -1310,17 +1355,17 @@ void events_populate_planets(double JD, struct ln_lnlat_posn *observer) {
 /// @param JD The current Julian Date
 /// @param observer The observer's lat/lon coordinates
 /// @return void
-void events_populate(double JD, struct ln_lnlat_posn *observer) {
-   events_populate_solar(JD, observer);
-   events_populate_lunar(JD, observer);
-   events_populate_planets(JD, observer);
+void events_populate(Context *context, double JD, struct ln_lnlat_posn *observer) {
+   events_populate_solar(context, JD, observer);
+   events_populate_lunar(context, JD, observer);
+   events_populate_planets(context, JD, observer);
 }
 
 /// @brief Figure out which way is "up"
 ///
 /// @param jd The current Julian Date
 /// @return A Julian Date useful as "up", usually a solar transit
-double events_transit(double jd) {
+double events_transit(Context *context, double jd) {
    // any non pruned, non lunar, will do...
    for (int i = 0; i < event_spot; i++) {
       if (!events[i].prune &&
@@ -1364,30 +1409,13 @@ double events_transit(double jd) {
    return frac(ret);
 }
 
-/// @brief A struct used to remember where something is drawn.
-typedef struct AccumDrawnMemory {
-   int x;
-   int y;
-   unsigned int fg;
-   unsigned int bg;
-   char *str;
-} AccumDrawnMemory;
-
-#define NUM_ACCUM 8
-
-/// @brief An array of things drawn
-AccumDrawnMemory accumdrawnmemory[NUM_ACCUM];
-
-/// @brief The next open spot in the array
-int accumdrawnspot = 0;
-
 /// @brief Redraw stored accumulator times
 ///
 /// This fixes some drawing oddities on very small screens
 ///
 /// @param canvas Pointer to the canvas object
 /// @returns void
-void replay_accum_memory(Canvas * canvas) {
+void replay_accum_memory(Context *context, Canvas * canvas) {
    for (int i = 0; i < accumdrawnspot; i++) {
       text_canvas(canvas, FONT_BOLD_MED, accumdrawnmemory[i].x,
             accumdrawnmemory[i].y, accumdrawnmemory[i].fg,
@@ -1398,7 +1426,7 @@ void replay_accum_memory(Canvas * canvas) {
 }
 
 // fwd declaration to appease the compiler gods
-int check(int x, int y, int w, int h);
+int check(Context *context, int x, int y, int w, int h);
 
 /// @brief Helper function to accumulate total sunlight/night/whatever hours
 ///
@@ -1410,7 +1438,7 @@ int check(int x, int y, int w, int h);
 /// @param back The background color
 /// @return void
 void
-accum_helper(Canvas * canvas,
+accum_helper(Context *context, Canvas * canvas,
       double angle,
       char *label,
       double draw_angle, unsigned int fore, unsigned int back) {
@@ -1444,7 +1472,7 @@ accum_helper(Canvas * canvas,
       x = (canvas->w / 2) + radius * cos(DEG2RAD(draw_angle));
       y = (canvas->h / 2) + radius * sin(DEG2RAD(draw_angle));
 
-      collision = check(x, y, w, h);
+      collision = check(context, x, y, w, h);
 
       radius--;
    }
@@ -1455,26 +1483,6 @@ accum_helper(Canvas * canvas,
       x, y, fore, COLOR_NONE, strdup(buffer)};
 }
 
-/// @brief A struct used to remember where something is drawn.
-typedef struct TimeDrawnMemory {
-   double now;
-   double jd;
-   int x;
-   int y;
-   int w;
-   int h;
-   unsigned int fg;
-   unsigned int bg;
-} TimeDrawnMemory;
-
-#define NUM_TIMEDRAWN 32
-
-/// @brief An array of things drawn
-TimeDrawnMemory timedrawnmemory[NUM_TIMEDRAWN];
-
-/// @brief The next open spot in the array
-int timedrawnspot = 0;
-
 /// @brief A helper function toe determine when labels collide
 ///
 /// @param x X coordinate of desired label
@@ -1482,7 +1490,7 @@ int timedrawnspot = 0;
 /// @param w Width of desired label
 /// @param h height of desired label
 /// @return 1 if there is a collision, 0 otherwise
-int check(int x, int y, int w, int h) {
+int check(Context *context, int x, int y, int w, int h) {
    w += 4;
    h += 4;
    x -= w / 2;
@@ -1523,7 +1531,7 @@ int check(int x, int y, int w, int h) {
 /// @param bg The background color for text
 /// @return void
 void
-do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
+do_tr_time_sun(Context *context, Canvas * canvas, double now, double jd, double theta,
       double radius, unsigned int fg, unsigned int bg) {
 
    // get width and height by drawing offscreen
@@ -1538,7 +1546,7 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
       x = (canvas->w / 2) + radius * cos(DEG2RAD(theta));
       y = (canvas->h / 2) + radius * sin(DEG2RAD(theta));
 
-      collision = check(x, y, w, h);
+      collision = check(context, x, y, w, h);
 
       radius--;
    }
@@ -1558,7 +1566,7 @@ do_tr_time_sun(Canvas * canvas, double now, double jd, double theta,
 ///
 /// @param canvas Pointer to the canvas object
 /// @returns void
-void replayTimeDrawnMemory(Canvas * canvas) {
+void replayTimeDrawnMemory(Context *context, Canvas * canvas) {
    for (int i = 0; i < timedrawnspot; i++) {
       do_xy_time(canvas,
             timedrawnmemory[i].now,
@@ -1575,7 +1583,7 @@ void replayTimeDrawnMemory(Canvas * canvas) {
 /// @param up The Julian Date for "up"
 /// @param now The Julian Date for the current time
 /// @return void
-void do_sun_bands(Canvas * canvas, double up, double now) {
+void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
    double last = now - 0.5;
    double base = (double)((int)(last));
@@ -1603,60 +1611,6 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    int times_written = 0;
 
    bool arcd = false;
-
-#if 0
-   // pick a starting color
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].prune) {
-         if (events[i].category < CAT_LUNAR) {
-            if (events[i].type == EVENT_UP ||
-                events[i].type == EVENT_RISE) {
-               switch(events[i].category) {
-                  case CAT_ASTRONOMICAL:
-                     color = back = COLOR_BLUE;
-                     fore = COLOR_WHITE;
-                     break;
-                  case CAT_NAUTICAL:
-                     color = back = COLOR_LIGHTBLUE;
-                     fore = COLOR_WHITE;
-                     break;
-                  case CAT_CIVIL:
-                     color = back = COLOR_ORANGE;
-                     fore = COLOR_BLACK;
-                     break;
-                  case CAT_SOLAR:
-                     color = back = COLOR_YELLOW;
-                     fore = COLOR_BLACK;
-                     break;
-               }
-            }
-            else if (events[i].type == EVENT_SET) {
-               switch(events[i].category) {
-                  case CAT_ASTRONOMICAL:
-                     color = back = COLOR_DARKBLUE;
-                     fore = COLOR_WHITE;
-                     break;
-                  case CAT_NAUTICAL:
-                     color = back = COLOR_BLUE;
-                     fore = COLOR_WHITE;
-                     break;
-                  case CAT_CIVIL:
-                     color = back = COLOR_LIGHTBLUE;
-                     fore = COLOR_WHITE;
-                     break;
-                  case CAT_SOLAR:
-                     color = back = COLOR_ORANGE;
-                     fore = COLOR_BLACK;
-                     break;
-               }
-            }
-         }
-      }
-      else {
-         break;
-      }
-   }
-#endif
 
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
@@ -1705,7 +1659,7 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
                if (started) {
                   times_written++;
                   // TODO FIX check size
-                  do_tr_time_sun(canvas, now, last, start_angle,
+                  do_tr_time_sun(context, canvas, now, last, start_angle,
                         (canvas->w / 3 - SCALE(32)), fore, back);
                }
 
@@ -1831,58 +1785,58 @@ void do_sun_bands(Canvas * canvas, double up, double now) {
    }
 
    if (times_written) {
-      do_tr_time_sun(canvas, now, last, start_angle,
+      do_tr_time_sun(context, canvas, now, last, start_angle,
             canvas->w / 3 - SCALE(32), fore, back);
    }
 
    if (transited != 0.0) {
       double angle = (transited-base) * 360.0 - up_angle + 270.0;
-      do_tr_time_sun(canvas, now, transited, angle,
+      do_tr_time_sun(context, canvas, now, transited, angle,
             canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }
 
    if (angle_daylight > one_minute) {
-      accum_helper(canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
+      accum_helper(context, canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
             COLOR_YELLOW);
    }
    else if (angle_civil > one_minute) {
-      accum_helper(canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
+      accum_helper(context, canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
             COLOR_ORANGE);
    }
    else if (angle_nautical > one_minute) {
-      accum_helper(canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
+      accum_helper(context, canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
             COLOR_LIGHTBLUE);
    }
    else if (angle_astronomical > one_minute) {
-      accum_helper(canvas, angle_astronomical, "astronomical", 270.0,
+      accum_helper(context, canvas, angle_astronomical, "astronomical", 270.0,
             COLOR_WHITE, COLOR_BLUE);
    }
    else if (angle_darkness > one_minute) {
-      accum_helper(canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
+      accum_helper(context, canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
             COLOR_DARKBLUE);
    }
 
    if (angle_darkness > one_minute) {
       if (angle_astronomical > one_minute) {
-         accum_helper(canvas, angle_darkness, "darkness", 90.0,
+         accum_helper(context, canvas, angle_darkness, "darkness", 90.0,
                COLOR_WHITE, COLOR_DARKBLUE);
       }
    }
    else if (angle_astronomical > one_minute) {
       if (angle_nautical > one_minute) {
-         accum_helper(canvas, angle_astronomical, "astronomical", 90.0,
+         accum_helper(context, canvas, angle_astronomical, "astronomical", 90.0,
                COLOR_WHITE, COLOR_BLUE);
       }
    }
    else if (angle_nautical > one_minute) {
       if (angle_civil > one_minute) {
-         accum_helper(canvas, angle_nautical, "nautical", 90.0,
+         accum_helper(context, canvas, angle_nautical, "nautical", 90.0,
                COLOR_WHITE, COLOR_LIGHTBLUE);
       }
    }
    else if (angle_civil > one_minute) {
       if (angle_daylight > one_minute) {
-         accum_helper(canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
+         accum_helper(context, canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
                COLOR_ORANGE);
       }
    }
@@ -1938,38 +1892,38 @@ double get_moon_angle(double JD, double lunar_new) {
 /// @param JD The current Julian Date
 /// @param up The Julian Date used as "up" on the clock
 /// @return void
-void do_planet_bands(Canvas * canvas, double JD, double up) {
+void do_planet_bands(Context *context, Canvas * canvas, double JD, double up) {
    double r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_MARS, r, CAT_MARS, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 0);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 0);
+   do_planet_band(context, canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 0);
 
    r = canvas->w / 2 / 2 + SCALE(128 + 16 + 5);
 
-   do_planet_band(canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_MOONBAND, r, CAT_LUNAR, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_MERCURY, r, CAT_MERCURY, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_VENUS, r, CAT_VENUS, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_MARS, r, CAT_MARS, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_JUPITER, r, CAT_JUPITER, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_SATURN, r, CAT_SATURN, 1);
    r += SCALE(15);
-   do_planet_band(canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 1);
+   do_planet_band(context, canvas, up, JD, COLOR_ARIES, r, CAT_ARIES, 1);
 }
 
 /// @brief Draw debugging information
@@ -2090,7 +2044,7 @@ void do_provider_info(Canvas * canvas, const char *provider) {
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
 }
 
-void initialize_all(void) {
+void initialize_all(Context *context) {
    event_spot = 0;
    timedrawnspot = 0;
    accumdrawnspot = 0;
@@ -2206,6 +2160,12 @@ double to_the_minute(double jd) {
 /// @return A canvas that has been drawn upon
 Canvas *do_all(double lat, double lon, double offset, int width,
       const char *provider, const char *tzprovider, const char *tz) {
+
+   static Context *context = NULL;
+   if (context == NULL) {
+      context = (Context *)calloc(1, sizeof(Context));
+   }
+
    struct ln_zonedate now;
    struct ln_lnlat_posn observer;
 
@@ -2231,7 +2191,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 #define FONT_ITALIC_MED djsmo_20_bdf
     */
 
-   initialize_all();
+   initialize_all(context);
 
    // observer's location
    observer.lat = lat;          // degrees, North is positive
@@ -2251,15 +2211,15 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    my_get_local_date(JD, &now);
 
    // all of the data
-   events_clear();
-   events_populate(JD, &observer);
-   events_sort();
-   events_uniq();
-   events_prune(JD);
+   events_clear(context);
+   events_populate(context, JD, &observer);
+   events_sort(context);
+   events_uniq(context);
+   events_prune(context, JD);
    //events_dump();
 
    // get the transit time
-   up = to_the_minute(events_transit(JD)); // rounding added to reduce jitter
+   up = to_the_minute(events_transit(context, JD)); // rounding added to reduce jitter
 
    // lunar disk, phase and bright limb
    float lunar_phase = ln_get_lunar_phase(JD);  // 0 to 180
@@ -2289,12 +2249,12 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // colored bands for planets
    if (goodloc) {
-      do_planet_bands(canvas, JD, up);
+      do_planet_bands(context, canvas, JD, up);
    }
 
    // colored bands for the sun
    if (goodloc) {
-      do_sun_bands(canvas, up, JD);
+      do_sun_bands(context, canvas, up, JD);
    }
 
    // our rotating "now" hand
@@ -2304,17 +2264,17 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    double moon_angle;
    if (goodloc) {
       moon_angle = get_moon_angle(JD, lunar_new);
-      do_moon_draw(canvas, JD, lunar_phase, lunar_bright_limb, moon_angle);
+      do_moon_draw(context, canvas, JD, lunar_phase, lunar_bright_limb, moon_angle);
    }
 
    // draw accumulated times
-   replay_accum_memory(canvas);
+   replay_accum_memory(context, canvas);
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
 
    // redraw some text, to make things pretty
-   replayTimeDrawnMemory(canvas);
+   replayTimeDrawnMemory(context, canvas);
 
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
@@ -2339,14 +2299,19 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 }
 
 int do_when_is_it(double lat, double lon, int category, int type, int offset_minutes) {
+   static Context *context = NULL;
+   if (context == NULL) {
+      context = (Context *)calloc(1, sizeof(Context));
+   }
+
    struct ln_lnlat_posn observer;
    observer.lat = lat;
    observer.lng = lon;
    double JD = ln_get_julian_from_sys();
 
-   initialize_all();
+   initialize_all(context);
 
-   events_populate(JD, &observer);
+   events_populate(context, JD, &observer);
 
    for (int i = 0; i < event_spot; i++) {
       if (events[i].category == category && events[i].type == type) {

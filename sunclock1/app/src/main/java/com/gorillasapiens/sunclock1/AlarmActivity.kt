@@ -10,10 +10,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import androidx.core.view.marginLeft
+import kotlin.random.Random
 
 
 class AlarmActivity : AppCompatActivity() {
-    val fieldnames = arrayOf("name", "observer", "category", "type", "offset")
+    val fieldnames = AlarmStorage.fields
     val categorynames = arrayOf(
         "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
         "LUNAR",                   // moon and planets from here on
@@ -72,6 +73,16 @@ class AlarmActivity : AppCompatActivity() {
                     }
                     tableEditSpinner
                 }
+                else if (field == "label") {
+                    val tableTextView = TextView(this)
+                    if (title.contains("Add") || values[i]!!.length == 0) {
+                        tableTextView.text = String.format("ταμ-%08x", Random.nextInt())
+                    }
+                    else {
+                        tableTextView.setText(values[i])
+                    }
+                    tableTextView
+                }
                 else {
                     val tableEditText = EditText(this)
                     tableEditText.setText(values[i])
@@ -128,6 +139,10 @@ class AlarmActivity : AppCompatActivity() {
                             val spinner = row.getChildAt(1) as Spinner
                             values += spinner.selectedItemPosition.toString()
                         }
+                        else if (field == "label") {
+                            val textview = row.getChildAt(1) as TextView
+                            values += textview.text.toString()
+                        }
                         else {
                             val editable = row.getChildAt(1) as EditText
                             values += editable.text.toString()
@@ -155,7 +170,10 @@ class AlarmActivity : AppCompatActivity() {
             val values = alarmStorage!!.getSet(i)
 
             val tv = TextView(this)
-            tv.text = values[0]
+            tv.text = values[1]
+            if (tv.text.length == 0) {
+                tv.text = "<none>"
+            }
             tv.setTextColor(0xFFFFFFFF.toInt())
             tv.setTextSize(32.0f)
 
@@ -185,7 +203,6 @@ class AlarmActivity : AppCompatActivity() {
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
 
-
         val b = intent.extras
         var value : String? = "0.0000,0.0000"
         if (b != null) value = b.getString("observer")
@@ -198,7 +215,7 @@ class AlarmActivity : AppCompatActivity() {
             finish()
         }
 
-        alarmStorage = AlarmStorage(this, fieldnames)
+        alarmStorage = AlarmStorage(this)
         val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
 
         val addButton: Button = findViewById(R.id.addButton)

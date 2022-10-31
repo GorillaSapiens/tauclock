@@ -4,6 +4,9 @@ package com.gorillasapiens.sunclock1
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.AlarmManager.AlarmClockInfo
+import android.app.PendingIntent
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
@@ -39,7 +42,6 @@ import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
-    private var mRingtone: Ringtone? = null
     private var mSeenAlarmTime_clock: Long = 0
     private var mDrawableInitialized = false
     private val mPermissionID = 44
@@ -387,7 +389,6 @@ class MainActivity : AppCompatActivity() {
         })
 
         mLocationManager = this.getSystemService(LOCATION_SERVICE) as LocationManager?
-
         mHandler.post(runVeryOften)
 
         //val runtime = Runtime.getRuntime()
@@ -503,36 +504,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun makeNoise() {
-        var alert: Uri? = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-
-        if (alert == null) {
-            // alert is null, using backup
-            alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-
-            // I can't see this ever being null (as always have a default notification)
-            // but just in case
-            if (alert == null) {
-                // alert backup is null, using 2nd backup
-                alert = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            }
-        }
-
-        if (alert != null ) {
-            mRingtone = RingtoneManager.getRingtone(applicationContext, alert)
-            mRingtone!!.play()
-        }
-    }
-
-    private fun stopNoise() {
-        if (mRingtone != null) {
-            mRingtone!!.stop()
-        }
-    }
-
     private fun ponderAlarms() {
-        var wakeup_clock = System.currentTimeMillis() / 1000 + 12*60*60 // 12 hours from now
-        val alarmStorage = AlarmStorage(this, arrayOf("name", "observer", "category", "type", "offset"))
+        var wakeup_clock = System.currentTimeMillis() / 1000 + 24*60*60 // 24 hours from now
+        val alarmStorage = AlarmStorage(this)
         val categorynames = arrayOf(
             "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
             "LUNAR",                   // moon and planets from here on
@@ -550,7 +524,7 @@ class MainActivity : AppCompatActivity() {
 
             val latlon = observer?.split(",")
             val lat = latlon?.get(0)!!.toDouble()
-            val lon = latlon?.get(1)!!.toDouble()
+            val lon = latlon.get(1).toDouble()
 
             val pondering_s = doWhenIsIt(lat, lon,
                 category!!.toInt(),type!!.toInt() + 2, offset!!.toInt())
@@ -559,7 +533,7 @@ class MainActivity : AppCompatActivity() {
 
             if (pondering_s < 60) {
                 if (actual_clock > mSeenAlarmTime_clock) {
-                    makeNoise()
+
 
                     val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
                     alertDialogBuilder.setTitle("ALARM: " + name)
@@ -568,11 +542,10 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         ""
                     }
-                    alertDialogBuilder.setMessage(observer + "\n" + categorynames[category!!.toInt()] + " " + typenames[type!!.toInt()] + " " + plusminus + offset + " minutes")
+                    alertDialogBuilder.setMessage(observer + "\n" + categorynames[category.toInt()] + " " + typenames[type.toInt()] + " " + plusminus + offset + " minutes")
                     alertDialogBuilder.setPositiveButton("Ok",
                         DialogInterface.OnClickListener { arg0, arg1 ->
                             mSeenAlarmTime_clock = actual_clock
-                            stopNoise()
                         })
                     alertDialogBuilder.setCancelable(false)
                     alertDialogBuilder.show()
@@ -582,19 +555,6 @@ class MainActivity : AppCompatActivity() {
                 wakeup_clock = actual_clock
             }
         }
-
-//        mAlarmService!!.startAlarm(wakeup_clock.toLong() * 1000)
-
-//        val intent = Intent(this, MainActivity::class.java)
-//        val pendingIntent = PendingIntent.getActivity(
-//            this,
-//            0,
-//            intent,
-//            PendingIntent.FLAG_UPDATE_CURRENT
-//        )
-//        val am = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//        val ALARM_TYPE = AlarmManager.RTC_WAKEUP
-//        AlarmManagerCompat.setExact(am, ALARM_TYPE, wakeup_clock.toLong() * 1000, pendingIntent)
 
         var sec = (wakeup_clock - (System.currentTimeMillis() / 1000))
         val min = (sec / 60) % 60
@@ -619,7 +579,7 @@ class MainActivity : AppCompatActivity() {
 
         mNeedUpdate = true
 
-        ponderAlarms()
+ //       ponderAlarms()
     }
 
     override fun onPause() {

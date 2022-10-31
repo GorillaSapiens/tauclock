@@ -2311,26 +2311,24 @@ int do_when_is_it(double lat, double lon, int category, int type, int offset_min
 
    initialize_all(context);
 
-   events_populate(context, JD, &observer);
+   for (int halfdays = 0; halfdays < 14; halfdays++) {
+      events_populate(context, JD, &observer);
 
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].category == category && events[i].type == type) {
-         double event_jd = events[i].jd + ((double)offset_minutes * ONE_MINUTE_JD);
-         if (event_jd < JD) {
-            if ((JD - event_jd) < (10.0 * ONE_MINUTE_JD)) {
-               // within the last 10 minutes
+      for (int i = 0; i < event_spot; i++) {
+         if (events[i].category == category && events[i].type == type) {
+            double event_jd = events[i].jd + ((double)offset_minutes * ONE_MINUTE_JD);
+            if (event_jd > JD) {
+               // in the future
                return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);
             }
          }
-         else {
-            // in the future
-            return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);
-         }
       }
+
+      JD += 0.5;
    }
 
    // hrm, not found...
-   return INT_MAX;
+   return -1;
 }
 
 // vim: expandtab:noai:ts=3:sw=3

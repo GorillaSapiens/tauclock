@@ -13,7 +13,7 @@ extern "C" {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_gorillasapiens_sunclock1_MainActivity_doWhenIsIt(JNIEnv *env, jobject thiz, jdouble lat,
+Java_com_gorillasapiens_sunclock1_AlarmActivity_doWhenIsIt(JNIEnv *env, jobject thiz, jdouble lat,
                         jdouble lon, jint category, jint type, jint offset_minutes) {
     return do_when_is_it(lat, lon, category, type, offset_minutes);
 }

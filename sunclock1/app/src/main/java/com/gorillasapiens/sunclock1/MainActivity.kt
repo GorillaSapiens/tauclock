@@ -224,12 +224,10 @@ class MainActivity : AppCompatActivity() {
         ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+            this,
+            Manifest.permission.SET_ALARM
         ) == PackageManager.PERMISSION_GRANTED
-
-        // If we want background location
-        // on Android 10.0 and higher,
-        // use:
-        // ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     // method to request for permissions
@@ -237,7 +235,8 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(
             this, arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.SET_ALARM
             ), mPermissionID
         )
     }
@@ -504,70 +503,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun ponderAlarms() {
-        var wakeup_clock = System.currentTimeMillis() / 1000 + 24*60*60 // 24 hours from now
-        val alarmStorage = AlarmStorage(this)
-        val categorynames = arrayOf(
-            "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
-            "LUNAR",                   // moon and planets from here on
-            "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
-            "ARIES")
-        val typenames = arrayOf("RISE","TRANSIT","SET")
-
-        for (i in 0..alarmStorage.getCount()-1) {
-            val values = alarmStorage.getSet(i)
-            val name = values[0]
-            val observer = values[1]
-            val category = values[2]
-            val type = values[3]
-            val offset = values[4]
-
-            val latlon = observer?.split(",")
-            val lat = latlon?.get(0)!!.toDouble()
-            val lon = latlon.get(1).toDouble()
-
-            val pondering_s = doWhenIsIt(lat, lon,
-                category!!.toInt(),type!!.toInt() + 2, offset!!.toInt())
-
-            val actual_clock = System.currentTimeMillis() / 1000 + pondering_s
-
-            if (pondering_s < 60) {
-                if (actual_clock > mSeenAlarmTime_clock) {
-
-
-                    val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
-                    alertDialogBuilder.setTitle("ALARM: " + name)
-                    val plusminus = if (offset.toInt() >= 0) {
-                        "+"
-                    } else {
-                        ""
-                    }
-                    alertDialogBuilder.setMessage(observer + "\n" + categorynames[category.toInt()] + " " + typenames[type.toInt()] + " " + plusminus + offset + " minutes")
-                    alertDialogBuilder.setPositiveButton("Ok",
-                        DialogInterface.OnClickListener { arg0, arg1 ->
-                            mSeenAlarmTime_clock = actual_clock
-                        })
-                    alertDialogBuilder.setCancelable(false)
-                    alertDialogBuilder.show()
-                }
-            }
-            else if (actual_clock < wakeup_clock) {
-                wakeup_clock = actual_clock
-            }
-        }
-
-        var sec = (wakeup_clock - (System.currentTimeMillis() / 1000))
-        val min = (sec / 60) % 60
-        val hour = sec / 3600
-        sec %= 60
-
-        Toast.makeText(
-            this,
-            java.lang.String.format("Next alarm check in %dh%02dm%02ds", hour, min, sec),
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
     override fun onResume() {
         super.onResume()
 
@@ -578,8 +513,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         mNeedUpdate = true
-
- //       ponderAlarms()
     }
 
     override fun onPause() {
@@ -804,5 +737,4 @@ class MainActivity : AppCompatActivity() {
 
     private external fun doAll(lat:Double, lon:Double, offset:Double, width:Int, provider:String, tzprovider:String, tz:String) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
-    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int, offset_minutes:Int) : Int
 }

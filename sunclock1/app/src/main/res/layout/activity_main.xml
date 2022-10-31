@@ -30,6 +30,7 @@
         android:layout_weight="1"
         android:backgroundTint="#303030"
         android:text="ALARMS"
+        android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -42,6 +43,7 @@
         android:layout_weight="1"
         android:backgroundTint="#303030"
         android:text="SETTINGS"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -55,6 +57,7 @@
         android:backgroundTint="#303030"
         android:minWidth="64dp"
         android:text=">"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/settingsButton" />
 
@@ -67,6 +70,7 @@
         android:layout_weight="1"
         android:backgroundTint="#303030"
         android:text="Location"
+        android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -80,6 +84,7 @@
         android:backgroundTint="#303030"
         android:minWidth="64dp"
         android:text="&lt;"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/tzButton" />
 
@@ -92,6 +97,7 @@
         android:layout_weight="1"
         android:backgroundTint="#303030"
         android:text="TZ"
+        android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 

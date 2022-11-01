@@ -210,6 +210,7 @@ class AlarmActivity : AppCompatActivity() {
             intent.putExtra(AlarmClock.EXTRA_MINUTES, calendar.get(Calendar.MINUTE)) // Integer
             intent.putExtra(AlarmClock.EXTRA_IS_PM, calendar.get(Calendar.PM) == 1) // Boolean
             intent.putExtra(AlarmClock.EXTRA_MESSAGE, message)
+            intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
             this.startActivity(intent)
         }
     }
@@ -222,6 +223,7 @@ class AlarmActivity : AppCompatActivity() {
         val intent = Intent(AlarmClock.ACTION_DISMISS_ALARM)
         intent.putExtra(AlarmClock.EXTRA_ALARM_SEARCH_MODE, AlarmClock.ALARM_SEARCH_MODE_LABEL)
         intent.putExtra(AlarmClock.EXTRA_MESSAGE, label)
+        intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
         this.startActivity(intent)
     }
 

@@ -81,8 +81,8 @@
 				it, as shown in this example.  If it is below the horizon, the ring
 				around the moon will be a dark gray.<br>
 				<br>
-				Outside the outer circle are a series of colored arcs depicting the rise, set,
-				and transit times of various visible bodies.  Starting from the inside
+				Outside the outer circle are a series of colored arcs depicting the rise, transit,
+				and set times of various visible bodies.  Starting from the inside
 				and working out, they are:
 				<ul>
 					<li>Purple for the moon</li>
@@ -102,7 +102,10 @@
 		</tr>
 		<tr>
 			<td>
-				&nbsp;
+				In the lower right of the image is text that reads "JD=".  This indicates
+				the Julian Day used to generate the image.  The Julian Day is the continuous
+				count of days since the beginning of the Julian period, and is used primarily
+				by astronomers.  It appears here for debugging purposes.
 			</td>
 			<td>
 				In the upper left is a "Location" button.  Pressing this will cycle through
@@ -138,7 +141,7 @@
 			<td>
 				In the lower left is a "TZ" button.  Pressing this will cycle through
 				the various timezone providers.  Text in the lower left indicates the current
-				timezone provider.
+				timezone provider, and the timezone given by that provider.
 				The timezone providers are:
 				<ul>
 					<li>system (use the timzeone of the Android device, regardless of location)</li>
@@ -147,6 +150,12 @@
 				</ul>
 				The timezone provider can also be selected through the "Settings" button
 				(see below).<br>
+				<br>
+				In this example, the timezone provider is "system", which is providing the
+				"America/Los_Angeles" timezone.  The two abbreviations for this timezone are
+				"PST" (for Pacific Standard Time) and "PDT" (for Pacific Daylight Time), and
+				the square brackets around "PDT" indicate that that is the actual timezone
+				currently in use.
 			</td>
 		</tr>
 		<tr>

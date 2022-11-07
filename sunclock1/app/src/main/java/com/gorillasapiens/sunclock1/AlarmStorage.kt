@@ -6,7 +6,7 @@ import androidx.preference.PreferenceManager
 
 class AlarmStorage(context: Context) {
     companion object {
-        val fields = arrayOf("label", "description", "observer", "category", "type", "offset")
+        val fields = arrayOf("label", "description", "observer", "category", "type", "delay")
     }
 
     val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);

@@ -31,8 +31,8 @@ class AlarmActivity : AppCompatActivity() {
         var entry = -1
 
         if (!title.contains("Add")) {
-            val offset = title.indexOf('#')
-            val tmp = title.substring(offset + 1)
+            val hashtagindex = title.indexOf('#')
+            val tmp = title.substring(hashtagindex + 1)
             entry = tmp.toInt()
         }
 
@@ -93,12 +93,12 @@ class AlarmActivity : AppCompatActivity() {
                         if (field == "observer") {
                             tableEditText.setText(mObserver)
                         }
-                        else if (field == "offset") {
+                        else if (field == "delay") {
                             tableEditText.setText("0")
                         }
                     }
 
-                    if (field == "offset") {
+                    if (field == "delay") {
                         tableEditText.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_SIGNED
                     }
 
@@ -122,8 +122,8 @@ class AlarmActivity : AppCompatActivity() {
                 var entry = -1
 
                 if (!title.contains("Add")) {
-                    val offset = title.indexOf('#')
-                    val tmp = title.substring(offset + 1)
+                    val hashtagindex = title.indexOf('#')
+                    val tmp = title.substring(hashtagindex + 1)
                     entry = tmp.toInt()
                 }
 
@@ -185,21 +185,21 @@ class AlarmActivity : AppCompatActivity() {
         val observer = values[2]
         val category = values[3]
         val type = values[4]
-        val offset = values[5]
+        val delay = values[5]
 
-        val message = String.format("%s\n%s\n%s %s %s %s%s",
+        val message = String.format("%s\n%s\n%s %s %s %s%s minutes",
             label,
             description,
             observer,
             categorynames[category!!.toInt()], typenames[type!!.toInt()],
-            if (offset?.toInt() ?: 0 < 0) { "-" } else { "+" }, offset)
+            if (delay?.toInt() ?: 0 < 0) { "-" } else { "+" }, delay)
 
         val latlon = observer?.split(",")
         val lat = latlon?.get(0)!!.toDouble()
         val lon = latlon.get(1).toDouble()
 
         val pondering_s = doWhenIsIt(lat, lon,
-            category!!.toInt(),type!!.toInt() + 2, offset!!.toInt())
+            category!!.toInt(),type!!.toInt() + 2, delay!!.toInt())
 
         if (pondering_s > 0) {
             val calendar = Calendar.getInstance()
@@ -329,6 +329,6 @@ class AlarmActivity : AppCompatActivity() {
         return -1
     }
 
-    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int, offset_minutes:Int) : Int
+    private external fun doWhenIsIt(lat:Double, lon:Double, category:Int, type:Int, delayMinutes:Int) : Int
 }
 

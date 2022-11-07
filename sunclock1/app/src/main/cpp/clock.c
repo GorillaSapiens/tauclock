@@ -2298,7 +2298,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    return canvas;
 }
 
-int do_when_is_it(double lat, double lon, int category, int type, int offset_minutes) {
+int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes) {
    static Context *context = NULL;
    if (context == NULL) {
       context = (Context *)calloc(1, sizeof(Context));
@@ -2316,7 +2316,7 @@ int do_when_is_it(double lat, double lon, int category, int type, int offset_min
 
       for (int i = 0; i < event_spot; i++) {
          if (events[i].category == category && events[i].type == type) {
-            double event_jd = events[i].jd + ((double)offset_minutes * ONE_MINUTE_JD);
+            double event_jd = events[i].jd + ((double)delayMinutes * ONE_MINUTE_JD);
             if (event_jd > JD) {
                // in the future
                return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);

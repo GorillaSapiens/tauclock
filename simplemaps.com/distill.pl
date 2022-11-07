@@ -2,6 +2,8 @@
 
 # see https://stackoverflow.com/questions/24086660/perl-parsing-csv-file-with-embedded-commas
 
+print "<string-array name=\"cities\">\n";
+
 my $re = qr/(?| "\( ( [^()""]* ) \)" |  \( ( [^()]* ) \) |  " ( [^"]* ) " |  ( [^,]* ) ) , \s* /x;
 
 $n = 0;
@@ -37,10 +39,12 @@ while (<>) {
 		$city_ascii =~ s/,,/,/g;
 		$city_ascii =~ s/,$//g;
 
-		print "\"$city,$lat,$lon\",\n";
+		print "<item>$city,$lat,$lon</item>\n";
 		if ($city_ascii ne $city) {
-			print "\"$city_ascii,$lat,$lon\",\n";
+			print "<item>$city_ascii,$lat,$lon\</item>\n";
 		}
 	}
 	$n++;
 }
+
+print "</string-array>\n";

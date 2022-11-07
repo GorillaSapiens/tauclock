@@ -2,11 +2,20 @@ package com.gorillasapiens.sunclock1
 
 import android.location.LocationManager
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.marginLeft
+import androidx.core.widget.doOnTextChanged
+import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
 import java.util.*
+
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -32,6 +41,8 @@ class SettingsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
+    var choices : ListView? = null
+
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -53,6 +64,37 @@ class SettingsActivity : AppCompatActivity() {
                 val array: Array<String> = allProviders.toTypedArray()
                 locationProviders.entries = array
                 locationProviders.entryValues = array
+            }
+
+            var manualLocation = findPreference<EditTextPreference>("manual_location")
+            if (manualLocation != null) {
+                manualLocation.setOnBindEditTextListener { editText ->
+                    val parent = editText.parent as ViewGroup
+                    if (parent.getChildCount() == 2) {
+                        val choices = AutoCompleteTextView(editText.context)
+                        val adapter = ArrayAdapter<String>(editText.context,android.R.layout.simple_dropdown_item_1line, resources.getStringArray(R.array.cities))
+                        choices.setAdapter(adapter)
+                        parent.addView(choices, 1, editText.layoutParams)
+                        choices.text = editText.text
+                        editText.visibility = View.INVISIBLE
+                        editText.height = 0
+                        choices.requestFocus()
+                        choices.doOnTextChanged { text, start, before, count ->
+                            editText.text = choices.text
+                        }
+                    }
+/*
+                    editText.addTextChangedListener(object : TextWatcher {
+                        override fun afterTextChanged(s: Editable?) {
+                        }
+
+                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                        }
+
+                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        }
+                    })*/
+                }
             }
         }
     }

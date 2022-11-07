@@ -328,10 +328,13 @@ class MainActivity : AppCompatActivity() {
         editor.putString("provider", mProviderName)
         if (mProviderName == "manual") {
             if (mLastLocation != null) {
-                editor.putString("manual_location",
-                    ((mLastLocation!!.latitude * 10000.0).toInt().toDouble() / 10000.0).toString() +
-                    "," +
-                    ((mLastLocation!!.longitude * 10000.0).toInt().toDouble() / 10000.0).toString())
+                val tmp = ((mLastLocation!!.latitude * 10000.0).toInt().toDouble() / 10000.0).toString() +
+                        "," +
+                        ((mLastLocation!!.longitude * 10000.0).toInt().toDouble() / 10000.0).toString()
+
+                if (!mManualLocation!!.contains("," + tmp)) {
+                    editor.putString("manual_location", tmp)
+                }
             }
         }
         editor.putString("timezone", mTimeZoneProvider)

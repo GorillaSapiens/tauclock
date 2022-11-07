@@ -2,14 +2,11 @@ package com.gorillasapiens.sunclock1
 
 import android.location.LocationManager
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.marginLeft
 import androidx.core.widget.doOnTextChanged
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference

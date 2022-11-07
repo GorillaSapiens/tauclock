@@ -68,6 +68,7 @@ class MainActivity : AppCompatActivity() {
     private var mLocationManager : LocationManager? = null
     private var mProviderName: String = "best"
     private var mRealProviderName : String = "gps"
+    private var mManualLocation : String? = null
 
     private var mTimeZoneProvider : String = "system"
     private var mManualTimeZone : String = "Etc/GMT"
@@ -256,6 +257,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun commitManualLocation() {
+        mLastLocation = Location("manual")
+        mLastLocation?.latitude = -91.0
+        mLastLocation?.longitude = -181.0
+        mLastLocation?.altitude = 0.0
+
+        if (mManualLocation != null && mManualLocation!!.isNotEmpty()) {
+            val parts = mManualLocation!!.split(",")
+
+            val tmp =
+            if (parts.size >= 2) {
+                parts[parts.size - 2] + "," + parts[parts.size - 1];
+            }
+            else {
+                ""
+            }
+
+            val pattern : Pattern = Pattern.compile("^([^,]+),(.+)$")
+            val matcher : Matcher = pattern.matcher(tmp)
+            val isMatch = matcher.matches()
+
+            if (isMatch) {
+                try {
+                    mLastLocation?.latitude = matcher.group(1)?.toDouble() ?: -91.0
+                    mLastLocation?.longitude = matcher.group(2)?.toDouble() ?: -181.0
+                    mLastLocation?.altitude = 0.0
+                }
+                catch (e: Exception) {
+                }
+            }
+        }
+    }
+
     private fun importSettings() {
         val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
 
@@ -263,25 +297,9 @@ class MainActivity : AppCompatActivity() {
         if (tmp != null && tmp.isNotEmpty()) {
             mProviderName = tmp
         }
+        mManualLocation = sharedPreferences.getString("manual_location", "")
         if (mProviderName == "manual") {
-            tmp = sharedPreferences.getString("manual_location", "")
-            if (tmp != null && tmp.isNotEmpty()) {
-                val pattern : Pattern = Pattern.compile("^([^,]+),(.+)$")
-                val matcher : Matcher = pattern.matcher(tmp)
-                val isMatch = matcher.matches()
-
-                if (isMatch) {
-                    try {
-                        mLastLocation = Location("manual")
-                        mLastLocation?.latitude = matcher.group(1)?.toDouble() ?: -91.0
-                        mLastLocation?.longitude = matcher.group(2)?.toDouble() ?: -181.0
-                        mLastLocation?.altitude = 0.0
-                    }
-                    catch (e: Exception) {
-                        // ignore it
-                    }
-                }
-            }
+            commitManualLocation()
         }
 
         tmp = sharedPreferences.getString("timezone", "")
@@ -416,6 +434,10 @@ class MainActivity : AppCompatActivity() {
                     "Go to Android Settings to enable this Location Provider",
                     Toast.LENGTH_LONG
                 ).show()
+            }
+
+            if (mProviderName == "manual") {
+                commitManualLocation()
             }
 
             mNeedUpdate = true

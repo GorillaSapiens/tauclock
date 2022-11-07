@@ -38,8 +38,6 @@ class SettingsActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    var choices : ListView? = null
-
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
@@ -53,7 +51,7 @@ class SettingsActivity : AppCompatActivity() {
 
             var locationProviders = findPreference<ListPreference>("provider")
             if (locationProviders != null) {
-                var mLocationManager = activity!!.getSystemService(LOCATION_SERVICE) as LocationManager?
+                var mLocationManager = requireActivity().getSystemService(LOCATION_SERVICE) as LocationManager?
                 val allProviders = mLocationManager!!.getProviders(false)
                 allProviders.sort()
                 allProviders.add(0, "best")
@@ -80,17 +78,6 @@ class SettingsActivity : AppCompatActivity() {
                             editText.text = choices.text
                         }
                     }
-/*
-                    editText.addTextChangedListener(object : TextWatcher {
-                        override fun afterTextChanged(s: Editable?) {
-                        }
-
-                        override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                        }
-
-                        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                        }
-                    })*/
                 }
             }
         }

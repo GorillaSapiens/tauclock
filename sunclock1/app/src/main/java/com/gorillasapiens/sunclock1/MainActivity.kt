@@ -328,9 +328,26 @@ class MainActivity : AppCompatActivity() {
         editor.putString("provider", mProviderName)
         if (mProviderName == "manual") {
             if (mLastLocation != null) {
-                val tmp = ((mLastLocation!!.latitude * 10000.0).toInt().toDouble() / 10000.0).toString() +
+                var latitude = mLastLastLocation!!.latitude
+                var longitude = mLastLocation!!.longitude
+
+                if (latitude > 0.0) {
+                    latitude += 0.00005
+                }
+                else {
+                    latitude -= 0.00005
+                }
+
+                if (longitude > 0.0) {
+                    longitude += 0.00005
+                }
+                else {
+                    longitude -= 0.00005
+                }
+
+                val tmp = ((latitude * 10000.0).toInt().toDouble() / 10000.0).toString() +
                         "," +
-                        ((mLastLocation!!.longitude * 10000.0).toInt().toDouble() / 10000.0).toString()
+                        ((longitude * 10000.0).toInt().toDouble() / 10000.0).toString()
 
                 if (!mManualLocation!!.contains("," + tmp)) {
                     editor.putString("manual_location", tmp)

@@ -1,215 +1,244 @@
-<html>
-<body bgcolor=black text=white>
-	<center>
-		<font size=+5>tauclock primer</font><br>
-		primer: a short informative piece of writing.<br><br><br>
-	</center>
-	<table border=3>
-		<tr>
-			<td>
-				<img src=tauclock.0.16.main.png width=540/>
-			</td>
-			<td>
-				This is a primer for tauclock v0.16<br>
-				<br>
-				tauclock uses a 24 hour clock, with hours
-				numbered from 00 (midnight, or 12:00 am)
-				to 23 (11:00 pm)<br>
-				<br>
-				The very center of the clock shows the current
-				time in the currently selected timezone.  In
-				this case 18:55, or 6:55 PM.<br>
-				<br>
-				Above the current time is the weekday name,
-				as well as the month name and day.<br>
-				<br>
-				Below the current time is the current location
-				latitude and longitude, as well as the ISO8601
-				representation of the date.<br>
-				<br>
-				This clock has only one hand, the "now hand",
-				indicating the current time.  This is a solid
-				white line, which in this example appears
-				horizontally to the right, from the inner 
-				white circle to the outer white circle.<br>
-				<br>
-				Along the inside edge of the outside circle
-				are small numbers and ticks indicating the
-				hours.<br>
-				<br>
-				The section between the inner circle and
-				outer circle is partitioned into various
-				colors.<br>
-				<ul>
-					<li>Yellow indicates daylight,
-						when the Sun is above the horizon.</li>
-					<li>Orange indicates civil twilight, when the
-						Sun is just below the horizon.<br>This is
-				generally considered bright enough for
-				most people to see well without help.</li>
-					<li>Light Blue indicates nautical twilight.<br>
-				This is the period of time sailors
-				can begin to take readings from the
-				brightest stars.</li>
-					<li>Medium Blue indicates
-						astronomical twilight.<br>During this time,
-				most casual observers would regard the
-				sky as fully dark, especially under
-				urban or suburban light pollution.</li>
-					<li>Dark Blue indicates complete darkness.</li>
-				</ul>
-				Printed times at color transitions indicate when transitions
-				will occur.  In this example, the morning transition from
-				orange to yellow, indicating Sunrise, occurs at 07:30.
-				A printed time also appears at the top of the dial, indicating
-				when the Sun will be at its highest point, or "transit"<br>
-				<br>
-				These printed times may be in italic text, indicating they
-				occurred in the past (within the 12 hours before the "now hand")
-				or in bold text, indicating they will occur in the future
-				(within the 12 hours after the "now hand").<br>
-				<br>
-				Hours and minutes of daylight and darkness are also given.<br>
-				<br>
-				Just outside the inner circle is a depiction of the phase of
-				the Moon.  During the course of the Lunar month, this depiction
-				will travel clockwise around the inner circle.  If it is on the
-				right side, as in this example, it is "waxing" (getting bigger),
-				and if it is on the left side it is "waning" (getting smaller).
-				If it is generally above the inner circle it is "crescent", and
-				if it is generally below the inner circle it is "gibbous" (Latin for "hump").
-				New Moon occurs when the depiction is directly above the inner
-				circle, and Full Moon occurs when the depiction is directly
-				below the inner circle.<br>
-				<br>
-				If the Moon is above the horizon, it will have a white ring around
-				it, as shown in this example.  If it is below the horizon, the ring
-				around the moon will be a dark gray.<br>
-				<br>
-				Outside the outer circle are a series of colored arcs depicting the rise, transit,
-				and set times of various visible bodies.  Starting from the inside
-				and working out, they are:
-				<ul>
-					<li>Purple for the moon</li>
-					<li>Gray for Mercury</li>
-					<li>White for Venus</li>
-					<li>Red for Mars</li>
-					<li>Orange for Jupiter</li>
-					<li>Light Blue for Saturn</li>
-					<li>Green for the first point of Aries, which
-						is a sort of astronomical landmark.</li>
-				</ul>
-				Traditional astronomical symbols for these objects appear alongside the arcs,
-				in the appropriate colors.<br>
-				</br>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Site</title>
+    <!-- everything above here is boilerplate code and not further relevant -->
+    <style>
+        body {
+            display: flex; /* prevents weird whitespace issues */
+            margin: 0; /* makes the website take up the whole window */
+        }
 
-			</td>
-		</tr>
-		<tr>
-			<td>
-				In the lower right of the image is text that reads "JD=".  This indicates
-				the Julian Day used to generate the image.  The Julian Day is the continuous
-				count of days since the beginning of the Julian period, and is used primarily
-				by astronomers.  It appears here for debugging purposes.
-			</td>
-			<td>
-				In the upper left is a "Location" button.  Pressing this will cycle through
-				the various location providers.  Text in the upper left indicates the current
-				location provider.  Not all providers are available on all devices, and
-				some providers may be disabled in the Android system settings.
-				The location providers are:
-				<ul>
-					<li>best (let Android chose what is best for this device)</li>
-					<li>fused (uses a combination of GPS and Network providers)</li>
-					<li>gps (uses GPS satellites to determine location)</li>
-					<li>network (uses Cellular of WiFi network)</li>
-					<li>passive (only updates if some other app asks for location)</li>
-					<li>manual (user selects location, see below)</li>
-				</ul>
-				The location provider can also be selected through the "Settings" button
-				(see below).<br>
-				<br>
-				If the location provider is "manual", the location can be entered via latitude
-				and longitude on the Settings page, OR the user can press anywhere in the dial,
-				causing a graphic of the earth to appear, which can then be dragged to the
-				desired location. (see below)
-			</td>
-		</tr>
-		<tr>
-			<td>
-				Also appearing along the bottom button row are the "&lt;" and "&gt;" buttons.<br>
-				<br>
-				When the "Offset Provider" in "Settings" is set to manual, these can be used
-				to move the clock forward or backward, day by day.  This is useful to determine
-				past or future event times.<br>
-			</td>
-			<td>
-				In the lower left is a "TZ" button.  Pressing this will cycle through
-				the various timezone providers.  Text in the lower left indicates the current
-				timezone provider, and the timezone given by that provider.
-				The timezone providers are:
-				<ul>
-					<li>system (use the timzeone of the Android device, regardless of location)</li>
-					<li>location (use a static database to guess the timezone based on location)</li>
-					<li>manual (user selects timezone, see below)</li>
-				</ul>
-				The timezone provider can also be selected through the "Settings" button
-				(see below).<br>
-				<br>
-				In this example, the timezone provider is "system", which is providing the
-				"America/Los_Angeles" timezone.  The two abbreviations for this timezone are
-				"PST" (for Pacific Standard Time) and "PDT" (for Pacific Daylight Time), and
-				the square brackets around "PDT" indicate that that is the actual timezone
-				currently in use.
-			</td>
-		</tr>
-		<tr>
-			<td>
-				In the upper right is an "Alarms" button.  This feature is still under
-				development.
-			</td>
-			<td>
-				In the lower right is the "Settings" button, which opens the settings
-				page shown below.
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<img src=tauclock.0.16.settings.png width=540/>
-			</td>
-			<td>
-				This is the Settings page.  Many features here are also available
-				on the main clock view.  This page allows you to select various
-				information providers, as well as values to use when a provider
-				is set to "manual".
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<img src=example2.png width=540/>
-			</td>
-			<td>
-				This is the main clock view, when the location provider has
-				been set to "manual", and the user presses anywhere within the
-				clock dial.  This view of the earth can be dragged to set
-				the desired "manual" location.<br>
-				<br>
-				Latitude and longitude are shown along the top.<br>
-				<br>
-				The location based timezone is also shown in the lower left.<br>
-				[TODO: update this graphic for v0.16]
-				<br>
-			</td>
-		</tr>
-		<tr>
-			<td colspan=2>
-				Because of axial tilt, things can get strange near the North and South Poles,
-				especially around the solstices.
-				Sometimes the Sun may not rise or set for days, depending on the
-				time of year.  The same is true of the Moon and Planets.
-				They may be up for days on end, or never rise at all.
-			</td>
-		</tr>
-	</table>
+        section {
+            display: inline-block; /* inline: allows multiple side by side. block: allows for more complex styling */
+            width: 50%; /* make each section have a width of 50% of the window */
+            height: 100vh; /* make the sections take up 100% of the vertical height of the window */
+            overflow-y: auto; /* if the content of a section does not fit, the section will be scrollable vertically (on the y axis) */
+            /* the following css is irrelevant styling */
+            /* font-size: 20vmin; */
+            /* word-wrap: break-word; */
+        }
+
+        section:nth-child(1) {
+            color: white;
+            background-color: black;
+        }
+        section:nth-child(2) {
+            color: white;
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <section>
+<center>
+	<font size=+5>tauclock primer</font><br>
+	primer: a short informative piece of writing.<br><br><br>
+</center>
+	<hr>
+	figure 1:<br>
+	<center>
+	<img src=tauclock.0.16.main.png width=320/>
+	</center>
+	<hr>
+	figure 2:<br>
+	<center>
+	<img src=tauclock.0.16.settings.png width=320/>
+	</center>
+	<hr>
+	figure 3:<br>
+	<center>
+	<img src=example2.png width=320/>
+	</center>
+    </section>
+    <section>
+	    This is a primer for tauclock v0.16<br>
+	    <br>
+	    It is designed to be viewed on a small display in landscape mode<br>
+	    <br>
+	    The left and right halves of this page should be able to scroll
+	    vertically independant of each other.<br>
+	    <br>
+	<hr><i>please refer to figure 1 on the left</i><hr>
+	<br>
+	tauclock uses a 24 hour clock, with hours
+	numbered from 00 (midnight, or 12:00 am)
+	to 23 (11:00 pm)<br>
+	<br>
+	The very center of the clock shows the current
+	time in the currently selected timezone.  In
+	this case 18:55, or 6:55 PM.<br>
+	<br>
+	Above the current time is the weekday name,
+	as well as the month name and day.<br>
+	<br>
+	Below the current time is the current location
+	latitude and longitude, as well as the ISO8601
+	representation of the date.<br>
+	<br>
+	This clock has only one hand, the "now hand",
+	indicating the current time.  This is a solid
+	white line, which in this example appears
+	horizontally to the right, from the inner 
+	white circle to the outer white circle.<br>
+	<br>
+	Along the inside edge of the outside circle
+	are small numbers and ticks indicating the
+	hours.<br>
+	<br>
+	The section between the inner circle and
+	outer circle is partitioned into various
+	colors.<br>
+	<ul>
+		<li>Yellow indicates daylight,
+			when the Sun is above the horizon.</li>
+		<li>Orange indicates civil twilight, when the
+			Sun is just below the horizon.<br>This is
+	generally considered bright enough for
+	most people to see well without help.</li>
+		<li>Light Blue indicates nautical twilight.<br>
+	This is the period of time sailors
+	can begin to take readings from the
+	brightest stars.</li>
+		<li>Medium Blue indicates
+			astronomical twilight.<br>During this time,
+	most casual observers would regard the
+	sky as fully dark, especially under
+	urban or suburban light pollution.</li>
+		<li>Dark Blue indicates complete darkness.</li>
+	</ul>
+	Printed times at color transitions indicate when transitions
+	will occur.  In this example, the morning transition from
+	orange to yellow, indicating Sunrise, occurs at 07:30.
+	A printed time also appears at the top of the dial, indicating
+	when the Sun will be at its highest point, or "transit"<br>
+	<br>
+	These printed times may be in italic text, indicating they
+	occurred in the past (within the 12 hours before the "now hand")
+	or in bold text, indicating they will occur in the future
+	(within the 12 hours after the "now hand").<br>
+	<br>
+	Hours and minutes of daylight and darkness are also given.<br>
+	<br>
+	Just outside the inner circle is a depiction of the phase of
+	the Moon.  During the course of the Lunar month, this depiction
+	will travel clockwise around the inner circle.  If it is on the
+	right side, as in this example, it is "waxing" (getting bigger),
+	and if it is on the left side it is "waning" (getting smaller).
+	If it is generally above the inner circle it is "crescent", and
+	if it is generally below the inner circle it is "gibbous" (Latin for "hump").
+	New Moon occurs when the depiction is directly above the inner
+	circle, and Full Moon occurs when the depiction is directly
+	below the inner circle.<br>
+	<br>
+	If the Moon is above the horizon, it will have a white ring around
+	it, as shown in this example.  If it is below the horizon, the ring
+	around the moon will be a dark gray.<br>
+	<br>
+	Outside the outer circle are a series of colored arcs depicting the rise, transit,
+	and set times of various visible bodies.  Starting from the inside
+	and working out, they are:
+	<ul>
+		<li>Purple for the moon</li>
+		<li>Gray for Mercury</li>
+		<li>White for Venus</li>
+		<li>Red for Mars</li>
+		<li>Orange for Jupiter</li>
+		<li>Light Blue for Saturn</li>
+		<li>Green for the first point of Aries, which
+			is a sort of astronomical landmark.</li>
+	</ul>
+	Traditional astronomical symbols for these objects appear alongside the arcs,
+	in the appropriate colors.<br>
+	</br>
+	In the lower right of the image is text that reads "JD=".  This indicates
+	the Julian Day used to generate the image.  The Julian Day is the continuous
+	count of days since the beginning of the Julian period, and is used primarily
+	by astronomers.  It appears here for debugging purposes.
+	<br>
+	In the upper left is a "Location" button.  Pressing this will cycle through
+	the various location providers.  Text in the upper left indicates the current
+	location provider.  Not all providers are available on all devices, and
+	some providers may be disabled in the Android system settings.
+	The location providers are:
+	<ul>
+		<li>best (let Android chose what is best for this device)</li>
+		<li>fused (uses a combination of GPS and Network providers)</li>
+		<li>gps (uses GPS satellites to determine location)</li>
+		<li>network (uses Cellular of WiFi network)</li>
+		<li>passive (only updates if some other app asks for location)</li>
+		<li>manual (user selects location, see below)</li>
+	</ul>
+	The location provider can also be selected through the "Settings" button
+	(see below).<br>
+	<br>
+	If the location provider is "manual", the location can be entered via latitude
+	and longitude on the Settings page, OR the user can press anywhere in the dial,
+	causing a graphic of the earth to appear, which can then be dragged to the
+	desired location. (see below)
+	<br>
+	Also appearing along the bottom button row are the "&lt;" and "&gt;" buttons.<br>
+	<br>
+	When the "Offset Provider" in "Settings" is set to manual, these can be used
+	to move the clock forward or backward, day by day.  This is useful to determine
+	past or future event times.<br>
+	<br>
+	In the lower left is a "TZ" button.  Pressing this will cycle through
+	the various timezone providers.  Text in the lower left indicates the current
+	timezone provider, and the timezone given by that provider.
+	The timezone providers are:
+	<ul>
+		<li>system (use the timzeone of the Android device, regardless of location)</li>
+		<li>location (use a static database to guess the timezone based on location)</li>
+		<li>manual (user selects timezone, see below)</li>
+	</ul>
+	The timezone provider can also be selected through the "Settings" button
+	(see below).<br>
+	<br>
+	In this example, the timezone provider is "system", which is providing the
+	"America/Los_Angeles" timezone.  The two abbreviations for this timezone are
+	"PST" (for Pacific Standard Time) and "PDT" (for Pacific Daylight Time), and
+	the square brackets around "PDT" indicate that that is the actual timezone
+	currently in use.<br>
+	<br>
+	In the upper right is an "Alarms" button.  This feature is still under
+	development.<br>
+	<br>
+	In the lower right is the "Settings" button, which opens the settings
+	page shown below.<br>
+	<br>
+	<hr><i>please refer to figure 2 on the left</i><hr>
+	<br>
+	This is the Settings page.  Many features here are also available
+	on the main clock view.  This page allows you to select various
+	information providers, as well as values to use when a provider
+	is set to "manual".<br>
+	<br>
+	<hr><i>please refer to figure 3 on the left</i><hr>
+	<br>
+	This is the main clock view, when the location provider has
+	been set to "manual", and the user presses anywhere within the
+	clock dial.  This view of the earth can be dragged to set
+	the desired "manual" location.<br>
+	<br>
+	Latitude and longitude are shown along the top.<br>
+	<br>
+	The location based timezone is also shown in the lower left.<br>
+	[TODO: update figure 2 for v0.16]<br>
+	<br>
+	<hr>
+	<br>
+	Because of axial tilt, things can get strange near the North and South Poles,
+	especially around the solstices.
+	Sometimes the Sun may not rise or set for days, depending on the
+	time of year.  The same is true of the Moon and Planets.
+	They may be up for days on end, or never rise at all.<br>
+	<br>
+	<br>
+	<br>
+    </section>
 </body>
 </html>

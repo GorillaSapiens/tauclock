@@ -2308,18 +2308,21 @@ int do_when_is_it(double lat, double lon, int category, int type, int delayMinut
    observer.lat = lat;
    observer.lng = lon;
    double JD = ln_get_julian_from_sys();
+   double oJD = JD;
 
    initialize_all(context);
 
    for (int halfdays = 0; halfdays < 14; halfdays++) {
       events_populate(context, JD, &observer);
+      events_sort(context);
+      events_uniq(context);
 
       for (int i = 0; i < event_spot; i++) {
          if (events[i].category == category && events[i].type == type) {
             double event_jd = events[i].jd + ((double)delayMinutes * ONE_MINUTE_JD);
-            if (event_jd > JD) {
+            if (event_jd > oJD) {
                // in the future
-               return (int) ((event_jd - JD) * 24.0 * 60.0 * 60.0);
+               return (int) ((event_jd - oJD) * 24.0 * 60.0 * 60.0);
             }
          }
       }

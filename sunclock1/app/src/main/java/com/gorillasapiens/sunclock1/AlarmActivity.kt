@@ -206,9 +206,9 @@ class AlarmActivity : AppCompatActivity() {
             calendar.add(Calendar.SECOND, pondering_s)
 
             val intent = Intent(AlarmClock.ACTION_SET_ALARM)
-            intent.putExtra(AlarmClock.EXTRA_HOUR, calendar.get(Calendar.HOUR)) // Integer
+            intent.putExtra(AlarmClock.EXTRA_HOUR, calendar.get(Calendar.HOUR_OF_DAY)) // Integer
             intent.putExtra(AlarmClock.EXTRA_MINUTES, calendar.get(Calendar.MINUTE)) // Integer
-            intent.putExtra(AlarmClock.EXTRA_IS_PM, calendar.get(Calendar.PM) == 1) // Boolean
+            //intent.putExtra(AlarmClock.EXTRA_IS_PM, calendar.get(Calendar.AM_PM) == 1) // Boolean
             intent.putExtra(AlarmClock.EXTRA_MESSAGE, message)
             intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
             this.startActivity(intent)

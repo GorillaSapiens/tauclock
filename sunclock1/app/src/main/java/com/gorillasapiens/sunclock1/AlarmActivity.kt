@@ -86,7 +86,6 @@ class AlarmActivity : AppCompatActivity() {
                 }
                 else {
                     val tableEditText = EditText(this)
-                    tableEditText.setText(values[i])
 
                     // special case
                     if (title.contains("Add")) {
@@ -94,8 +93,16 @@ class AlarmActivity : AppCompatActivity() {
                             tableEditText.setText(mObserver)
                         }
                         else if (field == "delay") {
-                            tableEditText.setText("0")
+                            tableEditText.setText("")
+                            tableEditText.hint = "0"
                         }
+                        else {
+                            tableEditText.setText("")
+                            tableEditText.hint = values[i]
+                        }
+                    }
+                    else {
+                        tableEditText.setText(values[i])
                     }
 
                     if (field == "delay") {
@@ -145,6 +152,18 @@ class AlarmActivity : AppCompatActivity() {
                             val textview = row.getChildAt(1) as TextView
                             values += textview.text.toString()
                         }
+                        else if (field == "delay") {
+                            val editable = row.getChildAt(1) as EditText
+                            var value = 0
+                            try {
+                                value = editable.text.toString().toInt()
+                            }
+                            catch (e: Exception) {
+                                // do nothing
+                            }
+
+                            values += value.toString()
+                        }
                         else {
                             val editable = row.getChildAt(1) as EditText
                             values += editable.text.toString()
@@ -171,8 +190,8 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     private fun ponderAdd(values: Array<String?>) {
-        var wakeup_clock = System.currentTimeMillis() / 1000 + 24*60*60 // 24 hours from now
-        val alarmStorage = AlarmStorage(this)
+        //var wakeup_clock = System.currentTimeMillis() / 1000 + 24*60*60 // 24 hours from now
+        //val alarmStorage = AlarmStorage(this)
         val categorynames = arrayOf(
             "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
             "LUNAR",                   // moon and planets from here on
@@ -187,12 +206,12 @@ class AlarmActivity : AppCompatActivity() {
         val type = values[4]
         val delay = values[5]
 
-        val message = String.format("%s\n%s\n%s %s %s %s%s minutes",
+        val message = String.format("%s\n%s\n%s %s %s minutes at %s",
             label,
             description,
-            observer,
             categorynames[category!!.toInt()], typenames[type!!.toInt()],
-            if (delay?.toInt() ?: 0 < 0) { "-" } else { "+" }, delay)
+            delayString(delay),
+            observer)
 
         val latlon = observer?.split(",")
         val lat = latlon?.get(0)!!.toDouble()
@@ -212,6 +231,22 @@ class AlarmActivity : AppCompatActivity() {
             intent.putExtra(AlarmClock.EXTRA_MESSAGE, message)
             intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
             this.startActivity(intent)
+        }
+    }
+
+    private fun delayString(delay: String?): String {
+        var value = 0
+        try {
+            value = delay!!.toInt()
+        }
+        catch (e: Exception) {
+            // basically ignore it
+        }
+        if (value < 0) {
+            return value.toString()
+        }
+        else {
+            return "+" + value.toString()
         }
     }
 
@@ -236,9 +271,19 @@ class AlarmActivity : AppCompatActivity() {
             val values = alarmStorage!!.getSet(i)
 
             val tv = TextView(this)
-            tv.text = values[1]
+            tv.text = values[1] // bad deep voodoo
             if (tv.text.length == 0) {
-                tv.text = "<none>"
+                val observer = values[2]
+                val category = values[3]
+                val type = values[4]
+                val delay = values[5]
+
+                val message = String.format("%s %s %s minutes at %s",
+                    categorynames[category!!.toInt()], typenames[type!!.toInt()],
+                    delayString(delay),
+                    observer)
+
+                tv.text = message
             }
             tv.setTextColor(0xFFFFFFFF.toInt())
             tv.setTextSize(32.0f)

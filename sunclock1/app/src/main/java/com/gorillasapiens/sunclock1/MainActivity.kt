@@ -42,7 +42,6 @@ import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
-    private var mSeenAlarmTime_clock: Long = 0
     private var mDrawableInitialized = false
     private val mPermissionID = 44
     private var mSunClockDrawable: SunclockDrawable? = null
@@ -62,9 +61,6 @@ class MainActivity : AppCompatActivity() {
     private var mOtlLon : Double = 0.0
     private var mOtlSpin : Double = 0.0
 
-    private var mTimeZoneEngine: TimeZoneEngine? = null
-    private var mEngineDone = false
-
     private var mLocationManager : LocationManager? = null
     private var mProviderName: String = "best"
     private var mRealProviderName : String = "gps"
@@ -80,7 +76,10 @@ class MainActivity : AppCompatActivity() {
     private var mHandler = Handler(Looper.getMainLooper())
 
     companion object {
-      init {
+        var mTimeZoneEngine: TimeZoneEngine? = null
+        var mEngineDone = false
+
+        init {
          System.loadLibrary("libnova")
       }
     }
@@ -432,10 +431,12 @@ class MainActivity : AppCompatActivity() {
         //mUsed = (runtime.totalMemory() - runtime.freeMemory()) / 1048576
 
         GlobalScope.launch(Dispatchers.IO) {
-            mTimeZoneEngine = TimeZoneEngine.initialize()
-            launch(Dispatchers.Main) {
-                mEngineDone = true
-                mNeedUpdate = true
+            if (mTimeZoneEngine == null) {
+                mTimeZoneEngine = TimeZoneEngine.initialize()
+                launch(Dispatchers.Main) {
+                    mEngineDone = true
+                    mNeedUpdate = true
+                }
             }
         }
 

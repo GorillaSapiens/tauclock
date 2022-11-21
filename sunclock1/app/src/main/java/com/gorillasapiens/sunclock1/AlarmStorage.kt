@@ -21,8 +21,31 @@ class AlarmStorage(context: Context) {
         editor.putString(key, value)
     }
 
+    private fun removeTuple(editor:SharedPreferences.Editor, i:Int, s:String) {
+        val key = java.lang.String.format("%d_%s", i, s)
+        editor.remove(key)
+    }
+
     fun getCount(): Int {
         return sharedPreferences.getInt("alarms", 0)
+    }
+
+    fun putLedger(label: String?, hour:Int, minute:Int) {
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        val value = hour.toString() + ":" + minute.toString()
+        editor.putString(label, value)
+        editor.commit()
+    }
+
+    fun getLedger(label: String?) : Array<Int> {
+        val time = sharedPreferences.getString(label, "0:0")
+        return time!!.split(":").map { it.toInt() }.toTypedArray()
+    }
+
+    fun deleteLedger(label: String?) {
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.remove(label)
+        editor.commit()
     }
 
     fun deleteSet(i:Int) {
@@ -40,7 +63,7 @@ class AlarmStorage(context: Context) {
             }
         }
         for (member in fields) {
-            putTuple(editor, max - 1, member, null)
+            removeTuple(editor, max - 1, member)
         }
         editor.putInt("alarms", max-1)
         editor.commit()

@@ -135,8 +135,10 @@ class AlarmActivity : AppCompatActivity() {
                 }
 
                 if (title.contains("Del")) {
+                    val hourminute = alarmStorage!!.getLedger(values[0])
                     alarmStorage!!.deleteSet(entry)
-                    ponderDelete(values[0])
+                    alarmStorage!!.deleteLedger(values[0])
+                    ponderDelete(values[0], hourminute[0], hourminute[1])
                 }
                 else {
                     var values : Array<String?> = emptyArray()
@@ -224,10 +226,13 @@ class AlarmActivity : AppCompatActivity() {
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.SECOND, pondering_s)
 
+            alarmStorage!!.putLedger(label,
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE))
+
             val intent = Intent(AlarmClock.ACTION_SET_ALARM)
             intent.putExtra(AlarmClock.EXTRA_HOUR, calendar.get(Calendar.HOUR_OF_DAY)) // Integer
             intent.putExtra(AlarmClock.EXTRA_MINUTES, calendar.get(Calendar.MINUTE)) // Integer
-            //intent.putExtra(AlarmClock.EXTRA_IS_PM, calendar.get(Calendar.AM_PM) == 1) // Boolean
             intent.putExtra(AlarmClock.EXTRA_MESSAGE, message)
             intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
             this.startActivity(intent)
@@ -251,13 +256,17 @@ class AlarmActivity : AppCompatActivity() {
     }
 
     private fun ponderEdit(values: Array<String?>) {
+        val hourminute = alarmStorage!!.getLedger(values[0])
+        alarmStorage!!.deleteLedger(values[0])
         ponderAdd(values)
+        ponderDelete(values[0], hourminute[0], hourminute[1])
     }
 
-    private fun ponderDelete(label: String?) {
+    private fun ponderDelete(label: String?, hour: Int, minute: Int) {
         val intent = Intent(AlarmClock.ACTION_DISMISS_ALARM)
-        intent.putExtra(AlarmClock.EXTRA_ALARM_SEARCH_MODE, AlarmClock.ALARM_SEARCH_MODE_LABEL)
-        intent.putExtra(AlarmClock.EXTRA_MESSAGE, label)
+        intent.putExtra(AlarmClock.EXTRA_ALARM_SEARCH_MODE, AlarmClock.ALARM_SEARCH_MODE_TIME)
+        intent.putExtra(AlarmClock.EXTRA_HOUR, hour)
+        intent.putExtra(AlarmClock.EXTRA_MINUTES, minute)
         intent.putExtra(AlarmClock.EXTRA_SKIP_UI, true)
         this.startActivity(intent)
     }
@@ -336,19 +345,20 @@ class AlarmActivity : AppCompatActivity() {
 
         val editButton: Button = findViewById(R.id.editButton)
         editButton.setOnClickListener { v ->
-//            val entry = findEntry(alarmLayout)
-//            if (entry != -1) {
-//                addEditDelete("Edit #" + entry, "Edit existing alarm", entry)
-            AlertDialog.Builder(this)
-                .setTitle("Unimplemented")
-                .setMessage("'Edit' is unimplemented.  As a workaround, please manually delete this alarm and add a new one'.") // Specifying a listener allows you to take an action before dismissing the dialog.
-                .setPositiveButton(
-                    android.R.string.yes
-                ) { dialog, which ->
-
-                }
-                .setIcon(android.R.drawable.ic_dialog_alert)
-                .show()
+            val entry = findEntry(alarmLayout)
+            if (entry != -1) {
+                addEditDelete("Edit #" + entry, "Edit existing alarm", entry)
+//            AlertDialog.Builder(this)
+//                .setTitle("Unimplemented")
+//                .setMessage("'Edit' is unimplemented.  As a workaround, please manually delete this alarm and add a new one'.") // Specifying a listener allows you to take an action before dismissing the dialog.
+//                .setPositiveButton(
+//                    android.R.string.yes
+//                ) { dialog, which ->
+//
+//                }
+//                .setIcon(android.R.drawable.ic_dialog_alert)
+//                .show()
+            }
         }
 
         val deleteButton: Button = findViewById(R.id.deleteButton)

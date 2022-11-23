@@ -138,7 +138,7 @@ class AlarmActivity : AppCompatActivity() {
                     val hourminute = alarmStorage!!.getLedger(values[0])
                     alarmStorage!!.deleteSet(entry)
                     alarmStorage!!.deleteLedger(values[0])
-                    ponderDelete(values[0], hourminute[0], hourminute[1])
+                    ponderDelete(values[0], hourminute[0].toInt(), hourminute[1].toInt())
                 }
                 else {
                     var values : Array<String?> = emptyArray()
@@ -228,7 +228,8 @@ class AlarmActivity : AppCompatActivity() {
 
             alarmStorage!!.putLedger(label,
                 calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE))
+                calendar.get(Calendar.MINUTE),
+                calendar.getTimeInMillis())
 
             val intent = Intent(AlarmClock.ACTION_SET_ALARM)
             intent.putExtra(AlarmClock.EXTRA_HOUR, calendar.get(Calendar.HOUR_OF_DAY)) // Integer
@@ -259,7 +260,7 @@ class AlarmActivity : AppCompatActivity() {
         val hourminute = alarmStorage!!.getLedger(values[0])
         alarmStorage!!.deleteLedger(values[0])
         ponderAdd(values)
-        ponderDelete(values[0], hourminute[0], hourminute[1])
+        ponderDelete(values[0], hourminute[0].toInt(), hourminute[1].toInt())
     }
 
     private fun ponderDelete(label: String?, hour: Int, minute: Int) {

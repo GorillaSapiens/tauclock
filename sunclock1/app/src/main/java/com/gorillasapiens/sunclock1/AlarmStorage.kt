@@ -3,6 +3,7 @@ package com.gorillasapiens.sunclock1
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import java.util.*
 
 class AlarmStorage(context: Context) {
     companion object {
@@ -30,16 +31,16 @@ class AlarmStorage(context: Context) {
         return sharedPreferences.getInt("alarms", 0)
     }
 
-    fun putLedger(label: String?, hour:Int, minute:Int) {
+    fun putLedger(label: String?, hour: Int, minute: Int, time: Long) {
         val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        val value = hour.toString() + ":" + minute.toString()
+        val value = hour.toString() + ":" + minute.toString() + ":" + time.toString()
         editor.putString(label, value)
         editor.commit()
     }
 
-    fun getLedger(label: String?) : Array<Int> {
-        val time = sharedPreferences.getString(label, "0:0")
-        return time!!.split(":").map { it.toInt() }.toTypedArray()
+    fun getLedger(label: String?) : Array<Long> {
+        val time = sharedPreferences.getString(label, "0:0:0")
+        return time!!.split(":").map { it.toLong() }.toTypedArray()
     }
 
     fun deleteLedger(label: String?) {

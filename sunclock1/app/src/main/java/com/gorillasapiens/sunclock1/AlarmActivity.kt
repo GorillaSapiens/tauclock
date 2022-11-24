@@ -272,6 +272,18 @@ class AlarmActivity : AppCompatActivity() {
         this.startActivity(intent)
     }
 
+    fun refresh() {
+        for (i in 0..(alarmStorage!!.getCount())) {
+            val values = alarmStorage!!.getSet(i)
+            val ledger = alarmStorage!!.getLedger(values[0])
+            if (ledger == null || ledger.size != 3 || ledger[2] < Calendar.getInstance().timeInMillis) {
+                // refresh this alarm
+                alarmStorage!!.deleteLedger(values[0])
+                ponderAdd(values)
+            }
+        }
+    }
+
     private fun repopulate() {
         val count = alarmStorage!!.getCount()
         val alarmLayout: LinearLayout = findViewById(R.id.alarmLayout)
@@ -349,16 +361,6 @@ class AlarmActivity : AppCompatActivity() {
             val entry = findEntry(alarmLayout)
             if (entry != -1) {
                 addEditDelete("Edit #" + entry, "Edit existing alarm", entry)
-//            AlertDialog.Builder(this)
-//                .setTitle("Unimplemented")
-//                .setMessage("'Edit' is unimplemented.  As a workaround, please manually delete this alarm and add a new one'.") // Specifying a listener allows you to take an action before dismissing the dialog.
-//                .setPositiveButton(
-//                    android.R.string.yes
-//                ) { dialog, which ->
-//
-//                }
-//                .setIcon(android.R.drawable.ic_dialog_alert)
-//                .show()
             }
         }
 

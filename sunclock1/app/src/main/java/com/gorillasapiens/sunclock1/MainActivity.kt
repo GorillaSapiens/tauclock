@@ -577,7 +577,7 @@ class MainActivity : AppCompatActivity() {
         alarmIntent.putExtra("insert", true)
         val pendingIntent = PendingIntent.getBroadcast(
             this, 0, alarmIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
         )
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setInexactRepeating(

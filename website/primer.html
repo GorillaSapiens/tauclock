@@ -205,7 +205,8 @@
 	currently in use.<br>
 	<br>
 	In the upper right is an "Alarms" button.  This feature is still under
-	development.<br>
+	development. (see the <i>Alarms</i> section below for more details)
+	<br>
 	<br>
 	In the lower right is the "Settings" button, which opens the settings
 	page shown below.<br>
@@ -235,13 +236,36 @@
 	<br>
 	<hr>
 	<br>
+	<i>Circumpolar objects</i><br>
+	<br>
 	Because of axial tilt, things can get strange near the North and South Poles,
 	especially around the solstices.
 	Sometimes the Sun may not rise or set for days, depending on the
 	time of year.  The same is true of the Moon and Planets.
 	They may be up for days on end, or never rise at all.<br>
 	<br>
+	<hr>
 	<br>
+	<i>Alarms</i><br>
+	<br>
+	Android does not really have a concept of a "repeating" alarm
+	that changes time every day. Because of this, alarms created in
+	the alarms page are created within the Android operating system
+	as single shot alarms.	When a single shot alarm is dismissed,
+	it is auotomatically removed from the alarm clock app. Tauclock
+	runs a background task about once every half hour, looking for
+	alarms that have expired, and recreating new single shot alarms
+	in the future, with updated times.<br><br>
+	For example, if you set an alarm for sunrise, a single shot
+	alarm will be created for the next future sunrise.  When that
+	time occurs, and the alarm is dismissed, it disappears from the
+	Alarm Clock application, but it still persists within Tauclock.
+	Sometime within an hour or so after sunrise, Tauclock's background
+	task will wake up, calculate a new time for the next future
+	sunrise, and create a new single shot alarm with that time in
+	the Alarm Clock.<br><br>
+	If you do NOT want the alarm to repeat, simply delete it in
+	Tauclock<br>
 	<br>
     </section>
 </body>

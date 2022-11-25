@@ -4,9 +4,10 @@ package com.gorillasapiens.sunclock1
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.AlarmManager
-import android.app.AlarmManager.AlarmClockInfo
 import android.app.PendingIntent
+import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
@@ -15,12 +16,12 @@ import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.media.Ringtone
-import android.media.RingtoneManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -78,6 +79,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         var mTimeZoneEngine: TimeZoneEngine? = null
         var mEngineDone = false
+        var ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469
 
         init {
          System.loadLibrary("libnova")
@@ -217,28 +219,60 @@ class MainActivity : AppCompatActivity() {
     }
 
     // method to check for permissions
-    private fun checkPermissions(): Boolean {
+    private fun checkLocationPermissions(): Boolean {
         return ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
             this,
             Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.SET_ALARM
         ) == PackageManager.PERMISSION_GRANTED
     }
 
     // method to request for permissions
-    private fun requestPermissions() {
+    private fun requestLocationPermissions() {
         ActivityCompat.requestPermissions(
             this, arrayOf(
                 Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.SET_ALARM
+                Manifest.permission.ACCESS_FINE_LOCATION
             ), mPermissionID
         )
+    }
+
+    fun checkSystemAlertPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+                alertDialogBuilder.setTitle("Permission Required")
+                alertDialogBuilder.setMessage(
+                    "Tauclock also needs permission to draw over other apps.  This is necessary " +
+                            "for proper functioning of repeating alarms, and needs to be turned on manually " +
+                            "for this app in system settings.")
+                alertDialogBuilder.setPositiveButton("Ok",
+                    DialogInterface.OnClickListener { arg0, arg1 ->
+                        val intent = Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                        startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE)
+                    })
+                alertDialogBuilder.setCancelable(false)
+                alertDialogBuilder.show()
+            }
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE) {
+            if (!Settings.canDrawOverlays(this)) {
+                // You don't have permission
+                checkSystemAlertPermission()
+            } else {
+                // Do as per your logic
+            }
+        }
     }
 
     // If everything is alright then
@@ -327,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         editor.putString("provider", mProviderName)
         if (mProviderName == "manual") {
             if (mLastLocation != null) {
-                var latitude = mLastLastLocation!!.latitude
+                var latitude = mLastLocation!!.latitude
                 var longitude = mLastLocation!!.longitude
 
                 if (latitude > 0.0) {
@@ -537,12 +571,27 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         )
+
+        val alarmIntent = Intent(this, UpdateReceiver::class.java)
+        alarmIntent.putExtra("origin", "alarm")
+        alarmIntent.putExtra("insert", true)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, 0, alarmIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.setInexactRepeating(
+            AlarmManager.RTC_WAKEUP, Calendar.getInstance().timeInMillis,
+            AlarmManager.INTERVAL_HALF_HOUR, pendingIntent
+        )
+
+        checkSystemAlertPermission()
     }
 
     override fun onStart() {
         super.onStart()
-        if (!checkPermissions()) {
-            requestPermissions()
+        if (!checkLocationPermissions()) {
+            requestLocationPermissions()
         }
     }
 
@@ -551,7 +600,7 @@ class MainActivity : AppCompatActivity() {
 
         importSettings()
 
-        if (checkPermissions()) {
+        if (checkLocationPermissions()) {
             startProvider()
         }
 
@@ -563,7 +612,7 @@ class MainActivity : AppCompatActivity() {
 
         exportSettings()
 
-        if (checkPermissions()) {
+        if (checkLocationPermissions()) {
             stopProvider()
         }
     }
@@ -733,7 +782,7 @@ class MainActivity : AppCompatActivity() {
             }
             */
 
-            if (checkPermissions()) {
+            if (checkLocationPermissions()) {
                 try {
                     mLocationManager?.requestLocationUpdates(
                         mRealProviderName,
@@ -743,7 +792,7 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
                 catch(e : SecurityException) {
-                    requestPermissions()
+                    requestLocationPermissions()
                 }
             }
         }

@@ -5,6 +5,7 @@ package com.gorillasapiens.sunclock1
 import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
+import android.app.ActivityManager
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
@@ -240,24 +241,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun checkSystemAlertPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
-                alertDialogBuilder.setTitle("Permission Required")
-                alertDialogBuilder.setMessage(
-                    "Tauclock also needs permission to draw over other apps.  This is necessary " +
-                            "for proper functioning of repeating alarms, and needs to be turned on manually " +
-                            "for this app in system settings.")
-                alertDialogBuilder.setPositiveButton("Ok",
-                    DialogInterface.OnClickListener { arg0, arg1 ->
-                        val intent = Intent(
-                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:$packageName")
-                        )
-                        startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE)
-                    })
-                alertDialogBuilder.setCancelable(false)
-                alertDialogBuilder.show()
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        if (activityManager.isLowRamDevice()) {
+            val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+            alertDialogBuilder.setTitle("Low Ram Device")
+            alertDialogBuilder.setMessage(
+                "Repeating alarms will not function on low RAM devices.")
+            alertDialogBuilder.setPositiveButton("Ok",
+                DialogInterface.OnClickListener { arg0, arg1 ->
+                })
+            alertDialogBuilder.setCancelable(false)
+            alertDialogBuilder.show()
+        }
+        else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(this)) {
+                    val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
+                    alertDialogBuilder.setTitle("Permission Required")
+                    alertDialogBuilder.setMessage(
+                        "Tauclock also needs permission to draw over other apps.  This is necessary " +
+                                "for proper functioning of repeating alarms, and needs to be turned on manually " +
+                                "for this app in system settings.")
+                    alertDialogBuilder.setPositiveButton("Ok",
+                        DialogInterface.OnClickListener { arg0, arg1 ->
+                            val intent = Intent(
+                                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:$packageName")
+                            )
+                            startActivityForResult(intent, ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE)
+                        })
+                    alertDialogBuilder.setCancelable(false)
+                    alertDialogBuilder.show()
+                }
             }
         }
     }

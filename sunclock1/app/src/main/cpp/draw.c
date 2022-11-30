@@ -613,6 +613,10 @@ arc_canvas_shaded(Canvas * canvas,
       double begin_deg, double end_deg) {
    float theta;
 
+   if (strokewidth < 3) {
+      strokewidth =  3;
+   }
+
    if (end_deg < begin_deg) {
       end_deg += 360.0;
    }

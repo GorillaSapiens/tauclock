@@ -42,25 +42,6 @@ class SettingsActivity : AppCompatActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
 
-            var multiTimezone = findPreference<ListPreference>("manual_timezone")
-            if (multiTimezone != null) {
-                val timezones = TimeZone.getAvailableIDs()
-                multiTimezone.entries = timezones
-                multiTimezone.entryValues = timezones
-            }
-
-            var locationProviders = findPreference<ListPreference>("provider")
-            if (locationProviders != null) {
-                var mLocationManager = requireActivity().getSystemService(LOCATION_SERVICE) as LocationManager?
-                val allProviders = mLocationManager!!.getProviders(false)
-                allProviders.sort()
-                allProviders.add(0, "best")
-                allProviders.add("manual")
-                val array: Array<String> = allProviders.toTypedArray()
-                locationProviders.entries = array
-                locationProviders.entryValues = array
-            }
-
             var manualLocation = findPreference<EditTextPreference>("manual_location")
             if (manualLocation != null) {
                 manualLocation.setOnBindEditTextListener { editText ->
@@ -79,6 +60,98 @@ class SettingsActivity : AppCompatActivity() {
                         }
                     }
                 }
+            }
+
+            var locationProviders = findPreference<ListPreference>("provider")
+            if (locationProviders != null) {
+                var mLocationManager = requireActivity().getSystemService(LOCATION_SERVICE) as LocationManager?
+                val allProviders = mLocationManager!!.getProviders(false)
+                allProviders.sort()
+                allProviders.add(0, "best")
+                allProviders.add("manual")
+                val array: Array<String> = allProviders.toTypedArray()
+                locationProviders.entries = array
+                locationProviders.entryValues = array
+
+                val setting = locationProviders.value as String
+                if (setting != "manual") {
+                    manualLocation!!.setEnabled(false);
+                }
+                else {
+                    manualLocation!!.setEnabled(true);
+                }
+
+                locationProviders.setOnPreferenceChangeListener { preference, newValue ->
+                    var manualLocation = findPreference<EditTextPreference>("manual_location")
+                    val setting = newValue as String
+                    if (setting != "manual") {
+                        manualLocation!!.setEnabled(false);
+                    }
+                    else {
+                        manualLocation!!.setEnabled(true);
+                    }
+                    true
+                }
+
+            }
+
+            var multiTimezone = findPreference<ListPreference>("manual_timezone")
+            if (multiTimezone != null) {
+                val timezones = TimeZone.getAvailableIDs()
+                multiTimezone.entries = timezones
+                multiTimezone.entryValues = timezones
+            }
+
+            var timezoneProviders = findPreference<ListPreference>("timezone")
+            if (timezoneProviders != null) {
+
+                val setting = timezoneProviders.value as String
+                if (setting != "manual") {
+                    multiTimezone!!.setEnabled(false);
+                }
+                else {
+                    multiTimezone!!.setEnabled(true);
+                }
+
+                timezoneProviders.setOnPreferenceChangeListener { preference, newValue ->
+                    var multiTimezone = findPreference<ListPreference>("manual_timezone")
+                    val setting = newValue as String
+                    if (setting != "manual") {
+                        multiTimezone!!.setEnabled(false);
+                    }
+                    else {
+                        multiTimezone!!.setEnabled(true);
+                    }
+                    true
+                }
+
+            }
+
+            var manualOffset = findPreference<EditTextPreference>("manual_offset")
+            var offsetProviders = findPreference<ListPreference>("offset")
+            if (offsetProviders != null) {
+
+                val setting = offsetProviders.value as String
+                if (setting != "manual") {
+                    manualOffset!!.setEnabled(false);
+                }
+                else {
+                    manualOffset!!.setEnabled(true);
+                }
+
+                offsetProviders.setOnPreferenceChangeListener { preference, newValue ->
+                    var manualOffset = findPreference<EditTextPreference>("manual_offset")
+                    val setting = newValue as String
+                    if (setting != "manual") {
+                        manualOffset!!.setEnabled(false);
+                    }
+                    else {
+                        manualOffset!!.setEnabled(true);
+                    }
+                    true
+                }
+
+
             }
         }
     }

@@ -384,14 +384,14 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       ya = y + (r - SCALE(8)) * sin(DEG2RAD(angle - up_angle + 270.0));
       xc = x + r * cos(DEG2RAD(angle - up_angle + 270.0));
       yc = y + r * sin(DEG2RAD(angle - up_angle + 270.0));
-      line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, COLOR_BLACK);
+      line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, LOCK(COLOR_BLACK));
 
       xa = x + (r - SCALE(30)) * cos(DEG2RAD(angle - up_angle + 270.0));
       ya = y + (r - SCALE(30)) * sin(DEG2RAD(angle - up_angle + 270.0));
       char buf[32];
       sprintf(buf, "%02d", hour);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
-            COLOR_BLACK, COLOR_NONE, buf, 1, 3);
+            LOCK(COLOR_BLACK), COLOR_NONE, buf, 1, 3);
    }
    xor_canvas(shadow, canvas);
 
@@ -1474,7 +1474,6 @@ accum_helper(Context *context, Canvas * canvas,
       char *label,
       double draw_angle, unsigned int fore, unsigned int back) {
 
-printf("%s %08X %08X\n", __FUNCTION__, fore, back);
    angle = angle * 24.0 / 360.0;
    int hours = (int)angle;
    int minutes = (angle - (double)hours) * 60.0;
@@ -1568,7 +1567,6 @@ void
 do_tr_time_sun(Context *context, Canvas * canvas, double now, double jd, double theta,
       double radius, unsigned int fg, unsigned int bg) {
 
-printf("%s %08X %08X\n", __FUNCTION__, fg, bg);
    // get width and height by drawing offscreen
    int wh = do_xy_time(canvas, now, jd, -300, -300, fg, bg);
    int w = wh >> 16;

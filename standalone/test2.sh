@@ -18,8 +18,8 @@
 
 LAT=30
 LON=-80
-#LD=0
-LD=257
+LD=0
+#LD=257
 
 rm out*
 ./calcdata $LAT $LON 0 0.000 $LD;convert -size 1024x1024 -depth 8 RGBA:out.bin -alpha off out_000.png

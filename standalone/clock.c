@@ -1640,7 +1640,6 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    unsigned int lightdark_astronomical = COLOR_TWILIGHT;
 
    unsigned int transit_fore = COLOR_GREEN;
-   unsigned int transit_back = COLOR_RED;
 
    double angle_daylight = 0.0;
    double angle_civil = 0.0;
@@ -1740,7 +1739,6 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                if (transited == 0.0) {
                   transited = events[i].jd;
                   transit_fore = fore;
-                  transit_back = back;
                }
             }
          }
@@ -1870,7 +1868,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    if (transited != 0.0) {
       double angle = (transited-base) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(context, canvas, now, transited, angle,
-            canvas->w / 3 - SCALE(32), LOCK(transit_fore), COLOR_LOCK); //transit_fore, transit_back);
+            canvas->w / 3 - SCALE(32), LOCK(transit_fore), COLOR_LOCK);
    }
 
    if (lightdark == 0x0000) {
@@ -1942,68 +1940,56 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       bool twilight_done = false;
 
       if (angle_light > one_minute) {
-         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+         unsigned int fg = COLOR_GREEN;
 
          if (angle_daylight > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_DAYLIGHT;
          }
          else if (angle_civil > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_CIVIL;
          }
          else if (angle_nautical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_NAUTICAL;
          }
          else if (angle_astronomical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_ASTRONOMICAL;
          }
 
          accum_helper(context, canvas, angle_light, "light", 270.0, LOCK(fg), COLOR_LOCK);
       }
       else if (angle_twilight > one_minute) {
-         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+         unsigned int fg = COLOR_GREEN;
 
          if (angle_daylight > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_DAYLIGHT;
          }
          else if (angle_civil > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_CIVIL;
          }
          else if (angle_nautical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_NAUTICAL;
          }
          else if (angle_astronomical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_ASTRONOMICAL;
          }
 
          accum_helper(context, canvas, angle_twilight, "twilight", 270.0, LOCK(fg), COLOR_LOCK);
          twilight_done = true;
       }
       else if (angle_dark > one_minute) {
-         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+         unsigned int fg = COLOR_GREEN;
 
          if (angle_darkness > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_DARKNESS;
          }
          else if (angle_astronomical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_ASTRONOMICAL;
          }
          else if (angle_nautical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_NAUTICAL;
          }
          else if (angle_civil > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_CIVIL;
          }
 
          accum_helper(context, canvas, angle_dark, "dark", 270.0, LOCK(fg), COLOR_LOCK);
@@ -2011,44 +1997,37 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       }
 
       if (angle_dark > one_minute && !dark_done) {
-         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+         unsigned int fg = COLOR_GREEN;
 
          if (angle_darkness > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_DARKNESS;
          }
          else if (angle_astronomical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_ASTRONOMICAL;
          }
          else if (angle_nautical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_NAUTICAL;
          }
          else if (angle_civil > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_CIVIL;
          }
 
-         accum_helper(context, canvas, angle_dark, "dark", 90.0, fg, bg);
+         accum_helper(context, canvas, angle_dark, "dark", 90.0, LOCK(fg), COLOR_LOCK);
       }
       else if (angle_twilight > one_minute && !twilight_done) {
-         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+         unsigned int fg = COLOR_GREEN;
 
          if (angle_astronomical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_ASTRONOMICAL;
          }
          else if (angle_nautical > one_minute) {
             fg = COLOR_WHITE;
-            bg = COLOR_NAUTICAL;
          }
          else if (angle_civil > one_minute) {
             fg = COLOR_BLACK;
-            bg = COLOR_CIVIL;
          }
 
-         accum_helper(context, canvas, angle_twilight, "twilight", 90.0, fg, bg);
+         accum_helper(context, canvas, angle_twilight, "twilight", 90.0, LOCK(fg), COLOR_LOCK);
       }
 
    }

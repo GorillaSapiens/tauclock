@@ -327,12 +327,13 @@ double frac(double arg) {
 int
 do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
       unsigned int fg, unsigned int bg) {
+
    char time[32];
    struct ln_zonedate zonedate;
    my_get_local_date(jd, &zonedate);
    sprintf(time, "%02d:%02d", zonedate.hours, zonedate.minutes);
    return text_canvas(canvas, jd < now ? FONT_ITALIC_MED : FONT_BOLD_MED, x, y,
-         fg, COLOR_NONE, time, 1, 3);
+         fg, bg, time, 1, 3);
 }
 
 /// @brief Draw ticks every hour around the outside edge
@@ -383,14 +384,14 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
       ya = y + (r - SCALE(8)) * sin(DEG2RAD(angle - up_angle + 270.0));
       xc = x + r * cos(DEG2RAD(angle - up_angle + 270.0));
       yc = y + r * sin(DEG2RAD(angle - up_angle + 270.0));
-      line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, COLOR_BLACK);
+      line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, LOCK(COLOR_BLACK));
 
       xa = x + (r - SCALE(30)) * cos(DEG2RAD(angle - up_angle + 270.0));
       ya = y + (r - SCALE(30)) * sin(DEG2RAD(angle - up_angle + 270.0));
       char buf[32];
       sprintf(buf, "%02d", hour);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
-            COLOR_BLACK, COLOR_NONE, buf, 1, 3);
+            LOCK(COLOR_BLACK), COLOR_NONE, buf, 1, 3);
    }
    xor_canvas(shadow, canvas);
 
@@ -662,6 +663,7 @@ do_moon_draw(Context *context, Canvas * canvas,
 
 /// @brief Draw the perimeter planet band
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param up The Julian Date used as "up" on the clock
 /// @param now The current Julian Date
@@ -823,6 +825,8 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
 }
 
 /// @brief Clear the events list
+///
+/// @param context Pointer to computation context
 void events_clear(Context *context) {
    event_spot = 0;
 }
@@ -906,6 +910,8 @@ int event_compar(const void *a, const void *b) {
 /// @brief Sort the events list
 ///
 /// Uses the event_compar function
+///
+/// @param context Pointer to computation context
 void events_sort(Context *context) {
    qsort(events, event_spot, sizeof(Event), event_compar);
 }
@@ -913,6 +919,8 @@ void events_sort(Context *context) {
 /// @brief Uniq the events list
 ///
 /// Uses the event_compar function
+///
+/// @param context Pointer to computation context
 void events_uniq(Context *context) {
    int i = 0;
    while (i < event_spot - 1) {
@@ -932,6 +940,7 @@ void events_uniq(Context *context) {
 ///
 /// Used to mark events occurring +/- 12 hours from current time.
 ///
+/// @param context Pointer to computation context
 /// @param jd The curren Julian Date
 /// @return void
 void events_prune(Context *context, double jd) {
@@ -941,6 +950,8 @@ void events_prune(Context *context, double jd) {
 }
 
 /// @brief For debugging, print the events list
+///
+/// @param context Pointer to computation context
 void events_dump(Context *context) {
    struct ln_zonedate zonedate;
 
@@ -1000,6 +1011,7 @@ void delete_cache_node(struct CacheNode *p) {
 
 /// @brief Find up and down events
 ///
+/// @param context Pointer to computation context
 /// @param JD The current Julian Date
 /// @param observer latitude and logitude of observer
 /// @param get_equ_coords Function pointer to get the body coordinates
@@ -1094,6 +1106,7 @@ struct CacheNode *insert_tail(struct CacheNode *oldtail, double JD,
 
 /// @brief given an ECH array, create events
 ///
+/// @param context Pointer to computation context
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @param get_equ_coords Function pointer to get body coordinates
@@ -1257,6 +1270,7 @@ void events_populate_anything_array(Context *context, double JD,
 ///
 /// This just creates a tmp array and calls events_populate_anything_array
 ///
+/// @param context Pointer to computation context
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @param get_equ_coords Function pointer to get body coordinates
@@ -1277,6 +1291,7 @@ void events_populate_anything(Context *context, double JD,
 ///
 /// This just creates a tmp array and calls events_populate_anything_array
 ///
+/// @param context Pointer to computation context
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
@@ -1298,6 +1313,7 @@ void events_populate_solar(Context *context, double JD, struct ln_lnlat_posn *ob
 ///
 /// This just events_populate_anything
 ///
+/// @param context Pointer to computation context
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
@@ -1313,6 +1329,7 @@ void events_populate_lunar(Context *context, double JD, struct ln_lnlat_posn *ob
 ///
 /// This just events_populate_anything for each planet
 ///
+/// @param context Pointer to computation context
 /// @param JD The Julian Date
 /// @param observer Observer position
 /// @return void
@@ -1362,6 +1379,7 @@ void events_populate_planets(Context *context, double JD, struct ln_lnlat_posn *
 
 /// @brief Populate the event list
 ///
+/// @param context Pointer to computation context
 /// @param JD The current Julian Date
 /// @param observer The observer's lat/lon coordinates
 /// @return void
@@ -1373,6 +1391,7 @@ void events_populate(Context *context, double JD, struct ln_lnlat_posn *observer
 
 /// @brief Figure out which way is "up"
 ///
+/// @param context Pointer to computation context
 /// @param jd The current Julian Date
 /// @return A Julian Date useful as "up", usually a solar transit
 double events_transit(Context *context, double jd) {
@@ -1423,6 +1442,7 @@ double events_transit(Context *context, double jd) {
 ///
 /// This fixes some drawing oddities on very small screens
 ///
+/// @param context Pointer to computation context
 /// @param canvas Pointer to the canvas object
 /// @returns void
 void replay_accum_memory(Context *context, Canvas * canvas) {
@@ -1440,6 +1460,7 @@ int check(Context *context, int x, int y, int w, int h);
 
 /// @brief Helper function to accumulate total sunlight/night/whatever hours
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param angle The angle used to derive total time
 /// @param label The string label to draw
@@ -1490,11 +1511,12 @@ accum_helper(Context *context, Canvas * canvas,
 
    assert(accumdrawnspot < NUM_ACCUM);
    accumdrawnmemory[accumdrawnspot++] = (AccumDrawnMemory) {
-      x, y, fore, COLOR_NONE, strdup(buffer)};
+      x, y, fore, back, strdup(buffer)};
 }
 
-/// @brief A helper function toe determine when labels collide
+/// @brief A helper function to determine when labels collide
 ///
+/// @param context Pointer to computation context
 /// @param x X coordinate of desired label
 /// @param y Y coordinate of desired label
 /// @param w Width of desired label
@@ -1532,6 +1554,7 @@ int check(Context *context, int x, int y, int w, int h) {
 
 /// @brief Draw a time for the sun band given theta,radius
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param now The current Julian Date
 /// @param jd The Julian Date for the event of interest
@@ -1574,6 +1597,7 @@ do_tr_time_sun(Context *context, Canvas * canvas, double now, double jd, double 
 ///
 /// This fixes some drawing oddities on very small screens
 ///
+/// @param context Pointer to computation context
 /// @param canvas Pointer to the canvas object
 /// @returns void
 void replayTimeDrawnMemory(Context *context, Canvas * canvas) {
@@ -1583,12 +1607,14 @@ void replayTimeDrawnMemory(Context *context, Canvas * canvas) {
             timedrawnmemory[i].jd,
             timedrawnmemory[i].x,
             timedrawnmemory[i].y,
-            timedrawnmemory[i].fg, timedrawnmemory[i].bg);
+            timedrawnmemory[i].fg,
+            timedrawnmemory[i].bg);
    }
 }
 
 /// @brief Draw colored bands for solar position
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param up The Julian Date for "up"
 /// @param now The Julian Date for the current time
@@ -1614,7 +1640,6 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    unsigned int lightdark_astronomical = COLOR_TWILIGHT;
 
    unsigned int transit_fore = COLOR_GREEN;
-   unsigned int transit_back = COLOR_RED;
 
    double angle_daylight = 0.0;
    double angle_civil = 0.0;
@@ -1699,7 +1724,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                   times_written++;
                   // TODO FIX check size
                   do_tr_time_sun(context, canvas, now, last, start_angle,
-                        (canvas->w / 3 - SCALE(32)), fore, back);
+                        (canvas->w / 3 - SCALE(32)), LOCK(fore), COLOR_LOCK); //fore, back);
                }
 
                last = here;
@@ -1714,7 +1739,6 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                if (transited == 0.0) {
                   transited = events[i].jd;
                   transit_fore = fore;
-                  transit_back = back;
                }
             }
          }
@@ -1810,8 +1834,11 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    }
 
    // accumulate angle_daylight and angle_darkness
-   start_angle = normalize_angle(start_angle);
-   stop_angle = normalize_angle(stop_angle);
+
+   // ALREADY SEQUENTIAL!  DON'T NORMALIZE, IT BREAKS THE 24HR CASE!
+   //   start_angle = normalize_angle(start_angle);
+   //   stop_angle = normalize_angle(stop_angle);
+
    while (stop_angle <= start_angle) {
       stop_angle += 360.0;
    }
@@ -1835,59 +1862,59 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
 
    if (times_written) {
       do_tr_time_sun(context, canvas, now, last, start_angle,
-            canvas->w / 3 - SCALE(32), fore, back);
+            canvas->w / 3 - SCALE(32), LOCK(fore), COLOR_LOCK); //fore, back);
    }
 
    if (transited != 0.0) {
       double angle = (transited-base) * 360.0 - up_angle + 270.0;
       do_tr_time_sun(context, canvas, now, transited, angle,
-            canvas->w / 3 - SCALE(32), transit_fore, transit_back);
+            canvas->w / 3 - SCALE(32), LOCK(transit_fore), COLOR_LOCK);
    }
 
    if (lightdark == 0x0000) {
       if (angle_daylight > one_minute) {
-         accum_helper(context, canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
-               COLOR_DAYLIGHT);
+         accum_helper(context, canvas, angle_daylight, "daylight", 270.0,
+            LOCK(COLOR_BLACK), COLOR_LOCK);
       }
       else if (angle_civil > one_minute) {
-         accum_helper(context, canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
-               COLOR_CIVIL);
+         accum_helper(context, canvas, angle_civil, "civil", 270.0,
+            LOCK(COLOR_BLACK), COLOR_LOCK);
       }
       else if (angle_nautical > one_minute) {
-         accum_helper(context, canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
-               COLOR_NAUTICAL);
+         accum_helper(context, canvas, angle_nautical, "nautical", 270.0,
+            LOCK(COLOR_WHITE), COLOR_LOCK);
       }
       else if (angle_astronomical > one_minute) {
          accum_helper(context, canvas, angle_astronomical, "astronomical", 270.0,
-               COLOR_WHITE, COLOR_ASTRONOMICAL);
+            LOCK(COLOR_WHITE), COLOR_LOCK);
       }
       else if (angle_darkness > one_minute) {
-         accum_helper(context, canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
-               COLOR_DARKNESS);
+         accum_helper(context, canvas, angle_darkness, "darkness", 270.0,
+            LOCK(COLOR_WHITE), COLOR_LOCK);
       }
 
       if (angle_darkness > one_minute) {
          if (angle_astronomical > one_minute) {
             accum_helper(context, canvas, angle_darkness, "darkness", 90.0,
-                  COLOR_WHITE, COLOR_DARKNESS);
+               LOCK(COLOR_WHITE), COLOR_LOCK);
          }
       }
       else if (angle_astronomical > one_minute) {
          if (angle_nautical > one_minute) {
             accum_helper(context, canvas, angle_astronomical, "astronomical", 90.0,
-                  COLOR_WHITE, COLOR_ASTRONOMICAL);
+               LOCK(COLOR_WHITE), COLOR_LOCK);
          }
       }
       else if (angle_nautical > one_minute) {
          if (angle_civil > one_minute) {
             accum_helper(context, canvas, angle_nautical, "nautical", 90.0,
-                  COLOR_WHITE, COLOR_NAUTICAL);
+               LOCK(COLOR_WHITE), COLOR_LOCK);
          }
       }
       else if (angle_civil > one_minute) {
          if (angle_daylight > one_minute) {
-            accum_helper(context, canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
-                  COLOR_CIVIL);
+            accum_helper(context, canvas, angle_civil, "civil", 90.0,
+               LOCK(COLOR_BLACK), COLOR_LOCK);
          }
       }
    }
@@ -1907,15 +1934,102 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
          case 1: angle_dark += angle_astronomical; // fallthrough
       }
 
+      double angle_twilight = 360.0 - angle_light - angle_dark;
+
+      bool dark_done = false;
+      bool twilight_done = false;
+
       if (angle_light > one_minute) {
-         accum_helper(context, canvas, angle_light, "light", 270.0, COLOR_BLACK,
-               COLOR_WHITE);
+         unsigned int fg = COLOR_GREEN;
+
+         if (angle_daylight > one_minute) {
+            fg = COLOR_BLACK;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+
+         accum_helper(context, canvas, angle_light, "light", 270.0, LOCK(fg), COLOR_LOCK);
+      }
+      else if (angle_twilight > one_minute) {
+         unsigned int fg = COLOR_GREEN;
+
+         if (angle_daylight > one_minute) {
+            fg = COLOR_BLACK;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+
+         accum_helper(context, canvas, angle_twilight, "twilight", 270.0, LOCK(fg), COLOR_LOCK);
+         twilight_done = true;
+      }
+      else if (angle_dark > one_minute) {
+         unsigned int fg = COLOR_GREEN;
+
+         if (angle_darkness > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+         }
+
+         accum_helper(context, canvas, angle_dark, "dark", 270.0, LOCK(fg), COLOR_LOCK);
+         dark_done = true;
       }
 
-      if (angle_dark > one_minute) {
-         accum_helper(context, canvas, angle_dark, "dark", 90.0, COLOR_WHITE,
-               COLOR_BLACK);
+      if (angle_dark > one_minute && !dark_done) {
+         unsigned int fg = COLOR_GREEN;
+
+         if (angle_darkness > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+         }
+
+         accum_helper(context, canvas, angle_dark, "dark", 90.0, LOCK(fg), COLOR_LOCK);
       }
+      else if (angle_twilight > one_minute && !twilight_done) {
+         unsigned int fg = COLOR_GREEN;
+
+         if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+         }
+
+         accum_helper(context, canvas, angle_twilight, "twilight", 90.0, LOCK(fg), COLOR_LOCK);
+      }
+
    }
 }
 
@@ -1965,6 +2079,7 @@ double get_moon_angle(double JD, double lunar_new) {
 
 /// @brief Draw the perimeter bands for all planets
 ///
+/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
 /// @param JD The current Julian Date
 /// @param up The Julian Date used as "up" on the clock
@@ -2336,6 +2451,12 @@ Canvas *do_all(double lat, double lon, double offset, int width,
       do_sun_bands(context, canvas, up, JD, lightdark);
    }
 
+   // draw accumulated times
+   replay_accum_memory(context, canvas);
+
+   // redraw some text, to make things pretty
+   replayTimeDrawnMemory(context, canvas);
+
    // our rotating "now" hand
    do_now_hand(canvas, up, JD);
 
@@ -2346,14 +2467,8 @@ Canvas *do_all(double lat, double lon, double offset, int width,
       do_moon_draw(context, canvas, JD, lunar_phase, lunar_bright_limb, moon_angle);
    }
 
-   // draw accumulated times
-   replay_accum_memory(context, canvas);
-
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
-
-   // redraw some text, to make things pretty
-   replayTimeDrawnMemory(context, canvas);
 
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);

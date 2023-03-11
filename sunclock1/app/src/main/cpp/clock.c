@@ -2157,9 +2157,11 @@ double to_the_minute(double jd) {
 /// @param provider Name of the location provider to be displayed
 /// @param tzprovider Name of the timezone provider to be displayed
 /// @param tz Name of timezone to be used
+/// @param lightdark controls which regions are considered light and dark
 /// @return A canvas that has been drawn upon
 Canvas *do_all(double lat, double lon, double offset, int width,
-      const char *provider, const char *tzprovider, const char *tz) {
+      const char *provider, const char *tzprovider, const char *tz,
+      int lightdark) {
 
    static Context *context = NULL;
    if (context == NULL) {

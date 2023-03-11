@@ -28,14 +28,17 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
                      jint width,
                      jstring provider,
                      jstring tzprovider,
-                     jstring tz) {
+                     jstring tz,
+                     jint lightdark) {
     jboolean garbage = false;
     const char *ccProvider = env->GetStringUTFChars(provider, &garbage);
     garbage = false;
     const char *ccTz = env->GetStringUTFChars(tz, &garbage);
     garbage = false;
     const char *ccTzProvider = env->GetStringUTFChars(tzprovider, &garbage);
-    Canvas *canvas = do_all(lat, lon, offset, width, ccProvider, ccTzProvider, ccTz);
+    Canvas *canvas = do_all(lat, lon, offset,
+                            width, ccProvider, ccTzProvider, ccTz,
+                            lightdark);
     env->ReleaseStringUTFChars(tzprovider, ccTzProvider);
     env->ReleaseStringUTFChars(tz, ccTz);
     env->ReleaseStringUTFChars(provider, ccProvider);

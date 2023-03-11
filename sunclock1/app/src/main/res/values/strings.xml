@@ -13,4 +13,8 @@
     <string name="offset_category_title">Offset</string>
     <string name="offset_title">Offset Provider</string>
     <string name="manual_offset_title">Manual Offset</string>
+
+    <string name="light_dark_category_title">Light/Darkness</string>
+    <string name="light_title">Light</string>
+    <string name="dark_title">Dark</string>
 </resources>

@@ -2,6 +2,8 @@ package com.gorillasapiens.sunclock1
 
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
@@ -65,6 +67,14 @@ class SettingsActivity : AppCompatActivity() {
                 .commit()
         }
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        Handler(Looper.getMainLooper() ).postDelayed({
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this /* Activity context */)
+            val light = sharedPreferences.getInt("light", 0)
+            val dark = sharedPreferences.getInt("dark", 0)
+            technicolor(light, dark)
+        },100)
+
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -239,7 +249,6 @@ class SettingsActivity : AppCompatActivity() {
                     true
                 }
             }
-
         }
     }
 }

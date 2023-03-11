@@ -137,12 +137,22 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
    "lunar", "mercury", "venus", "mars", "jupiter", "saturn", "aries"
 };
 
-#define COLOR_MERCURY   COLOR_GRAY
-#define COLOR_VENUS     COLOR_WHITE
-#define COLOR_MARS      COLOR_RED
-#define COLOR_JUPITER   COLOR_ORANGE
-#define COLOR_SATURN    COLOR_LIGHTBLUE
-#define COLOR_ARIES     COLOR_GREEN
+#define COLOR_DAYLIGHT        COLOR_YELLOW
+#define COLOR_CIVIL           COLOR_ORANGE
+#define COLOR_NAUTICAL        COLOR_LIGHTBLUE
+#define COLOR_ASTRONOMICAL    COLOR_BLUE
+#define COLOR_DARKNESS        COLOR_DARKBLUE
+
+#define COLOR_LIGHT           COLOR_WHITE
+#define COLOR_TWILIGHT        COLOR_LIGHTGRAY
+#define COLOR_DARK            COLOR_DARKGRAY
+
+#define COLOR_MERCURY         COLOR_GRAY
+#define COLOR_VENUS           COLOR_WHITE
+#define COLOR_MARS            COLOR_RED
+#define COLOR_JUPITER         COLOR_ORANGE
+#define COLOR_SATURN          COLOR_LIGHTBLUE
+#define COLOR_ARIES           COLOR_GREEN
 
 /// @brief Human readable names for the EVENT_* defines
 const char *typenames[] = { "up", "down", "rise", "transit", "set" };
@@ -1582,16 +1592,26 @@ void replayTimeDrawnMemory(Context *context, Canvas * canvas) {
 /// @param canvas The Canvas to draw on
 /// @param up The Julian Date for "up"
 /// @param now The Julian Date for the current time
+/// @param lightdark Controls what is considered "light" and "dark"
 /// @return void
-void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
+void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int lightdark) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
+
    double last = now - 0.5;
    double base = (double)((int)(last));
 
+   int light = lightdark >> 8;
+   int dark = lightdark & 0xFF;
+
    // we begin in darkness...
-   unsigned int color = COLOR_DARKBLUE;
+   unsigned int color = COLOR_DARKNESS;
    unsigned int fore = COLOR_WHITE;
-   unsigned int back = COLOR_DARKBLUE;
+   unsigned int back = COLOR_DARKNESS;
+   unsigned int ld_color = COLOR_DARK;
+
+   unsigned int lightdark_civil = COLOR_TWILIGHT;
+   unsigned int lightdark_nautical = COLOR_TWILIGHT;
+   unsigned int lightdark_astronomical = COLOR_TWILIGHT;
 
    unsigned int transit_fore = COLOR_GREEN;
    unsigned int transit_back = COLOR_RED;
@@ -1612,6 +1632,23 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
 
    bool arcd = false;
 
+   if (lightdark != 0) {
+      int light = lightdark >> 8;
+      int dark = lightdark & 0xff;
+
+      switch (light) {
+         case 3: lightdark_astronomical = COLOR_LIGHT; // fallthrough
+         case 2: lightdark_nautical = COLOR_LIGHT;     // fallthrough
+         case 1: lightdark_civil = COLOR_LIGHT;        // fallthrough
+      }
+
+      switch (dark) {
+         case 3: lightdark_civil = COLOR_DARK;        // fallthrough
+         case 2: lightdark_nautical = COLOR_DARK;     // fallthrough
+         case 1: lightdark_astronomical = COLOR_DARK; // fallthrough
+      }
+   }
+
    // big, messy state machine...
    for (int i = 0; i < event_spot; i++) {
       if (events[i].prune == 0) {
@@ -1631,6 +1668,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
                      canvas->w / 2 / 2,
                      canvas->h / 2 / 2, color, start_angle,
                      stop_angle);
+               arc_canvas(canvas, canvas->w/2, canvas->w/2, canvas->w/2 / 2 + SCALE(126), 7, ld_color,
+                     start_angle, stop_angle);
 
                // accumulate angle_daylight and angle_darkness
                start_angle = normalize_angle(start_angle);
@@ -1639,19 +1678,19 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
                   stop_angle += 360.0;
                }
                switch (color) {
-                  case COLOR_YELLOW:
+                  case COLOR_DAYLIGHT:
                      angle_daylight += stop_angle - start_angle;
                      break;
-                  case COLOR_ORANGE:
+                  case COLOR_CIVIL:
                      angle_civil += stop_angle - start_angle;
                      break;
-                  case COLOR_LIGHTBLUE:
+                  case COLOR_NAUTICAL:
                      angle_nautical += stop_angle - start_angle;
                      break;
-                  case COLOR_BLUE:
+                  case COLOR_ASTRONOMICAL:
                      angle_astronomical += stop_angle - start_angle;
                      break;
-                  case COLOR_DARKBLUE:
+                  case COLOR_DARKNESS:
                      angle_darkness += stop_angle - start_angle;
                      break;
                }
@@ -1684,19 +1723,23 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
             if (events[i].type == EVENT_UP || events[i].type == EVENT_RISE) {
                switch (events[i].category) {
                   case CAT_ASTRONOMICAL:
-                     color = back = COLOR_BLUE;
+                     color = back = COLOR_ASTRONOMICAL;
+                     ld_color = lightdark_astronomical;
                      fore = COLOR_WHITE;
                      break;
                   case CAT_NAUTICAL:
-                     color = back = COLOR_LIGHTBLUE;
+                     color = back = COLOR_NAUTICAL;
+                     ld_color = lightdark_nautical;
                      fore = COLOR_WHITE;
                      break;
                   case CAT_CIVIL:
-                     color = back = COLOR_ORANGE;
+                     color = back = COLOR_CIVIL;
+                     ld_color = lightdark_civil;
                      fore = COLOR_BLACK;
                      break;
                   case CAT_SOLAR:
-                     color = back = COLOR_YELLOW;
+                     color = back = COLOR_DAYLIGHT;
+                     ld_color = COLOR_LIGHT;
                      fore = COLOR_BLACK;
                      break;
                   case CAT_LUNAR:
@@ -1715,22 +1758,26 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
                switch (events[i].category) {
                   case CAT_ASTRONOMICAL:
                      back = color;
-                     color = COLOR_DARKBLUE;
+                     color = COLOR_DARKNESS;
+                     ld_color = COLOR_DARK;
                      fore = COLOR_WHITE;
                      break;
                   case CAT_NAUTICAL:
                      back = color;
-                     color = COLOR_BLUE;
+                     color = COLOR_ASTRONOMICAL;
+                     ld_color = lightdark_astronomical;
                      fore = COLOR_WHITE;
                      break;
                   case CAT_CIVIL:
                      back = color;
-                     color = COLOR_LIGHTBLUE;
+                     color = COLOR_NAUTICAL;
+                     ld_color = lightdark_nautical;
                      fore = COLOR_BLACK;
                      break;
                   case CAT_SOLAR:
                      back = color;
-                     color = COLOR_ORANGE;
+                     color = COLOR_CIVIL;
+                     ld_color = lightdark_civil;
                      fore = COLOR_BLACK;
                      break;
                   case CAT_LUNAR:
@@ -1758,6 +1805,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
             canvas->w / 2 / 2,
             canvas->h / 2 / 2,
             color, start_angle, stop_angle);
+      arc_canvas(canvas, canvas->w/2, canvas->w/2, canvas->w/2 / 2 + SCALE(126), 7, ld_color,
+            start_angle, stop_angle);
    }
 
    // accumulate angle_daylight and angle_darkness
@@ -1767,19 +1816,19 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
       stop_angle += 360.0;
    }
    switch (color) {
-      case COLOR_YELLOW:
+      case COLOR_DAYLIGHT:
          angle_daylight += stop_angle - start_angle;
          break;
-      case COLOR_ORANGE:
+      case COLOR_CIVIL:
          angle_civil += stop_angle - start_angle;
          break;
-      case COLOR_LIGHTBLUE:
+      case COLOR_NAUTICAL:
          angle_nautical += stop_angle - start_angle;
          break;
-      case COLOR_BLUE:
+      case COLOR_ASTRONOMICAL:
          angle_astronomical += stop_angle - start_angle;
          break;
-      case COLOR_DARKBLUE:
+      case COLOR_DARKNESS:
          angle_darkness += stop_angle - start_angle;
          break;
    }
@@ -1795,49 +1844,77 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now) {
             canvas->w / 3 - SCALE(32), transit_fore, transit_back);
    }
 
-   if (angle_daylight > one_minute) {
-      accum_helper(context, canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
-            COLOR_YELLOW);
-   }
-   else if (angle_civil > one_minute) {
-      accum_helper(context, canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
-            COLOR_ORANGE);
-   }
-   else if (angle_nautical > one_minute) {
-      accum_helper(context, canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
-            COLOR_LIGHTBLUE);
-   }
-   else if (angle_astronomical > one_minute) {
-      accum_helper(context, canvas, angle_astronomical, "astronomical", 270.0,
-            COLOR_WHITE, COLOR_BLUE);
-   }
-   else if (angle_darkness > one_minute) {
-      accum_helper(context, canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
-            COLOR_DARKBLUE);
-   }
-
-   if (angle_darkness > one_minute) {
-      if (angle_astronomical > one_minute) {
-         accum_helper(context, canvas, angle_darkness, "darkness", 90.0,
-               COLOR_WHITE, COLOR_DARKBLUE);
-      }
-   }
-   else if (angle_astronomical > one_minute) {
-      if (angle_nautical > one_minute) {
-         accum_helper(context, canvas, angle_astronomical, "astronomical", 90.0,
-               COLOR_WHITE, COLOR_BLUE);
-      }
-   }
-   else if (angle_nautical > one_minute) {
-      if (angle_civil > one_minute) {
-         accum_helper(context, canvas, angle_nautical, "nautical", 90.0,
-               COLOR_WHITE, COLOR_LIGHTBLUE);
-      }
-   }
-   else if (angle_civil > one_minute) {
+   if (lightdark == 0x0000) {
       if (angle_daylight > one_minute) {
-         accum_helper(context, canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
-               COLOR_ORANGE);
+         accum_helper(context, canvas, angle_daylight, "daylight", 270.0, COLOR_BLACK,
+               COLOR_DAYLIGHT);
+      }
+      else if (angle_civil > one_minute) {
+         accum_helper(context, canvas, angle_civil, "civil", 270.0, COLOR_BLACK,
+               COLOR_CIVIL);
+      }
+      else if (angle_nautical > one_minute) {
+         accum_helper(context, canvas, angle_nautical, "nautical", 270.0, COLOR_WHITE,
+               COLOR_NAUTICAL);
+      }
+      else if (angle_astronomical > one_minute) {
+         accum_helper(context, canvas, angle_astronomical, "astronomical", 270.0,
+               COLOR_WHITE, COLOR_ASTRONOMICAL);
+      }
+      else if (angle_darkness > one_minute) {
+         accum_helper(context, canvas, angle_darkness, "darkness", 270.0, COLOR_WHITE,
+               COLOR_DARKNESS);
+      }
+
+      if (angle_darkness > one_minute) {
+         if (angle_astronomical > one_minute) {
+            accum_helper(context, canvas, angle_darkness, "darkness", 90.0,
+                  COLOR_WHITE, COLOR_DARKNESS);
+         }
+      }
+      else if (angle_astronomical > one_minute) {
+         if (angle_nautical > one_minute) {
+            accum_helper(context, canvas, angle_astronomical, "astronomical", 90.0,
+                  COLOR_WHITE, COLOR_ASTRONOMICAL);
+         }
+      }
+      else if (angle_nautical > one_minute) {
+         if (angle_civil > one_minute) {
+            accum_helper(context, canvas, angle_nautical, "nautical", 90.0,
+                  COLOR_WHITE, COLOR_NAUTICAL);
+         }
+      }
+      else if (angle_civil > one_minute) {
+         if (angle_daylight > one_minute) {
+            accum_helper(context, canvas, angle_civil, "civil", 90.0, COLOR_BLACK,
+                  COLOR_CIVIL);
+         }
+      }
+   }
+   else {
+      double angle_light = angle_daylight;
+      double angle_dark = angle_darkness;
+
+      switch (light) {
+         case 3: angle_light += angle_astronomical; // fallthrough
+         case 2: angle_light += angle_nautical;     // fallthrough
+         case 1: angle_light += angle_civil;        // fallthrough
+      }
+
+      switch (dark) {
+         case 3: angle_dark += angle_civil;        // fallthrough
+         case 2: angle_dark += angle_nautical;     // fallthrough
+         case 1: angle_dark += angle_astronomical; // fallthrough
+      }
+
+      if (angle_light > one_minute) {
+         accum_helper(context, canvas, angle_light, "light", 270.0, COLOR_BLACK,
+               COLOR_WHITE);
+      }
+
+      if (angle_dark > one_minute) {
+         accum_helper(context, canvas, angle_dark, "dark", 90.0, COLOR_WHITE,
+               COLOR_BLACK);
       }
    }
 }
@@ -2256,7 +2333,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // colored bands for the sun
    if (goodloc) {
-      do_sun_bands(context, canvas, up, JD);
+      do_sun_bands(context, canvas, up, JD, lightdark);
    }
 
    // our rotating "now" hand
@@ -2280,7 +2357,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // border bands
    arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
-   arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+   //arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
 
    // information in the center
    do_now_time(canvas, JD);

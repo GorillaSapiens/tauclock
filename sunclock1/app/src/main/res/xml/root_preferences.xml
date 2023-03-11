@@ -2,6 +2,25 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <PreferenceCategory
+        android:title="@string/light_dark_category_title"
+        app:key='"lightdarkcat"'>
+
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="light"
+            android:max="3"
+            android:title="@string/light_title"
+            app:min="0"
+            app:updatesContinuously="true" />
+        <SeekBarPreference
+            android:defaultValue="0"
+            android:key="dark"
+            android:max="3"
+            android:title="@string/dark_title"
+            app:min="0"
+            app:updatesContinuously="true" />
+    </PreferenceCategory>
     <PreferenceCategory android:title="@string/location_category_title">
 
         <ListPreference
@@ -55,25 +74,6 @@
             android:singleLine="true"
             android:title="@string/manual_offset_title"
             app:useSimpleSummaryProvider="true" />
-    </PreferenceCategory>
-    <PreferenceCategory
-        android:title="@string/light_dark_category_title"
-        app:key='"lightdarkcat"'>
-
-        <SeekBarPreference
-            android:defaultValue="0"
-            android:key="light"
-            android:max="3"
-            android:title="@string/light_title"
-            app:min="0"
-            app:updatesContinuously="true" />
-        <SeekBarPreference
-            android:defaultValue="0"
-            android:key="dark"
-            android:max="3"
-            android:title="@string/dark_title"
-            app:min="0"
-            app:updatesContinuously="true" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Thanks for using ταμ clock!">
 

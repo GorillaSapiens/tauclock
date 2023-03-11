@@ -73,7 +73,7 @@ class SettingsActivity : AppCompatActivity() {
             val light = sharedPreferences.getInt("light", 0)
             val dark = sharedPreferences.getInt("dark", 0)
             technicolor(light, dark)
-        },100)
+        },150)
 
     }
 

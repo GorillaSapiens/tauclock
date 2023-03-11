@@ -74,6 +74,9 @@ class MainActivity : AppCompatActivity() {
     private var mOffset: String = "none"
     private var mManualOffset : String = "0"
 
+    private var mLight : Int = 0
+    private var mDark : Int = 0
+
     // Create the Handler object (on the main thread by default)
     private var mHandler = Handler(Looper.getMainLooper())
 
@@ -367,6 +370,9 @@ class MainActivity : AppCompatActivity() {
         if (tmp != null && tmp.isNotEmpty()) {
             mManualOffset = tmp
         }
+
+        mLight = sharedPreferences.getInt("light", 0)
+        mDark = sharedPreferences.getInt("dark", 0)
     }
 
     private fun exportSettings() {
@@ -406,6 +412,8 @@ class MainActivity : AppCompatActivity() {
         editor.putString("manual_timezone", mManualTimeZone)
         editor.putString("offset", mOffset)
         editor.putString("manual_offset", mManualOffset)
+        editor.putInt("light", mLight)
+        editor.putInt("dark", mDark)
 
         editor.apply()
     }

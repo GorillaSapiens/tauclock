@@ -34,6 +34,8 @@ int main(int argc, char *argv[]) {
    }
 
    double offset = 0.0;
+   int lightdark = 0;
+
    if (argv[3]) {
       if (strchr(argv[3], '/')) {
          int year, month, day;
@@ -59,6 +61,9 @@ int main(int argc, char *argv[]) {
    if (argv[4]) {
       offset += atof(argv[4]);
    }
+   if (argv[5]) {
+      lightdark = atoi(argv[5]);
+   }
 
    char *provider = getenv("PROVIDER");
    if (provider == NULL) {
@@ -67,7 +72,7 @@ int main(int argc, char *argv[]) {
 
    Canvas *canvas =
       do_all(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
-             "tzprovider", "timezone");
+             "tzprovider", "timezone", lightdark);
 
    dump_canvas(canvas, "out.bin");
 

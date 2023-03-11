@@ -21,8 +21,10 @@ clean:
 	rm -rf deja* ico* *.h *.bdf *.png *.zip *.ttf
 	rm -f .bdf .part_a .part_b .part_c .part_d
 
-.part_a:
+dejavu-fonts-ttf-2.37.tar.bz2:
 	wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2
+
+.part_a: dejavu-fonts-ttf-2.37.tar.bz2
 	tar -xjvf deja*.tar.bz2
 	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_8.bdf
 	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_10.bdf

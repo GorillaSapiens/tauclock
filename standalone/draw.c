@@ -67,6 +67,10 @@ void dump_canvas(Canvas * canvas, const char *fname) {
       exit(-1);
    }
 
+   for (int i = 0; i < canvas->w * canvas->h; i++) {
+      canvas->data[i] |= 0xFF000000;
+   }
+
    int ret = write(fd, canvas->data,
          sizeof(unsigned int) * canvas->w * canvas->h);
    if (ret != sizeof(unsigned int) * canvas->w * canvas->h) {
@@ -105,7 +109,15 @@ void xor_canvas(Canvas * mask, Canvas * target) {
 void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
    if (0 <= x && x < canvas->w) {
       if (0 <= y && y < canvas->h) {
-         canvas->data[y * canvas->w + x] = color;
+         unsigned int current = canvas->data[y * canvas->w + x];
+         if (!ISLOCKED(current) || ISLOCKED(color)) {
+            if (color == COLOR_LOCK) {
+               canvas->data[y * canvas->w + x] = LOCK(current);
+            }
+            else {
+               canvas->data[y * canvas->w + x] = color;
+            }
+         }
       }
    }
 }

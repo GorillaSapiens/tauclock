@@ -33,10 +33,10 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.c draw.c clock.c libnova.a
+calcdata: main.c draw.c draw.h clock.c libnova.a
 	gcc -g -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
 
-calcrange: mainrange.c draw.c clock.c libnova.a
+calcrange: mainrange.c draw.c draw.h clock.c libnova.a
 	gcc -g -Wall -DSTANDALONE draw.c clock.c mainrange.c libnova.a -I libnova-0.15.0/src -lm -o calcrange
 
 libnova-0.15.0/doc/html:
@@ -58,5 +58,8 @@ tidy:
 
 clean: tidy
 	rm -f libnova.a doxygen.conf.bak calcdata
-	rm -rf libnova-0.15.0 latex html
+	rm -rf latex html
 	( cd fonts ; make clean )
+
+squeaky:
+	rm -rf libnova-0.15.0

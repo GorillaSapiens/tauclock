@@ -1836,8 +1836,11 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    }
 
    // accumulate angle_daylight and angle_darkness
-   start_angle = normalize_angle(start_angle);
-   stop_angle = normalize_angle(stop_angle);
+
+   // ALREADY SEQUENTIAL!  DON'T NORMALIZE, IT BREAKS THE 24HR CASE!
+   //   start_angle = normalize_angle(start_angle);
+   //   stop_angle = normalize_angle(stop_angle);
+
    while (stop_angle <= start_angle) {
       stop_angle += 360.0;
    }
@@ -1933,6 +1936,11 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
          case 1: angle_dark += angle_astronomical; // fallthrough
       }
 
+      double angle_twilight = 360.0 - angle_light - angle_dark;
+
+      bool dark_done = false;
+      bool twilight_done = false;
+
       if (angle_light > one_minute) {
          unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
 
@@ -1955,8 +1963,30 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
 
          accum_helper(context, canvas, angle_light, "light", 270.0, LOCK(fg), COLOR_LOCK);
       }
+      else if (angle_twilight > one_minute) {
+         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
 
-      if (angle_dark > one_minute) {
+         if (angle_daylight > one_minute) {
+            fg = COLOR_BLACK;
+            bg = COLOR_DAYLIGHT;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+            bg = COLOR_CIVIL;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_NAUTICAL;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_ASTRONOMICAL;
+         }
+
+         accum_helper(context, canvas, angle_twilight, "twilight", 270.0, LOCK(fg), COLOR_LOCK);
+         twilight_done = true;
+      }
+      else if (angle_dark > one_minute) {
          unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
 
          if (angle_darkness > one_minute) {
@@ -1976,8 +2006,49 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
             bg = COLOR_CIVIL;
          }
 
-         //accum_helper(context, canvas, angle_dark, "dark", 90.0, fg, bg);
-         accum_helper(context, canvas, angle_dark, "dark", 90.0, LOCK(fg), COLOR_LOCK);
+         accum_helper(context, canvas, angle_dark, "dark", 270.0, LOCK(fg), COLOR_LOCK);
+         dark_done = true;
+      }
+
+      if (angle_dark > one_minute && !dark_done) {
+         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+
+         if (angle_darkness > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_DARKNESS;
+         }
+         else if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_ASTRONOMICAL;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_NAUTICAL;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+            bg = COLOR_CIVIL;
+         }
+
+         accum_helper(context, canvas, angle_dark, "dark", 90.0, fg, bg);
+      }
+      else if (angle_twilight > one_minute && !twilight_done) {
+         unsigned int fg = COLOR_GREEN, bg = COLOR_RED;
+
+         if (angle_astronomical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_ASTRONOMICAL;
+         }
+         else if (angle_nautical > one_minute) {
+            fg = COLOR_WHITE;
+            bg = COLOR_NAUTICAL;
+         }
+         else if (angle_civil > one_minute) {
+            fg = COLOR_BLACK;
+            bg = COLOR_CIVIL;
+         }
+
+         accum_helper(context, canvas, angle_twilight, "twilight", 90.0, fg, bg);
       }
 
    }

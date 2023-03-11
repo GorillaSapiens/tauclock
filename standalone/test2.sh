@@ -16,9 +16,16 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-LAT=30
-LON=-80
-DATE=0
+#LAT=30
+#LON=-80
+LAT=-70
+LON=0
+
+#DATE=0
+
+DATE=2023/12/21
+DATE=2023/10/21
+
 #LD=0
 LD=257
 

@@ -174,62 +174,13 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"colors indicate sun position") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# colors yellow
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"yellow = sun above horizon") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# colors orange
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"orange = civil twilight") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# colors light blue
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"light blue = nautical twilight") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# colors blue
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"blue = astronomical twilight") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# colors dark blue
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,"dark blue = darkness") .
+   text(100,600,1300,900,
+      "colors indicate sun position: ".
+      "yellow = sun up; \\n".
+      "orange = civil twilight; ".
+      "light blue = nautical twilight; ".
+      "blue = astronomical twilight; ".
+      "dark blue = night") .
    "img/$m";
 print "$cmd\n";
 `$cmd`; popcrop();
@@ -240,40 +191,10 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1226,1646,1272,1826) .
-   text(100,600,1300,900,"edge color indicates light/dark") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# edge colors white
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(1226,1646,1272,1826) .
-   text(100,600,1300,900,"white = light") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# edge colors light gray
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(1226,1646,1272,1826) .
-   text(100,600,1300,900,"light gray = twilight") .
-   "img/$m";
-print "$cmd\n";
-`$cmd`; popcrop();
-$n++; $m = sprintf("primer_%03d.png", $n);
-
-# edge colors dark gray
-$load = "tauclock_0_26_main.png";
-$cmd = "convert $load " .
-   rectanglepre() .
-   rectangle(1226,1646,1272,1826) .
-   text(100,600,1300,900,"dark gray = dark") .
+   text(100,600,1300,900,"edge color indicates light/dark: \\n" .
+      "white = light; " .
+      "light gray = twilight; " .
+      "dark gray = dark") .
    "img/$m";
 print "$cmd\n";
 `$cmd`; popcrop();
@@ -373,6 +294,100 @@ $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,1122,254,1844) .
    text(100,600,1300,900,"rise, transit, and set times for moon & planets") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# julian date
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(1020,2286,1438,2374) .
+   text(100,600,1300,900,"current Julian Date") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# location provider
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,900,240,1000) .
+   text(212,1238,1322,2094,"location provider") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# location button
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,360,440,526) .
+   text(212,1238,1322,2094,"location button\\n" .
+      "cycles through location providers") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# timezone provider
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,2180,412,2400) .
+   text(212,1238,1322,2094,"timezone provider\\n".
+      "shows provider and current timezone") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# timezone button
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,2760,344,2906) .
+   text(212,1238,1322,2094,"timezone button\\n" .
+      "cycles through timezone providers") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# fwd/back button
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(348,2760,1020,2900) .
+   text(212,1238,1322,2094,"forward and back buttons\\n" .
+      "move clock forward or back when offset is set to manual") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# alarm button
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(1060,360,1430,520) .
+   text(212,1238,1322,2094,"alarm button\\n" .
+      "add / edit / delete alarms based on rise / transit / set events") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# settings button
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(1020,2750,1420,2910) .
+   text(212,1238,1322,2094,"settings button\\n" .
+      "change application settings") .
    "img/$m";
 print "$cmd\n";
 `$cmd`; popcrop();

@@ -8,6 +8,35 @@ $n = 0;
 $m = sprintf("primer_%03d.png", $n);
 @crop = ();
 
+sub do_html() {
+   my $fname = sprintf("primer_%03d.html", $n);
+   open TEMPLATE, "<template.html";
+   open FILE, ">$fname";
+
+   while (<TEMPLATE>) {
+      if (/PREV/) {
+         if ($n == 0) {
+            s/[ -~]/&nbsp;/g;
+         }
+         else {
+            $prev = sprintf("primer_%03d.html", $n - 1);
+            s/ //g;
+            $_ =~ s/^(.*)$/"<a href=$prev>$1<\/a>"/ge;
+         }
+      }
+      if (/NEXT/) {
+         $next = sprintf("primer_%03d.html", $n + 1);
+         s/ //g;
+         s/^(.*)$/"<a href=$next>$1<\/a>"/ge;
+      }
+      $pn = sprintf("%03d", $n);
+      s/_XXX/"_".$pn/ge;
+      print FILE $_;
+   }
+   close FILE;
+   close TEMPLATE;
+}
+
 sub popcrop() {
    if ($#crop < 0) {
       return;
@@ -89,7 +118,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"ταμ clock primer") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # weekday name
@@ -100,7 +129,7 @@ $cmd = "convert $load " .
    text(100,900,1300,1200,"weekday name") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # month and date
@@ -111,7 +140,7 @@ $cmd = "convert $load " .
    text(100,900,1300,1200,"month name and date") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # current time
@@ -122,7 +151,7 @@ $cmd = "convert $load " .
    text(100,900,1300,1200,"current time") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # current location
@@ -133,7 +162,7 @@ $cmd = "convert $load " .
    text(100,900,1300,1200,"current location") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # ISO-8601 date
@@ -144,7 +173,7 @@ $cmd = "convert $load " .
    text(100,900,1300,1200,"ISO 8601 date") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # now hand
@@ -155,7 +184,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"white 'now hand' indicates current time") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # hour ticks
@@ -166,7 +195,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"tick marks every hour around edge") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # colors
@@ -183,7 +212,7 @@ $cmd = "convert $load " .
       "dark blue = night") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # edge colors
@@ -197,7 +226,7 @@ $cmd = "convert $load " .
       "dark gray = dark") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # top time
@@ -208,7 +237,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"top time indicates solar noon") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # top duration
@@ -219,7 +248,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"top duration shows length of light") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # bottom duration
@@ -230,7 +259,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"bottom duration shows length of dark") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon
@@ -241,7 +270,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"phase of the moon") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon down
@@ -252,7 +281,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"gray edge indicates moon is down") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon up
@@ -263,7 +292,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"white edge indicates moon is up") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # sun rise times
@@ -271,10 +300,10 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(208,1591,387,1820) .
-   text(100,600,1300,900,"sun rise times, italic means in the past") .
+   text(100,600,1300,900,"sun rise times\\nitalic text = in the past") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # sun set times
@@ -282,10 +311,10 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1050,1580,1216,1821) .
-   text(100,600,1300,900,"sun set times, bold means in the future") .
+   text(100,600,1300,900,"sun set times\\nbold text = in the future") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # planets
@@ -296,7 +325,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"rise, transit, and set times for moon & planets") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # julian date
@@ -307,7 +336,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"current Julian Date") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # location provider
@@ -318,7 +347,7 @@ $cmd = "convert $load " .
    text(212,1238,1322,2094,"location provider") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # location button
@@ -330,7 +359,7 @@ $cmd = "convert $load " .
       "cycles through location providers") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # timezone provider
@@ -342,7 +371,7 @@ $cmd = "convert $load " .
       "shows provider and current timezone") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # timezone button
@@ -354,7 +383,7 @@ $cmd = "convert $load " .
       "cycles through timezone providers") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # fwd/back button
@@ -366,7 +395,7 @@ $cmd = "convert $load " .
       "move clock forward or back when offset is set to manual") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # alarm button
@@ -378,7 +407,7 @@ $cmd = "convert $load " .
       "add / edit / delete alarms based on rise / transit / set events") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # settings button
@@ -390,6 +419,6 @@ $cmd = "convert $load " .
       "change application settings") .
    "img/$m";
 print "$cmd\n";
-`$cmd`; popcrop();
+`$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 

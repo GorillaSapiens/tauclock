@@ -9,27 +9,38 @@ $m = sprintf("primer_%03d.png", $n);
 @crop = ();
 
 sub do_html() {
-   my $fname = sprintf("primer_%03d.html", $n);
+   my $nn = $n - 1;
+   if ($nn < 0) {
+      return;
+   }
+   my $xname = sprintf("img/primer_%03d.png", $nn + 1);
+
+   my $fname = sprintf("primer_%03d.html", $nn);
    open TEMPLATE, "<template.html";
    open FILE, ">$fname";
 
    while (<TEMPLATE>) {
       if (/PREV/) {
-         if ($n == 0) {
+         if ($nn == 0) {
             s/[ -~]/&nbsp;/g;
          }
          else {
-            $prev = sprintf("primer_%03d.html", $n - 1);
+            $prev = sprintf("primer_%03d.html", $nn - 1);
             s/ //g;
             $_ =~ s/^(.*)$/"<a href=$prev>$1<\/a>"/ge;
          }
       }
       if (/NEXT/) {
-         $next = sprintf("primer_%03d.html", $n + 1);
-         s/ //g;
-         s/^(.*)$/"<a href=$next>$1<\/a>"/ge;
+         if (-e $xname) {
+            $next = sprintf("primer_%03d.html", $nn + 1);
+            s/ //g;
+            s/^(.*)$/"<a href=$next>$1<\/a>"/ge;
+         }
+         else {
+            s/[ -~]/&nbsp;/g;
+         }
       }
-      $pn = sprintf("%03d", $n);
+      $pn = sprintf("%03d", $nn);
       s/_XXX/"_".$pn/ge;
       print FILE $_;
    }
@@ -118,6 +129,7 @@ $cmd = "convert $load " .
    text(100,600,1300,900,"ταμ clock primer") .
    "img/$m";
 print "$cmd\n";
+push @crop, "100,600,1300,900";
 `$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
@@ -203,12 +215,12 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(900,1480,1060,1880) .
-   text(100,600,1300,900,
-      "colors indicate sun position: ".
-      "yellow = sun up; \\n".
-      "orange = civil twilight; ".
-      "light blue = nautical twilight; ".
-      "blue = astronomical twilight; ".
+   text(100,600,1300,1400,
+      "colors indicate sun position:\\n".
+      "yellow = sun up\\n".
+      "orange = civil twilight\\n".
+      "light blue = nautical twilight\\n".
+      "blue = astronomical twilight\\n".
       "dark blue = night") .
    "img/$m";
 print "$cmd\n";
@@ -220,9 +232,9 @@ $load = "tauclock_0_26_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1226,1646,1272,1826) .
-   text(100,600,1300,900,"edge color indicates light/dark: \\n" .
-      "white = light; " .
-      "light gray = twilight; " .
+   text(100,600,1300,1500,"edge color indicates light/dark:\\n" .
+      "white = light\\n" .
+      "light gray = twilight\\n" .
       "dark gray = dark") .
    "img/$m";
 print "$cmd\n";
@@ -323,6 +335,14 @@ $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,1122,254,1844) .
    text(100,600,1300,900,"rise, transit, and set times for moon & planets") .
+   "-font DejaVu-Sans-Mono " .
+   text(300,930,1394,1900, "purple ☽︎ = Moon\\n" .
+      "gray ☿ = Mercury\\n" .
+      "white ♀ = Venus\\n" .
+      "red ♂ = Mars\\n" .
+      "orange ♃ = Jupiter\\n" .
+      "lt blue ♄ = Saturn\\n" .
+      "green ♈︎= Aries") .
    "img/$m";
 print "$cmd\n";
 `$cmd`; popcrop(); do_html();
@@ -422,3 +442,7 @@ print "$cmd\n";
 `$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
+
+
+####################### FINI
+do_html(); # for the last page

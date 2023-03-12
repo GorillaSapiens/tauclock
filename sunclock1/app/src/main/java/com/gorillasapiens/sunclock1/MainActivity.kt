@@ -123,19 +123,18 @@ class MainActivity : AppCompatActivity() {
     private fun manualOffsetAdjust(days: Long) {
         if (mManualOffset.contains("/") || mManualOffset.indexOf("-") > 0) {
             try {
-                val p :Pattern = Pattern.compile("([0-9]+)[-/]([0-9]+)[-/]([.0-9]+)")
-                val m :Matcher = p.matcher(mManualOffset)
+                val m :Matcher = mManualOffsetPattern.matcher(mManualOffset)
+                m.find()
                 val year: Int = m.group(1).toInt()
                 val month: Int = m.group(2).toInt()
-                val day: Int = m.group(3).toInt()
+                val day: Int = m.group(3).toDouble().toInt()
                 val residual: Double = m.group(3).toDouble() - day.toDouble();
 
-                val then = LocalDateTime.of(year,month,day,0,0)
-                then.plusDays(days)
+                val then = LocalDateTime.of(year,month,day,0,0).plusDays(days)
 
                 val sep = if (mManualOffset.contains("/")) "/" else "-"
                 mManualOffset =
-                    then.year.toString() + sep + then.month.toString() + sep +
+                    then.year.toString() + sep + then.month.value.toString() + sep +
                             (then.dayOfMonth.toDouble() + residual).toString()
             }
             catch (e: Exception) {

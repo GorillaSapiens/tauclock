@@ -137,11 +137,11 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
    "lunar", "mercury", "venus", "mars", "jupiter", "saturn", "aries"
 };
 
-#define COLOR_DAYLIGHT        COLOR_YELLOW
+#define COLOR_SUNUP           COLOR_YELLOW
 #define COLOR_CIVIL           COLOR_ORANGE
 #define COLOR_NAUTICAL        COLOR_LIGHTBLUE
 #define COLOR_ASTRONOMICAL    COLOR_BLUE
-#define COLOR_DARKNESS        COLOR_DARKBLUE
+#define COLOR_NIGHT           COLOR_DARKBLUE
 
 #define COLOR_LIGHT           COLOR_WHITE
 #define COLOR_TWILIGHT        COLOR_LIGHTGRAY
@@ -510,7 +510,7 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
    char *degree = "\u00B0";     // in utf8, degree symbol
 
    if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
-      sprintf(location, "INVALID_LOCATION");
+      sprintf(location, "INVALID LOCATION");
    }
    else {
       sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree,
@@ -1480,7 +1480,7 @@ accum_helper(Context *context, Canvas * canvas,
    char buffer[4096];
    if (minutes != 0) {
       if (hours != 0) {
-         sprintf(buffer, "%dh %dm\n%s", hours, minutes, label);
+         sprintf(buffer, "%dh%dm\n%s", hours, minutes, label);
       }
       else {
          sprintf(buffer, "%dm\n%s", minutes, label);
@@ -1629,10 +1629,10 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    int light = lightdark >> 8;
    int dark = lightdark & 0xFF;
 
-   // we begin in darkness...
-   unsigned int color = COLOR_DARKNESS;
+   // we begin in night...
+   unsigned int color = COLOR_NIGHT;
    unsigned int fore = COLOR_WHITE;
-   unsigned int back = COLOR_DARKNESS;
+   unsigned int back = COLOR_NIGHT;
    unsigned int ld_color = COLOR_DARK;
 
    unsigned int lightdark_civil = COLOR_TWILIGHT;
@@ -1641,11 +1641,11 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
 
    unsigned int transit_fore = COLOR_GREEN;
 
-   double angle_daylight = 0.0;
+   double angle_sunup = 0.0;
    double angle_civil = 0.0;
    double angle_nautical = 0.0;
    double angle_astronomical = 0.0;
-   double angle_darkness = 0.0;
+   double angle_night = 0.0;
 
    double up_angle = frac(up) * 360.0;
 
@@ -1696,15 +1696,15 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                arc_canvas(canvas, canvas->w/2, canvas->w/2, canvas->w/2 / 2 + SCALE(126), 7, ld_color,
                      start_angle, stop_angle);
 
-               // accumulate angle_daylight and angle_darkness
+               // accumulate angle_sunup and angle_night
                start_angle = normalize_angle(start_angle);
                stop_angle = normalize_angle(stop_angle);
                while (stop_angle < start_angle) {
                   stop_angle += 360.0;
                }
                switch (color) {
-                  case COLOR_DAYLIGHT:
-                     angle_daylight += stop_angle - start_angle;
+                  case COLOR_SUNUP:
+                     angle_sunup += stop_angle - start_angle;
                      break;
                   case COLOR_CIVIL:
                      angle_civil += stop_angle - start_angle;
@@ -1715,8 +1715,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                   case COLOR_ASTRONOMICAL:
                      angle_astronomical += stop_angle - start_angle;
                      break;
-                  case COLOR_DARKNESS:
-                     angle_darkness += stop_angle - start_angle;
+                  case COLOR_NIGHT:
+                     angle_night += stop_angle - start_angle;
                      break;
                }
 
@@ -1762,7 +1762,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                      fore = COLOR_BLACK;
                      break;
                   case CAT_SOLAR:
-                     color = back = COLOR_DAYLIGHT;
+                     color = back = COLOR_SUNUP;
                      ld_color = COLOR_LIGHT;
                      fore = COLOR_BLACK;
                      break;
@@ -1782,7 +1782,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                switch (events[i].category) {
                   case CAT_ASTRONOMICAL:
                      back = color;
-                     color = COLOR_DARKNESS;
+                     color = COLOR_NIGHT;
                      ld_color = COLOR_DARK;
                      fore = COLOR_WHITE;
                      break;
@@ -1833,7 +1833,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
             start_angle, stop_angle);
    }
 
-   // accumulate angle_daylight and angle_darkness
+   // accumulate angle_sunup and angle_night
 
    // ALREADY SEQUENTIAL!  DON'T NORMALIZE, IT BREAKS THE 24HR CASE!
    //   start_angle = normalize_angle(start_angle);
@@ -1843,8 +1843,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       stop_angle += 360.0;
    }
    switch (color) {
-      case COLOR_DAYLIGHT:
-         angle_daylight += stop_angle - start_angle;
+      case COLOR_SUNUP:
+         angle_sunup += stop_angle - start_angle;
          break;
       case COLOR_CIVIL:
          angle_civil += stop_angle - start_angle;
@@ -1855,8 +1855,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       case COLOR_ASTRONOMICAL:
          angle_astronomical += stop_angle - start_angle;
          break;
-      case COLOR_DARKNESS:
-         angle_darkness += stop_angle - start_angle;
+      case COLOR_NIGHT:
+         angle_night += stop_angle - start_angle;
          break;
    }
 
@@ -1872,8 +1872,8 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    }
 
    if (lightdark == 0x0000) {
-      if (angle_daylight > one_minute) {
-         accum_helper(context, canvas, angle_daylight, "daylight", 270.0,
+      if (angle_sunup > one_minute) {
+         accum_helper(context, canvas, angle_sunup, "sun up", 270.0,
             LOCK(COLOR_BLACK), COLOR_LOCK);
       }
       else if (angle_civil > one_minute) {
@@ -1888,14 +1888,14 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
          accum_helper(context, canvas, angle_astronomical, "astronomical", 270.0,
             LOCK(COLOR_WHITE), COLOR_LOCK);
       }
-      else if (angle_darkness > one_minute) {
-         accum_helper(context, canvas, angle_darkness, "darkness", 270.0,
+      else if (angle_night > one_minute) {
+         accum_helper(context, canvas, angle_night, "night", 270.0,
             LOCK(COLOR_WHITE), COLOR_LOCK);
       }
 
-      if (angle_darkness > one_minute) {
+      if (angle_night > one_minute) {
          if (angle_astronomical > one_minute) {
-            accum_helper(context, canvas, angle_darkness, "darkness", 90.0,
+            accum_helper(context, canvas, angle_night, "night", 90.0,
                LOCK(COLOR_WHITE), COLOR_LOCK);
          }
       }
@@ -1912,15 +1912,15 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
          }
       }
       else if (angle_civil > one_minute) {
-         if (angle_daylight > one_minute) {
+         if (angle_sunup > one_minute) {
             accum_helper(context, canvas, angle_civil, "civil", 90.0,
                LOCK(COLOR_BLACK), COLOR_LOCK);
          }
       }
    }
    else {
-      double angle_light = angle_daylight;
-      double angle_dark = angle_darkness;
+      double angle_light = angle_sunup;
+      double angle_dark = angle_night;
 
       switch (light) {
          case 3: angle_light += angle_astronomical; // fallthrough
@@ -1942,7 +1942,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       if (angle_light > one_minute) {
          unsigned int fg = COLOR_GREEN;
 
-         if (angle_daylight > one_minute) {
+         if (angle_sunup > one_minute) {
             fg = COLOR_BLACK;
          }
          else if (angle_civil > one_minute) {
@@ -1960,7 +1960,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       else if (angle_twilight > one_minute) {
          unsigned int fg = COLOR_GREEN;
 
-         if (angle_daylight > one_minute) {
+         if (angle_sunup > one_minute) {
             fg = COLOR_BLACK;
          }
          else if (angle_civil > one_minute) {
@@ -1979,7 +1979,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       else if (angle_dark > one_minute) {
          unsigned int fg = COLOR_GREEN;
 
-         if (angle_darkness > one_minute) {
+         if (angle_night > one_minute) {
             fg = COLOR_WHITE;
          }
          else if (angle_astronomical > one_minute) {
@@ -1999,7 +1999,7 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
       if (angle_dark > one_minute && !dark_done) {
          unsigned int fg = COLOR_GREEN;
 
-         if (angle_darkness > one_minute) {
+         if (angle_night > one_minute) {
             fg = COLOR_WHITE;
          }
          else if (angle_astronomical > one_minute) {

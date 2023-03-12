@@ -312,3 +312,69 @@ print "$cmd\n";
 `$cmd`; popcrop();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
+# moon
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(420,1640,576,1796) .
+   text(100,600,1300,900,"phase of the moon") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# moon down
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(420,1640,576,1796) .
+   text(100,600,1300,900,"gray edge indicates moon is down") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# moon up
+$load = "tauclock_0_26_main_b.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(425,1663,572,1799) .
+   text(100,600,1300,900,"white edge indicates moon is up") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# sun rise times
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(208,1591,387,1820) .
+   text(100,600,1300,900,"sun rise times, italic means in the past") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# sun set times
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(1050,1580,1216,1821) .
+   text(100,600,1300,900,"sun set times, bold means in the future") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# planets
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,1122,254,1844) .
+   text(100,600,1300,900,"rise, transit, and set times for moon & planets") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop();
+$n++; $m = sprintf("primer_%03d.png", $n);
+

@@ -11,7 +11,7 @@ android {
         minSdk 26
         targetSdk 31
         versionCode 23
-        versionName "0.25"
+        versionName "0.26"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {

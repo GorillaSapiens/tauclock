@@ -37,11 +37,12 @@ import kotlinx.coroutines.launch
 import net.iakovlev.timeshape.TimeZoneEngine
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalUnit
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.math.*
-
 
 class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
@@ -88,6 +89,62 @@ class MainActivity : AppCompatActivity() {
         init {
          System.loadLibrary("libnova")
       }
+    }
+
+    private val mManualOffsetPattern: Pattern = Pattern.compile("^([0-9]+)[-/]([0-9]+)[-/]([0-9]+(\\.[0-9]*)?)$")
+
+    private fun manualOffset2Double() : Double {
+        var ret = 0.0
+        if (mManualOffset.contains("/") || mManualOffset.indexOf("-") > 0) {
+            try {
+                val m :Matcher = mManualOffsetPattern.matcher(mManualOffset)
+                m.find()
+                val year: Int = m.group(1).toInt()
+                val month: Int = m.group(2).toInt()
+                val day: Int = m.group(3).toDouble().toInt()
+                val residual: Double = m.group(3).toDouble() - day.toDouble();
+
+                val now = LocalDateTime.now()
+                val then = LocalDateTime.of(year,month,day,0,0)
+
+                ret = now.until(then, ChronoUnit.DAYS).toDouble()
+                ret += residual
+            }
+            catch (e: Exception) {
+                // ignore it...
+            }
+        }
+        else {
+            ret =mManualOffset.toDouble()
+        }
+        return ret;
+    }
+
+    private fun manualOffsetAdjust(days: Long) {
+        if (mManualOffset.contains("/") || mManualOffset.indexOf("-") > 0) {
+            try {
+                val p :Pattern = Pattern.compile("([0-9]+)[-/]([0-9]+)[-/]([.0-9]+)")
+                val m :Matcher = p.matcher(mManualOffset)
+                val year: Int = m.group(1).toInt()
+                val month: Int = m.group(2).toInt()
+                val day: Int = m.group(3).toInt()
+                val residual: Double = m.group(3).toDouble() - day.toDouble();
+
+                val then = LocalDateTime.of(year,month,day,0,0)
+                then.plusDays(days)
+
+                val sep = if (mManualOffset.contains("/")) "/" else "-"
+                mManualOffset =
+                    then.year.toString() + sep + then.month.toString() + sep +
+                            (then.dayOfMonth.toDouble() + residual).toString()
+            }
+            catch (e: Exception) {
+                // ignore it...
+            }
+        }
+        else {
+            mManualOffset = (mManualOffset.toDouble() + days.toDouble()).toString();
+        }
     }
 
     private fun updateDrawing() {
@@ -154,7 +211,7 @@ class MainActivity : AppCompatActivity() {
             var offset = 0.0
             if (mOffset == "manual") {
                 try {
-                    offset = mManualOffset.toDouble()
+                    offset = manualOffset2Double()
                 }
                 catch (e: Exception) {
                     // do nothing
@@ -368,8 +425,8 @@ class MainActivity : AppCompatActivity() {
             mOffset = tmp
         }
         tmp = sharedPreferences.getString("manual_offset", "")
-        if (tmp != null && tmp.isNotEmpty()) {
-            mManualOffset = tmp
+        if (tmp != null && tmp.replace(" ", "").isNotEmpty()) {
+            mManualOffset = tmp.replace(" ", "")
         }
 
         mLight = sharedPreferences.getInt("light", 0)
@@ -412,7 +469,7 @@ class MainActivity : AppCompatActivity() {
         editor.putString("timezone", mTimeZoneProvider)
         editor.putString("manual_timezone", mManualTimeZone)
         editor.putString("offset", mOffset)
-        editor.putString("manual_offset", mManualOffset)
+        editor.putString("manual_offset", mManualOffset.replace(" ", ""))
         editor.putInt("light", mLight)
         editor.putInt("dark", mDark)
 
@@ -477,7 +534,7 @@ class MainActivity : AppCompatActivity() {
 
         mImageView = findViewById<View>(R.id.imageView) as ImageView
         mImageView?.setOnTouchListener(View.OnTouchListener { view, motionEvent ->
-            this.otl(motionEvent)
+            this.viewOnTouchListener(motionEvent)
             view.performClick()
             return@OnTouchListener true
         })
@@ -574,7 +631,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(v!!.context, "Offset Provider setting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
-                    mManualOffset = (mManualOffset.toDouble() - 1.0).toString()
+                    manualOffsetAdjust(-1);
                     mNeedUpdate = true
                     exportSettings()
                 }
@@ -589,7 +646,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(v!!.context, "Offset Provider settting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
-                    mManualOffset = (mManualOffset.toDouble() + 1.0).toString()
+                    manualOffsetAdjust(1)
                     mNeedUpdate = true
                     exportSettings()
                 }
@@ -658,7 +715,12 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun otl(motionEvent: MotionEvent) {
+    private fun isUpperLeft(motionEvent: MotionEvent) : Boolean {
+        return (motionEvent.x < (mImageView!!.width / 5.0) &&
+                motionEvent.y < (mImageView!!.height / 5.0))
+    }
+
+    private fun viewOnTouchListener(motionEvent: MotionEvent) {
         val action = motionEvent.action and MotionEvent.ACTION_MASK
 
         if (mRealProviderName == "manual") {
@@ -758,6 +820,18 @@ class MainActivity : AppCompatActivity() {
                     }
                     mLastLocation = proposedLocation
                     mNeedUpdate = true
+                }
+            }
+        }
+        else {
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (isUpperLeft(motionEvent)) {
+                    mOtlLat = mLastLocation?.latitude ?: 0.0
+                    mOtlLon = mLastLocation?.longitude ?: 0.0
+                    mOtlDown = !mOtlDown
+                    mOtlChanged = true
+                    mNeedUpdate = true
+                    return
                 }
             }
         }

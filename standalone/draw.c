@@ -514,7 +514,7 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 }
 
 /// @brief A step value used by arc_canvas()
-#define THETA_STEP(x) (180.0/(((double)(x)) * 2.0 * M_PI))
+#define THETA_STEP(x) (2.0 * 180.0/(((double)(x)) * 2.0 * M_PI))
 
 /// @brief Draw an arc on the canvas
 ///
@@ -541,20 +541,20 @@ arc_canvas(Canvas * canvas,
    }
 
    if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP(radius+strokewidth)) {
+      for (theta = begin_deg;
+           theta < end_deg;
+           theta += THETA_STEP(radius+strokewidth)) {
          int x1, y1, x2, y2;
+         double sin_theta = sin(theta * M_PI / 180.0);
+         double cos_theta = cos(theta * M_PI / 180.0);
          x1 = center_x + ((float)radius -
-               ((float)strokewidth) / 2.0) *
-            cos(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * cos_theta;
          y1 = center_y + ((float)radius -
-               ((float)strokewidth) / 2.0) *
-            sin(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * sin_theta;
          x2 = center_x + ((float)radius +
-               ((float)strokewidth) / 2.0) *
-            cos(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * cos_theta;
          y2 = center_y + ((float)radius +
-               ((float)strokewidth) / 2.0) *
-            sin(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * sin_theta;
          line_canvas(canvas, x1, y1, x2, y2, strokecolor);
       }
    }
@@ -644,20 +644,20 @@ arc_canvas_shaded(Canvas * canvas,
    }
 
    if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg; theta < end_deg; theta += THETA_STEP(radius+strokewidth)) {
+      for (theta = begin_deg;
+           theta < end_deg;
+           theta += THETA_STEP(radius+strokewidth)) {
          int x1, y1, x2, y2;
+         double sin_theta = sin(theta * M_PI / 180.0);
+         double cos_theta = cos(theta * M_PI / 180.0);
          x1 = center_x + ((float)radius -
-               ((float)strokewidth) / 2.0) *
-            cos(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * cos_theta;
          y1 = center_y + ((float)radius -
-               ((float)strokewidth) / 2.0) *
-            sin(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * sin_theta;
          x2 = center_x + ((float)radius +
-               ((float)strokewidth) / 2.0) *
-            cos(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * cos_theta;
          y2 = center_y + ((float)radius +
-               ((float)strokewidth) / 2.0) *
-            sin(theta * M_PI / 180.0);
+               ((float)strokewidth) / 2.0) * sin_theta;
          line_canvas_shaded(canvas, x1, y1, x2, y2, strokecolor,
                (x1 + x2) / 2, (y1 + y2) / 2,
                sqrt((x1 - x2) * (x1 - x2) +

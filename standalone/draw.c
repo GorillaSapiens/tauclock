@@ -734,7 +734,7 @@ printf("!?? %s:%d %g %g %d %d\n", __FILE__, __LINE__,
       }
    }
 
-begin_deg = 180.0; end_deg = 187.5;
+//begin_deg = 180.0; end_deg = 270.0-30.0;
 printf("!!! %s:%d %g %g %d %d\n", __FILE__, __LINE__,
    begin_deg, end_deg, radius, strokewidth);
 
@@ -835,13 +835,13 @@ printf("%s:%d small=%g large=%g\n", __FILE__, __LINE__,
       else {
          x_end_line = sqrt(square);
       }
-      if (signbit(cos_end) || signbit(cos_end)) {
+      if (signbit(cos_begin) || signbit(cos_end)) {
          x_end_line = -x_end_line;
       }
 
 printf("]]]] %s:%d y=%g %g %g\n", __FILE__, __LINE__, y, x_begin_line, x_end_line);
 
-      if (fabs(y) < 10.0) {
+      if (fabs(y) == 0.0) {
          // do nothing!
       }
       else if (begin_deg < 90.0) {
@@ -865,22 +865,22 @@ printf("%s:%d LIMIT\n", __FILE__, __LINE__);
          }
       }
       else if (begin_deg < 270.0) {
-         if (x_begin_line > y / tan(end_rad)) {
-            x_begin_line = y / tan(end_rad);
+         if (x_begin_line > y / tan(end_rad - M_PI)) {
+            x_begin_line = y / tan(end_rad - M_PI);
 printf("%s:%d LIMIT\n", __FILE__, __LINE__);
          }
-         if (x_end_line < y / tan(begin_rad)) {
-            x_end_line = y / tan(begin_rad);
+         if (x_end_line < y / tan(begin_rad - M_PI)) {
+            x_end_line = y / tan(begin_rad - M_PI);
 printf("%s:%d LIMIT\n", __FILE__, __LINE__);
          }
       }
       else { // < 360.0
-         if (x_begin_line < y / tan(begin_rad)) {
-            x_begin_line = y / tan(begin_rad);
+         if (x_begin_line < y / tan(begin_rad - M_PI)) {
+            x_begin_line = y / tan(begin_rad - M_PI);
 printf("%s:%d LIMIT\n", __FILE__, __LINE__);
          }
-         if (x_end_line > y / tan(end_rad)) {
-            x_end_line = y / tan(end_rad);
+         if (x_end_line > y / tan(end_rad - M_PI)) {
+            x_end_line = y / tan(end_rad - M_PI);
 printf("%s:%d LIMIT\n", __FILE__, __LINE__);
          }
       }

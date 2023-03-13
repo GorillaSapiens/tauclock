@@ -63,7 +63,11 @@ sub popcrop() {
    $y2 += 50;
    my $w = $x2 - $x1;
    my $h = $y2 - $y1;
-   my $cmd = "convert img/$ifname -crop $w"."x$h+$x1+$y1 img/$ofname";
+   my $scale = "";
+   if ($w > 512) {
+      $scale = "-scale 50%";
+   }
+   my $cmd = "convert img/$ifname -crop $w"."x$h+$x1+$y1 $scale img/$ofname";
    print "$cmd\n";
    `$cmd`;
 }
@@ -442,6 +446,17 @@ print "$cmd\n";
 `$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
+# light / darkness
+$load = "tauclock_0_26_settings_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(170,380,1400,1200) .
+   text(70,1290,1375,2600,"light / dark sliders\\n" .
+      "lets you choose which sun positions count as light or dark") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
 
 
 ####################### FINI

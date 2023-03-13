@@ -458,6 +458,119 @@ print "$cmd\n";
 `$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
+# location provider
+$load = "tauclock_0_26_settings_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(215,1319,710,1650) .
+   text(80,1910,1410,2750,"location provider\\n" .
+      "opens location provider settings dialog") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# location provider dialog
+$load = "tauclock_0_26_settings_location_provider.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(110,940,940,2010) .
+   text(80,80,1390,880,"location provider dialog " .
+      "allows you to select the location provider") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# location provider manual
+$load = "tauclock_0_26_settings_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(210,1705,1260,1905) .
+   text(80,1910,1410,2750,"manual location\\n" .
+      "opens manual location settings dialog") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# location provider manual
+$load = "tauclock_0_26_settings_location_manual.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(154,786,1292,1413) .
+   text(20,1450,1410,2623,"you can type in a city name and " .
+      "select from drop-down, or type " .
+      "coordinates (latitude,longitude).  North and East are " .
+      "positive, South and West are negative.") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# globe
+$load = "tauclock_0_26_globe.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(0,890,1420,2360) .
+   text(20,20,1420,880,"when manual location is selected, " .
+      "you can also touch the clock on the main screen, and " .
+      "drag the globe around.") .
+   text(20,2400,1400,2820,"display shows latitude, longitude, ".
+      "and suggested time zone for that location.") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# timezone provider
+$load = "tauclock_0_26_settings_main.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(214,2128,753,2321) .
+   text(44,1012,1408,1974,"opens the timezone provider settings dialog") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# timezone provider dialog
+$load = "tauclock_0_26_settings_timezone.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(137,1149,830,1793) .
+   text(20,1864,1364,2882,"system = let the device decide\\n".
+      "location = guess based on location\\n".
+      "manual = choose manually") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+# manual offset
+$load = "tauclock_0_26_settings_offset_manual.png";
+$cmd = "convert $load " .
+   rectanglepre() .
+   rectangle(132,819,715,1105) .
+   text(49,1331,1413,2414,"when manual offset is chosen, " .
+      "an offset from the current time ".
+      "can be selected, as +/- days from now, ".
+      "or as a date in YYYY/MM/DD format") .
+   "img/$m";
+print "$cmd\n";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
+
+
+
+
+
+
+
+
+
+
+
 
 ####################### FINI
 do_html(); # for the last page

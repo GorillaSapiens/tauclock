@@ -561,6 +561,15 @@ print "$cmd\n";
 `$cmd`; popcrop(); do_html();
 $n++; $m = sprintf("primer_%03d.png", $n);
 
+# primer fini
+$load = "tauclock_0_26_main.png";
+$cmd = "convert $load " .
+   text(100,600,1300,900,"ταμ clock primer\nFINI") .
+   "img/$m";
+print "$cmd\n";
+push @crop, "100,600,1300,900";
+`$cmd`; popcrop(); do_html();
+$n++; $m = sprintf("primer_%03d.png", $n);
 
 
 

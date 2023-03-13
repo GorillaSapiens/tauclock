@@ -644,8 +644,8 @@ arc_canvas(Canvas * canvas,
       }
    }
 
-   double outer = radius + strokewidth;
-   double inner = radius - strokewidth;
+   double outer = radius + strokewidth / 2;
+   double inner = outer - strokewidth;
 
    // disregard the center for now...
 

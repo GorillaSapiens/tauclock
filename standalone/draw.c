@@ -632,8 +632,8 @@ arc_canvas(Canvas * canvas,
       }
    }
 
-printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
-   begin_deg, end_deg, strokecolor, radius);
+//printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
+//   begin_deg, end_deg, strokecolor, radius);
 
    // we are now guaranteed to have a begin and end in
    // the same quadrant
@@ -669,8 +669,8 @@ printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
       }
    }
 
-   double outer = radius + strokewidth / 2;
-   double inner = outer - strokewidth;
+   double outer = (double)radius + round((double)strokewidth / 2.0 + .5);
+   double inner = (double)radius - round((double)strokewidth / 2.0 + .5);
 
    // disregard the center for now...
 
@@ -722,11 +722,22 @@ printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
          x_end_line = -x_end_line;
       }
 
-printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
-   y, x_begin_line, x_end_line);
+//printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
+//   y, x_begin_line, x_end_line);
 
-      if (fabs(y) == 0.0) {
-         // do nothing!
+      if (fabs(y) < 1.0) {
+         if (cos_begin < 0) {
+            x_begin_line = -inner;
+         }
+         else {
+            x_begin_line = inner;
+         }
+         if (cos_end < 0) {
+            x_end_line = -outer;
+         }
+         else {
+            x_end_line = outer;
+         }
       }
       else if (begin_deg < 90.0) {
          if (x_begin_line < y / tan(end_rad)) {
@@ -747,25 +758,21 @@ printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
       else if (begin_deg < 270.0) {
          if (x_begin_line > y / tan(end_rad - M_PI)) {
             x_begin_line = y / tan(end_rad - M_PI);
-printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
          if (x_end_line < y / tan(begin_rad - M_PI)) {
             x_end_line = y / tan(begin_rad - M_PI);
-printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
       }
       else { // < 360.0
          if (x_begin_line < y / tan(begin_rad - M_PI)) {
             x_begin_line = y / tan(begin_rad - M_PI);
-printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
          if (x_end_line > y / tan(end_rad - M_PI)) {
             x_end_line = y / tan(end_rad - M_PI);
-printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
       }
-printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
-   y, x_begin_line, x_end_line);
+//printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
+//   y, x_begin_line, x_end_line);
 
 
       double x_small = x_begin_line;

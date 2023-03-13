@@ -662,12 +662,12 @@ do_moon_draw(Context *context, Canvas * canvas,
    }
    // outline
    if (is_up == 1) {
-      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_WHITE, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_WHITE, 0, 360.0);
    }
    else {
-      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_BLACK, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_BLACK, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_BLACK, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_BLACK, 0, 360.0);
    }
 }
 

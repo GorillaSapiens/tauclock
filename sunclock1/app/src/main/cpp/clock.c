@@ -562,8 +562,10 @@ do_moon_draw(Context *context, Canvas * canvas,
    // this is, quite tedious.  here we go...
    int cx, cy;
 
-   cx = canvas->w / 2 + (int)(canvas->w * cos(DEG2RAD(where_angle)) / 6.0);
-   cy = canvas->h / 2 + (int)(canvas->h * sin(DEG2RAD(where_angle)) / 6.0);
+   cx = canvas->w / 2 +
+      (int)((10.0 + canvas->w / 6.0) * cos(DEG2RAD(where_angle)));
+   cy = canvas->h / 2 +
+      (int)((10.0 + canvas->h / 6.0) * sin(DEG2RAD(where_angle)));
 
    unsigned int interior_color;
    unsigned int chunk_color;

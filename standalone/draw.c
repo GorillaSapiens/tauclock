@@ -26,6 +26,28 @@
 #define INCLUDE_FONT_DATA
 #include "draw.h"
 
+static double mysin(double arg) {
+   if (arg > M_PI) {
+      arg -= 2.0 * M_PI;
+   }
+   if (arg < -M_PI) {
+      arg += 2.0 * M_PI;
+   }
+   return sin(arg);
+}
+#define sin(x) mysin(x)
+
+static double mycos(double arg) {
+   if (arg > M_PI) {
+      arg -= 2.0 * M_PI;
+   }
+   if (arg < -M_PI) {
+      arg += 2.0 * M_PI;
+   }
+   return cos(arg);
+}
+#define cos(x) mycos(x)
+
 /// @brief Create a new canvas suitable for drawing on
 ///
 /// @param w The width of the canvas
@@ -610,6 +632,9 @@ arc_canvas(Canvas * canvas,
       }
    }
 
+printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
+   begin_deg, end_deg, strokecolor, radius);
+
    // we are now guaranteed to have a begin and end in
    // the same quadrant
 
@@ -618,8 +643,8 @@ arc_canvas(Canvas * canvas,
    double end_rad = end_deg * M_PI / 180.0;
 
    double sin_begin = sin(begin_rad);
-   double sin_end = sin(end_rad);
    double cos_begin = cos(begin_rad);
+   double sin_end = sin(end_rad);
    double cos_end = cos(end_rad);
 
    // fix stupd trig rounding errors
@@ -697,6 +722,9 @@ arc_canvas(Canvas * canvas,
          x_end_line = -x_end_line;
       }
 
+printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
+   y, x_begin_line, x_end_line);
+
       if (fabs(y) == 0.0) {
          // do nothing!
       }
@@ -719,19 +747,26 @@ arc_canvas(Canvas * canvas,
       else if (begin_deg < 270.0) {
          if (x_begin_line > y / tan(end_rad - M_PI)) {
             x_begin_line = y / tan(end_rad - M_PI);
+printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
          if (x_end_line < y / tan(begin_rad - M_PI)) {
             x_end_line = y / tan(begin_rad - M_PI);
+printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
       }
       else { // < 360.0
          if (x_begin_line < y / tan(begin_rad - M_PI)) {
             x_begin_line = y / tan(begin_rad - M_PI);
+printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
          if (x_end_line > y / tan(end_rad - M_PI)) {
             x_end_line = y / tan(end_rad - M_PI);
+printf("%s:%d ### LIMIT\n", __FILE__, __LINE__);
          }
       }
+printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
+   y, x_begin_line, x_end_line);
+
 
       double x_small = x_begin_line;
       double x_large = x_begin_line;
@@ -868,6 +903,8 @@ arc_canvas_shaded(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
       double begin_deg, double end_deg) {
+   arc_canvas(canvas, center_x, center_y, radius, strokewidth, strokecolor, begin_deg, end_deg);
+   return;
    float theta;
 
    if (strokewidth < 3) {

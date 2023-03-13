@@ -1,4 +1,3 @@
-#pragma GCC optimize("Ofast")
 //  Sunclock, draw a clock with local solar and lunar information
 //  Copyright (C) 2022 Adam Wozniak / GorillaSapiens
 //
@@ -513,6 +512,517 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
+#if 0
+static double q1q4(double y, double tangent, double max) {
+   // x_begin_line = y / tangent;
+
+   // y / tangent < max
+   // y < max * tangent # tangent positive
+   // y > max * tangent # tangent negative
+
+   // y / tangent > 1
+   // y > tangent # tangent positive
+   // y < tangent # tangent negative
+
+   if (tangent >= 0) {
+      if (!(y < max * tangent)) {
+         return max;
+      }
+      if (!(y > tangent)) {
+         return 1;
+      }
+   }
+   else {
+      if (!(y > max * tangent)) {
+         return max;
+      }
+      if (!(y < tangent)) {
+         return 1;
+      }
+   }
+
+   return y / tangent;
+}
+
+static double q2q3(double y, double tangent, double min) {
+printf("%s:%d y=%g t=%g m=%g\n", __FILE__, __LINE__, y, tangent, min);
+   // x_begin_line = y / tangent;
+
+   // y / tangent > min
+   // y > min * tangent # tangent positive
+   // y < min * tangent # tangent negative
+
+   // y / tangent < -1
+   // y < -tangent # tangent positive
+   // y > -tangent # tangent negative
+
+   if (tangent == 0) {
+      if (y >= 0.0) {
+         return -1;
+      }
+      else {
+         return min;
+      }
+   }
+   else if (tangent > 0) {
+      if (!(y > min * tangent)) {
+printf("### %s:%d\n", __FILE__, __LINE__);
+         return min;
+      }
+      if (!(y < -tangent)) {
+printf("### %s:%d\n", __FILE__, __LINE__);
+         return -1;
+      }
+   }
+   else {
+      if (!(y < min * tangent)) {
+printf("### %s:%d\n", __FILE__, __LINE__);
+         return min;
+      }
+      if (!(y > -tangent)) {
+printf("### %s:%d\n", __FILE__, __LINE__);
+         return -1;
+      }
+   }
+
+   return y / tangent;
+}
+
+#endif
+
+// THIS IS THE NEW STUFF
+
+static double biggest4(double a, double b, double c, double d) {
+   double ret = a;
+   if (b > ret) { ret = b; }
+   if (c > ret) { ret = c; }
+   if (d > ret) { ret = d; }
+   return ret;
+}
+
+static double smallest4(double a, double b, double c, double d) {
+   double ret = a;
+   if (b < ret) { ret = b; }
+   if (c < ret) { ret = c; }
+   if (d < ret) { ret = d; }
+   return ret;
+}
+
+static int dist(double x, double y) {
+   return sqrt(x*x+y*y);
+}
+
+static double xfromysincosmax(double y,   // y
+                              double s,   // sin
+                              double c,   // cos
+                              double z) { // upper limit
+printf("### %s:%d y=%g s=%g c=%g z=%g\n", __FILE__, __LINE__,
+   y, s, c, z);
+
+   // in a perfect world...
+   // x = y / tan
+   // but this leads to... trouble.
+   //
+   // instead use
+   // x = y / (sin/cos)
+   // x = (y*cos)/sin
+
+   // we will overflow if
+   // x > z
+   // (abs(y) * abs(cos)) / abs(sin) > z
+   // abs(y) * abs(cos) > z * abs(sin) # avoid possible div0
+
+   double yac = y * fabs(c);
+   double zas = z * fabs(s);
+
+   if (yac > zas || fabs(s) < 0.000001 || fabs(c) < .000001) {
+      if (c < 0.0) {
+         return -INFINITY;
+      }
+      else {
+         return INFINITY;
+      }
+   }
+
+   double x = y * c / s;
+
+   return x;
+}
+
+/// @brief Draw an arc on the canvas
+///
+/// This function uses the recursive line_canvas to draw short segments of arc
+///
+/// @param canvas The Canvas to draw on
+/// @param center_x The center X coordinate used by the arc
+/// @param center_y The center Y coordinate used by the arc
+/// @param radius The radius of the arc
+/// @param strokewidth The width of the drawn arc
+/// @param strokecolor The color to draw inside the arc
+/// @param begin_deg The starting angle for the arc
+/// @param end_deg The ending angle for the arc
+/// @return void
+void
+arc_canvas(Canvas * canvas,
+      int center_x, int center_y, int radius,
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg) {
+
+printf("!?? %s:%d %g %g %d %d\n", __FILE__, __LINE__,
+   begin_deg, end_deg, radius, strokewidth);
+
+   if (strokecolor == COLOR_NONE) {
+      return;
+   }
+
+   // sane normalization
+   while (begin_deg < 0.0) {
+      begin_deg += 360.0;
+      end_deg += 360.0;
+   }
+   while (begin_deg >= 360.0) {
+      begin_deg -= 360.0;
+      end_deg -= 360.0;
+   }
+   while (end_deg < begin_deg) {
+      end_deg += 360.0;
+   }
+
+   // recursively break into quadrants
+   if (begin_deg >= 0.0 && begin_deg < 90.0) {
+      if (end_deg > 90.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 90.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            90.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 90.0 && begin_deg < 180.0) {
+      if (end_deg > 180.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 180.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            180.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 180.0 && begin_deg < 270.0) {
+      if (end_deg > 270.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 270.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            270.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 270.0 && begin_deg < 360.0) {
+      if (end_deg > 360.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 360.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            360.0, end_deg);
+         return;
+      }
+   }
+
+begin_deg = 180.0; end_deg = 187.5;
+printf("!!! %s:%d %g %g %d %d\n", __FILE__, __LINE__,
+   begin_deg, end_deg, radius, strokewidth);
+
+if (begin_deg >= 45.0 && begin_deg <= 90.0) {
+printf("FINDME %s:%d\n", __FILE__, __LINE__);
+}
+
+   // we are now guaranteed to have a begin and end in
+   // the same quadrant
+
+   // stuff we're going to use a lot
+   double begin_rad = begin_deg * M_PI / 180.0;
+   double end_rad = end_deg * M_PI / 180.0;
+
+   double sin_begin = sin(begin_rad);
+   double sin_end = sin(end_rad);
+   double cos_begin = cos(begin_rad);
+   double cos_end = cos(end_rad);
+
+   // fix stupd trig rounding errors
+   if (fabs(cos_begin) > 0.5) {
+      if (signbit(cos_begin) != signbit(cos_end)) {
+         cos_end = -cos_end;
+      }
+   }
+   if (fabs(cos_end) > 0.5) {
+      if (signbit(cos_begin) != signbit(cos_end)) {
+         cos_begin = -cos_begin;
+      }
+   }
+   if (fabs(sin_begin) > 0.5) {
+      if (signbit(sin_begin) != signbit(sin_end)) {
+         sin_end = -sin_end;
+      }
+   }
+   if (fabs(sin_end) > 0.5) {
+      if (signbit(sin_begin) != signbit(sin_end)) {
+         sin_begin = -sin_begin;
+      }
+   }
+
+printf("%s:%d sb=%g cb=%g se=%g ce=%g\n", __FILE__, __LINE__,
+   sin_begin, cos_begin, sin_end, cos_end);
+
+   double outer = radius + strokewidth;
+   double inner = radius - strokewidth;
+
+   // disregard the center for now...
+
+   // we shall consider 4 points:
+   // the end point of each of the outer and inner arcs.
+   // further, we look only at y values for now.
+
+   double y_outer_begin = outer * sin_begin;
+   double y_outer_end   = outer * sin_end;
+   double y_inner_begin = inner * sin_begin;
+   double y_inner_end   = inner * sin_end;
+
+   // now find the largest and smallest
+   double y_large =
+      biggest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+   double y_small =
+      smallest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+
+printf("%s:%d ob=%g oe=%g ib=%g ie=%g\n", __FILE__, __LINE__,
+   y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+
+   y_large = round(y_large);
+   y_small = round(y_small);
+
+printf("%s:%d small=%g large=%g\n", __FILE__, __LINE__,
+   y_small, y_large);
+
+   // for each scanline
+   for (double y = y_small; y <= y_large; y++) {
+      // find start and stop points on scanline
+      // it'll be on the line, or on the curve
+      double square;
+      double limit;
+
+      double x_begin_line;
+      square = inner*inner - y*y;
+      if (square < 0.0) {
+         x_begin_line = 0.0;
+      }
+      else {
+         x_begin_line = sqrt(square);
+      }
+      if (signbit(cos_begin) || signbit(cos_end)) {
+         x_begin_line = -x_begin_line;
+      }
+
+      double x_end_line;
+      square = outer*outer - y*y;
+      if (square < 0.0) {
+         x_end_line = 0.0;
+      }
+      else {
+         x_end_line = sqrt(square);
+      }
+      if (signbit(cos_end) || signbit(cos_end)) {
+         x_end_line = -x_end_line;
+      }
+
+printf("]]]] %s:%d y=%g %g %g\n", __FILE__, __LINE__, y, x_begin_line, x_end_line);
+
+      if (fabs(y) < 10.0) {
+         // do nothing!
+      }
+      else if (begin_deg < 90.0) {
+         if (x_begin_line < y / tan(end_rad)) {
+            x_begin_line = y / tan(end_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+         if (x_end_line > y / tan(begin_rad)) {
+            x_end_line = y / tan(begin_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+      }
+      else if (begin_deg < 180.0) {
+         if (x_begin_line > y / tan(begin_rad)) {
+            x_begin_line = y / tan(begin_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+         if (x_end_line < y / tan(end_rad)) {
+            x_end_line = y / tan(end_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+      }
+      else if (begin_deg < 270.0) {
+         if (x_begin_line > y / tan(end_rad)) {
+            x_begin_line = y / tan(end_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+         if (x_end_line < y / tan(begin_rad)) {
+            x_end_line = y / tan(begin_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+      }
+      else { // < 360.0
+         if (x_begin_line < y / tan(begin_rad)) {
+            x_begin_line = y / tan(begin_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+         if (x_end_line > y / tan(end_rad)) {
+            x_end_line = y / tan(end_rad);
+printf("%s:%d LIMIT\n", __FILE__, __LINE__);
+         }
+      }
+
+printf("]]]] %s:%d y=%g %g %g\n", __FILE__, __LINE__, y, x_begin_line, x_end_line);
+
+#if 0
+      if (begin_deg < 90.0) {
+printf("%s:%d Q1\n", __FILE__, __LINE__);
+         x_begin_line = q1q4(y,tan_begin,far);
+         x_end_line = q1q4(y,tan_end,far);
+
+         distance = dist(x_begin_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_begin_line = sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_begin_line = sqrt(smllimit*smllimit-y*y);
+         }
+
+         distance = dist(x_end_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_end_line = sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_end_line = sqrt(smllimit*smllimit-y*y);
+         }
+      }
+      else if (begin_deg < 180.0) {
+printf("%s:%d Q2\n", __FILE__, __LINE__);
+         x_begin_line = q2q3(y,othertan_begin,-far);
+         x_end_line = q2q3(y,othertan_end,-far);
+printf("%s:%d y=%g xb=%g xe=%g\n", __FILE__, __LINE__, y, x_begin_line, x_end_line);
+
+         distance = dist(x_begin_line, y);
+printf("%s:%d d=%g bl=%g sl=%g\n", __FILE__, __LINE__, distance, biglimit, smllimit);
+         if (distance > biglimit) {
+            // we're past the outer curve
+printf("%s:%d xb=%g\n", __FILE__, __LINE__, x_begin_line);
+            x_begin_line = -sqrt(biglimit*biglimit-y*y);
+printf("%s:%d xb=%g\n", __FILE__, __LINE__, x_begin_line);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+printf("%s:%d xb=%g\n", __FILE__, __LINE__, x_begin_line);
+            x_begin_line = -sqrt(smllimit*smllimit-y*y);
+printf("%s:%d xb=%g\n", __FILE__, __LINE__, x_begin_line);
+         }
+
+         distance = dist(x_end_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+printf("%s:%d xe=%g\n", __FILE__, __LINE__, x_end_line);
+            x_end_line = -sqrt(biglimit*biglimit-y*y);
+printf("%s:%d xe=%g\n", __FILE__, __LINE__, x_end_line);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+printf("%s:%d xe=%g\n", __FILE__, __LINE__, x_end_line);
+            x_end_line = -sqrt(smllimit*smllimit-y*y);
+printf("%s:%d xe=%g\n", __FILE__, __LINE__, x_end_line);
+         }
+      }
+      else if (begin_deg < 270.0) {
+printf("%s:%d Q3\n", __FILE__, __LINE__);
+         x_begin_line = q2q3(y,othertan_begin,-far);
+         x_end_line = q2q3(y,othertan_end,-far);
+
+         distance = dist(x_begin_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_begin_line = -sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_begin_line = -sqrt(smllimit*smllimit-y*y);
+         }
+
+         distance = dist(x_end_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_end_line = -sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_end_line = -sqrt(smllimit*smllimit-y*y);
+         }
+      }
+      else { // begin_deg < 360.0
+printf("%s:%d Q4 %g %g\n", __FILE__, __LINE__, tan_begin, tan_end);
+         x_begin_line = q1q4(y,tan_begin,far);
+         x_end_line = q1q4(y,tan_end,far);
+
+         distance = dist(x_begin_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_begin_line = sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_begin_line = sqrt(smllimit*smllimit-y*y);
+         }
+
+         distance = dist(x_end_line, y);
+         if (distance > biglimit) {
+            // we're past the outer curve
+            x_end_line = sqrt(biglimit*biglimit-y*y);
+         }
+         else if (distance < smllimit) {
+            // we're before the inner curve
+            x_end_line = sqrt(smllimit*smllimit-y*y);
+         }
+      }
+#endif
+
+printf(">>>> %s:%d y=%g %g %g\n", __FILE__, __LINE__, y, x_begin_line, x_end_line);
+      double x_small = x_begin_line;
+      double x_large = x_begin_line;
+
+      if (x_end_line < x_small) { x_small = x_end_line; }
+      if (x_end_line > x_large) { x_large = x_end_line; }
+
+      x_small = round(x_small);
+      x_large = round(x_large);
+
+      if (x_large - x_small < 0.5) {
+printf("%s:%d OUCH\n", __FILE__, __LINE__);
+      }
+
+printf(">>>> %s:%d y=%g %g %g\n", __FILE__, __LINE__, y, x_small, x_large);
+printf("==============\n");
+
+      for (int x = (int)x_small; x <= (int)x_large; x++) {
+         poke_canvas(canvas, center_x + x, center_y + y, strokecolor);
+      }
+   }
+}
+
 /// @brief A step value used by arc_canvas()
 #define THETA_STEP(x) (2.0 * 180.0/(((double)(x)) * 2.0 * M_PI))
 
@@ -530,7 +1040,7 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @param end_deg The ending angle for the arc
 /// @return void
 void
-arc_canvas(Canvas * canvas,
+arc_canvas_old(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
       double begin_deg, double end_deg) {

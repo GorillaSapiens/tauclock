@@ -550,6 +550,10 @@ static double smallest4(double a, double b, double c, double d) {
    return ret;
 }
 
+static double distance(double x, double y) {
+   return sqrt(x*x+y*y);
+}
+
 /// @brief Draw an arc on the canvas
 ///
 /// This function uses the recursive line_canvas to draw short segments of arc
@@ -725,6 +729,9 @@ arc_canvas(Canvas * canvas,
 //printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
 //   y, x_begin_line, x_end_line);
 
+      // TANGENT BASED FIXUPS
+      double tmp;
+
       if (fabs(y) < 1.0) {
          if (cos_begin < 0) {
             x_begin_line = -inner;
@@ -740,40 +747,118 @@ arc_canvas(Canvas * canvas,
          }
       }
       else if (begin_deg < 90.0) {
-         if (x_begin_line < y / tan(end_rad)) {
-            x_begin_line = y / tan(end_rad);
+         tmp = y / tan(end_rad);
+         // tmp = sqrt(inner*inner-y*y);
+         if (x_begin_line < tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
          }
-         if (x_end_line > y / tan(begin_rad)) {
-            x_end_line = y / tan(begin_rad);
+         tmp = y / tan(begin_rad);
+         // tmp = sqrt(outer*outer-y*y);
+         if (x_end_line > tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
          }
       }
       else if (begin_deg < 180.0) {
-         if (x_begin_line > y / tan(begin_rad)) {
-            x_begin_line = y / tan(begin_rad);
+         tmp = y / tan(begin_rad);
+         //tmp = -sqrt(inner*inner-y*y);
+         if (x_begin_line > tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
          }
-         if (x_end_line < y / tan(end_rad)) {
-            x_end_line = y / tan(end_rad);
+         tmp = y / tan(end_rad);
+         //tmp = -sqrt(outer*outer-y*y);
+         if (x_end_line < tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
          }
       }
       else if (begin_deg < 270.0) {
-         if (x_begin_line > y / tan(end_rad - M_PI)) {
-            x_begin_line = y / tan(end_rad - M_PI);
+         tmp = y / tan(end_rad - M_PI);
+         // tmp = -sqrt(inner*inner-y*y);
+         if (x_begin_line > tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
          }
-         if (x_end_line < y / tan(begin_rad - M_PI)) {
-            x_end_line = y / tan(begin_rad - M_PI);
+         tmp = y / tan(begin_rad - M_PI);
+         // tmp = -sqrt(outer*outer-y*y);
+         if (x_end_line < tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
          }
       }
       else { // < 360.0
-         if (x_begin_line < y / tan(begin_rad - M_PI)) {
-            x_begin_line = y / tan(begin_rad - M_PI);
+         tmp = y / tan(begin_rad - M_PI);
+         if (x_begin_line < tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
          }
-         if (x_end_line > y / tan(end_rad - M_PI)) {
-            x_end_line = y / tan(end_rad - M_PI);
+         tmp = y / tan(end_rad - M_PI);
+         if (x_end_line > tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
          }
       }
-//printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
-//   y, x_begin_line, x_end_line);
 
+      // ITERATIVE FIXUPS
+      double slop = 1.0;
+      for (double d = distance(x_begin_line,y);
+           d > outer + slop;
+           d = distance(x_begin_line, y)) {
+         if (x_begin_line < 0.0) {
+            x_begin_line++;
+         }
+         else {
+            x_begin_line--;
+         }
+      }
+      for (double d = distance(x_begin_line,y);
+           d < inner - slop;
+           d = distance(x_begin_line, y)) {
+         if (x_begin_line < 0.0) {
+            x_begin_line--;
+         }
+         else {
+            x_begin_line++;
+         }
+      }
+      for (double d = distance(x_end_line,y);
+           d > outer + slop;
+           d = distance(x_end_line, y)) {
+         if (x_end_line < 0.0) {
+            x_end_line++;
+         }
+         else {
+            x_end_line--;
+         }
+      }
+      for (double d = distance(x_end_line,y);
+           d < inner - slop;
+           d = distance(x_end_line, y)) {
+         if (x_end_line < 0.0) {
+            x_end_line--;
+         }
+         else {
+            x_end_line++;
+         }
+      }
+
+
+      double xeld = distance(x_end_line,y);
+      double xbld = distance(x_begin_line,y);
+      if ((xeld - inner) < -1.0 || (xbld - inner) < -1.0) {
+//printf("%s:%d <<< y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
+//printf("%s:%d <   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
+//printf("%s:%d <   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
+//printf("%s:%d <   %g %g\n", __FILE__, __LINE__, xeld - inner, xbld - inner);
+      }
+      if ((xeld - outer) > 1.0 || (xbld - outer) > 1.0) {
+//printf("%s:%d >>> y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
+//printf("%s:%d >   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
+//printf("%s:%d >   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
+//printf("%s:%d >   %g %g\n", __FILE__, __LINE__, xeld - outer, xbld - outer);
+      }
 
       double x_small = x_begin_line;
       double x_large = x_begin_line;

@@ -511,6 +511,14 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
 
    if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
       sprintf(location, "INVALID LOCATION");
+
+      // border bands
+      int mid = canvas->w / 2;
+      arc_canvas(canvas,
+         mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas,
+         mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+
    }
    else {
       sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree,
@@ -1620,11 +1628,15 @@ void replayTimeDrawnMemory(Context *context, Canvas * canvas) {
 /// @param now The Julian Date for the current time
 /// @param lightdark Controls what is considered "light" and "dark"
 /// @return void
-void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int lightdark) {
+void do_sun_bands(Context *context,
+      Canvas * canvas, double up, double now, int lightdark) {
    static const double one_minute = 360.0 / 24.0 / 60.0;
 
    double last = now - 0.5;
    double base = (double)((int)(last));
+
+   int midw = canvas->w / 2;
+   int midh = canvas->h / 2;
 
    int light = lightdark >> 8;
    int dark = lightdark & 0xFF;
@@ -1688,13 +1700,17 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
                double stop_angle = (here-base) * 360.0 - up_angle + 270.0;
 
                arcd = true;
-               arc_canvas_shaded(canvas, canvas->w / 2,
-                     canvas->h / 2,
-                     canvas->w / 2 / 2,
-                     canvas->h / 2 / 2, color, start_angle,
-                     stop_angle);
-               arc_canvas(canvas, canvas->w/2, canvas->w/2, canvas->w/2 / 2 + SCALE(126), 7, ld_color,
-                     start_angle, stop_angle);
+               // main band
+               arc_canvas_shaded(canvas,
+                     midw, midh, midw / 2, midh / 2,
+                     color, start_angle, stop_angle);
+               // border bands
+               arc_canvas(canvas,
+                     midh, midw, midw / 2 + SCALE(126), 7,
+                     ld_color, start_angle, stop_angle);
+               arc_canvas(canvas,
+                     midh, midw, midw / 2 - SCALE(128), 7,
+                     ld_color, start_angle, stop_angle);
 
                // accumulate angle_sunup and angle_night
                start_angle = normalize_angle(start_angle);
@@ -1824,13 +1840,17 @@ void do_sun_bands(Context *context, Canvas * canvas, double up, double now, int 
    double stop_angle = (here-base) * 360.0 - up_angle + 270.0;
 
    if (!arcd || start_angle != stop_angle) {
+      // main band
       arc_canvas_shaded(canvas,
-            canvas->w / 2, canvas->h / 2,
-            canvas->w / 2 / 2,
-            canvas->h / 2 / 2,
+            midw, midh, midw / 2, midh / 2,
             color, start_angle, stop_angle);
-      arc_canvas(canvas, canvas->w/2, canvas->w/2, canvas->w/2 / 2 + SCALE(126), 7, ld_color,
-            start_angle, stop_angle);
+      // border bands
+      arc_canvas(canvas,
+            midh, midw, midw / 2 + SCALE(126), 7,
+            ld_color, start_angle, stop_angle);
+      arc_canvas(canvas,
+            midh, midw, midw / 2 - SCALE(128), 7,
+            ld_color, start_angle, stop_angle);
    }
 
    // accumulate angle_sunup and angle_night
@@ -2469,10 +2489,6 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    // hour ticks
    do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
-
-   // border bands
-   arc_canvas(canvas, mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
-   //arc_canvas(canvas, mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
 
    // information in the center
    do_now_time(canvas, JD);

@@ -128,7 +128,7 @@ sub text($$$$$) {
 }
 
 # primer intro
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    text(100,600,1300,900,"ταμ clock primer") .
    "img/$m";
@@ -138,7 +138,7 @@ push @crop, "100,600,1300,900";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # weekday name
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(621,1460,818,1540) .
@@ -149,7 +149,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # month and date
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(627,1526,826,1577) .
@@ -160,7 +160,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # current time
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(592,1584,854,1672) .
@@ -171,7 +171,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # current location
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(565,1675,874,1724) .
@@ -182,7 +182,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # ISO-8601 date
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(640,1720,811,1763) .
@@ -193,10 +193,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # now hand
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(360,1200,624,1520) .
+   rectangle(620,1100,720,1480) .
    text(100,600,1300,900,"white 'now hand' indicates current time") .
    "img/$m";
 print "$cmd\n";
@@ -204,7 +204,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # hour ticks
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(510,1110,600,1200) .
@@ -215,7 +215,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # colors
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(900,1480,1060,1880) .
@@ -232,10 +232,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # edge colors
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(1226,1646,1272,1826) .
+   rectangle(850,1606,921,1741) .
    text(100,600,1300,1500,"edge color indicates light/dark:\\n" .
       "white = light\\n" .
       "light gray = twilight\\n" .
@@ -246,7 +246,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # top time
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(646,1162,792,1222) .
@@ -257,7 +257,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # top duration
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(622,1208,812,1328) .
@@ -268,7 +268,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # bottom duration
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(626,1934,822,2054) .
@@ -279,10 +279,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(420,1640,576,1796) .
+   rectangle(391,1541,552,1702) .
    text(100,600,1300,900,"phase of the moon") .
    "img/$m";
 print "$cmd\n";
@@ -290,10 +290,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon down
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(420,1640,576,1796) .
+   rectangle(391,1541,552,1702) .
    text(100,600,1300,900,"gray edge indicates moon is down") .
    "img/$m";
 print "$cmd\n";
@@ -301,10 +301,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # moon up
-$load = "tauclock_0_26_main_b.png";
+$load = "tauclock_0_28_main_b.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(425,1663,572,1799) .
+   rectangle(400,1555,539,1689) .
    text(100,600,1300,900,"white edge indicates moon is up") .
    "img/$m";
 print "$cmd\n";
@@ -312,7 +312,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # sun rise times
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(208,1591,387,1820) .
@@ -323,7 +323,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # sun set times
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1050,1580,1216,1821) .
@@ -334,7 +334,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # planets
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,1122,254,1844) .
@@ -353,7 +353,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # julian date
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1020,2286,1438,2374) .
@@ -364,10 +364,10 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # location provider
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
-   rectangle(0,900,240,1000) .
+   rectangle(0,900,260,1000) .
    text(212,1238,1322,2094,"location provider") .
    "img/$m";
 print "$cmd\n";
@@ -375,7 +375,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # location button
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,360,440,526) .
@@ -387,7 +387,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # timezone provider
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,2180,412,2400) .
@@ -399,7 +399,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # timezone button
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(0,2760,344,2906) .
@@ -411,7 +411,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # fwd/back button
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(348,2760,1020,2900) .
@@ -423,7 +423,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # alarm button
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1060,360,1430,520) .
@@ -435,7 +435,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # settings button
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    rectanglepre() .
    rectangle(1020,2750,1420,2910) .
@@ -562,7 +562,7 @@ print "$cmd\n";
 $n++; $m = sprintf("primer_%03d.png", $n);
 
 # primer fini
-$load = "tauclock_0_26_main.png";
+$load = "tauclock_0_28_main.png";
 $cmd = "convert $load " .
    text(100,600,1300,900,"ταμ clock primer\nFINI") .
    "img/$m";

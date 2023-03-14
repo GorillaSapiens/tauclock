@@ -1,4 +1,3 @@
-#pragma GCC optimize("Ofast")
 //  Sunclock, draw a clock with local solar and lunar information
 //  Copyright (C) 2022 Adam Wozniak / GorillaSapiens
 //
@@ -26,6 +25,28 @@
 
 #define INCLUDE_FONT_DATA
 #include "draw.h"
+
+static double mysin(double arg) {
+   if (arg > M_PI) {
+      arg -= 2.0 * M_PI;
+   }
+   if (arg < -M_PI) {
+      arg += 2.0 * M_PI;
+   }
+   return sin(arg);
+}
+#define sin(x) mysin(x)
+
+static double mycos(double arg) {
+   if (arg > M_PI) {
+      arg -= 2.0 * M_PI;
+   }
+   if (arg < -M_PI) {
+      arg += 2.0 * M_PI;
+   }
+   return cos(arg);
+}
+#define cos(x) mycos(x)
 
 /// @brief Create a new canvas suitable for drawing on
 ///
@@ -513,6 +534,347 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
+static double biggest4(double a, double b, double c, double d) {
+   double ret = a;
+   if (b > ret) { ret = b; }
+   if (c > ret) { ret = c; }
+   if (d > ret) { ret = d; }
+   return ret;
+}
+
+static double smallest4(double a, double b, double c, double d) {
+   double ret = a;
+   if (b < ret) { ret = b; }
+   if (c < ret) { ret = c; }
+   if (d < ret) { ret = d; }
+   return ret;
+}
+
+static double distance(double x, double y) {
+   return sqrt(x*x+y*y);
+}
+
+/// @brief Draw an arc on the canvas
+///
+/// This function uses the recursive line_canvas to draw short segments of arc
+///
+/// @param canvas The Canvas to draw on
+/// @param center_x The center X coordinate used by the arc
+/// @param center_y The center Y coordinate used by the arc
+/// @param radius The radius of the arc
+/// @param strokewidth The width of the drawn arc
+/// @param strokecolor The color to draw inside the arc
+/// @param begin_deg The starting angle for the arc
+/// @param end_deg The ending angle for the arc
+/// @return void
+void
+arc_canvas(Canvas * canvas,
+      int center_x, int center_y, int radius,
+      int strokewidth, unsigned int strokecolor,
+      double begin_deg, double end_deg) {
+
+   if (strokecolor == COLOR_NONE) {
+      return;
+   }
+
+   // sane normalization
+   while (begin_deg < 0.0) {
+      begin_deg += 360.0;
+      end_deg += 360.0;
+   }
+   while (begin_deg >= 360.0) {
+      begin_deg -= 360.0;
+      end_deg -= 360.0;
+   }
+   while (end_deg < begin_deg) {
+      end_deg += 360.0;
+   }
+
+   // recursively break into quadrants
+   if (begin_deg >= 0.0 && begin_deg < 90.0) {
+      if (end_deg > 90.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 90.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            90.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 90.0 && begin_deg < 180.0) {
+      if (end_deg > 180.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 180.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            180.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 180.0 && begin_deg < 270.0) {
+      if (end_deg > 270.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 270.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            270.0, end_deg);
+         return;
+      }
+   }
+   else if (begin_deg >= 270.0 && begin_deg < 360.0) {
+      if (end_deg > 360.0) {
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg, 360.0);
+         arc_canvas(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            360.0, end_deg);
+         return;
+      }
+   }
+
+//printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
+//   begin_deg, end_deg, strokecolor, radius);
+
+   // we are now guaranteed to have a begin and end in
+   // the same quadrant
+
+   // stuff we're going to use a lot
+   double begin_rad = begin_deg * M_PI / 180.0;
+   double end_rad = end_deg * M_PI / 180.0;
+
+   double sin_begin = sin(begin_rad);
+   double cos_begin = cos(begin_rad);
+   double sin_end = sin(end_rad);
+   double cos_end = cos(end_rad);
+
+   // fix stupd trig rounding errors
+   if (fabs(cos_begin) > 0.5) {
+      if (signbit(cos_begin) != signbit(cos_end)) {
+         cos_end = -cos_end;
+      }
+   }
+   if (fabs(cos_end) > 0.5) {
+      if (signbit(cos_begin) != signbit(cos_end)) {
+         cos_begin = -cos_begin;
+      }
+   }
+   if (fabs(sin_begin) > 0.5) {
+      if (signbit(sin_begin) != signbit(sin_end)) {
+         sin_end = -sin_end;
+      }
+   }
+   if (fabs(sin_end) > 0.5) {
+      if (signbit(sin_begin) != signbit(sin_end)) {
+         sin_begin = -sin_begin;
+      }
+   }
+
+   double outer = (double)radius + round((double)strokewidth / 2.0 + .5);
+   double inner = (double)radius - round((double)strokewidth / 2.0 + .5);
+
+   // disregard the center for now...
+
+   // we shall consider 4 points:
+   // the end point of each of the outer and inner arcs.
+   // further, we look only at y values for now.
+
+   double y_outer_begin = outer * sin_begin;
+   double y_outer_end   = outer * sin_end;
+   double y_inner_begin = inner * sin_begin;
+   double y_inner_end   = inner * sin_end;
+
+   // now find the largest and smallest
+   double y_large =
+      biggest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+   double y_small =
+      smallest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+
+   y_large = round(y_large);
+   y_small = round(y_small);
+
+   // for each scanline
+   for (double y = y_small; y <= y_large; y++) {
+      // find start and stop points on scanline
+      // it'll be on the line, or on the curve
+      double square;
+
+      double x_begin_line;
+      square = inner*inner - y*y;
+      if (square < 0.0) {
+         x_begin_line = 0.0;
+      }
+      else {
+         x_begin_line = sqrt(square);
+      }
+      if (signbit(cos_begin) || signbit(cos_end)) {
+         x_begin_line = -x_begin_line;
+      }
+
+      double x_end_line;
+      square = outer*outer - y*y;
+      if (square < 0.0) {
+         x_end_line = 0.0;
+      }
+      else {
+         x_end_line = sqrt(square);
+      }
+      if (signbit(cos_begin) || signbit(cos_end)) {
+         x_end_line = -x_end_line;
+      }
+
+//printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
+//   y, x_begin_line, x_end_line);
+
+      // TANGENT BASED FIXUPS
+      double tmp;
+
+      if (fabs(y) < 1.0) {
+         if (cos_begin < 0) {
+            x_begin_line = -inner;
+         }
+         else {
+            x_begin_line = inner;
+         }
+         if (cos_end < 0) {
+            x_end_line = -outer;
+         }
+         else {
+            x_end_line = outer;
+         }
+      }
+      else if (begin_deg < 90.0) {
+         tmp = y / tan(end_rad);
+         // tmp = sqrt(inner*inner-y*y);
+         if (x_begin_line < tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
+         }
+         tmp = y / tan(begin_rad);
+         // tmp = sqrt(outer*outer-y*y);
+         if (x_end_line > tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
+         }
+      }
+      else if (begin_deg < 180.0) {
+         tmp = y / tan(begin_rad);
+         //tmp = -sqrt(inner*inner-y*y);
+         if (x_begin_line > tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
+         }
+         tmp = y / tan(end_rad);
+         //tmp = -sqrt(outer*outer-y*y);
+         if (x_end_line < tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
+         }
+      }
+      else if (begin_deg < 270.0) {
+         tmp = y / tan(end_rad - M_PI);
+         // tmp = -sqrt(inner*inner-y*y);
+         if (x_begin_line > tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
+         }
+         tmp = y / tan(begin_rad - M_PI);
+         // tmp = -sqrt(outer*outer-y*y);
+         if (x_end_line < tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
+         }
+      }
+      else { // < 360.0
+         tmp = y / tan(begin_rad - M_PI);
+         if (x_begin_line < tmp) {
+//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
+            x_begin_line = tmp;
+         }
+         tmp = y / tan(end_rad - M_PI);
+         if (x_end_line > tmp) {
+//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
+            x_end_line = tmp;
+         }
+      }
+
+      // ITERATIVE FIXUPS
+      double slop = 1.0;
+      for (double d = distance(x_begin_line,y);
+           d > outer + slop;
+           d = distance(x_begin_line, y)) {
+         if (x_begin_line < 0.0) {
+            x_begin_line++;
+         }
+         else {
+            x_begin_line--;
+         }
+      }
+      for (double d = distance(x_begin_line,y);
+           d < inner - slop;
+           d = distance(x_begin_line, y)) {
+         if (x_begin_line < 0.0) {
+            x_begin_line--;
+         }
+         else {
+            x_begin_line++;
+         }
+      }
+      for (double d = distance(x_end_line,y);
+           d > outer + slop;
+           d = distance(x_end_line, y)) {
+         if (x_end_line < 0.0) {
+            x_end_line++;
+         }
+         else {
+            x_end_line--;
+         }
+      }
+      for (double d = distance(x_end_line,y);
+           d < inner - slop;
+           d = distance(x_end_line, y)) {
+         if (x_end_line < 0.0) {
+            x_end_line--;
+         }
+         else {
+            x_end_line++;
+         }
+      }
+
+
+      double xeld = distance(x_end_line,y);
+      double xbld = distance(x_begin_line,y);
+      if ((xeld - inner) < -1.0 || (xbld - inner) < -1.0) {
+//printf("%s:%d <<< y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
+//printf("%s:%d <   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
+//printf("%s:%d <   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
+//printf("%s:%d <   %g %g\n", __FILE__, __LINE__, xeld - inner, xbld - inner);
+      }
+      if ((xeld - outer) > 1.0 || (xbld - outer) > 1.0) {
+//printf("%s:%d >>> y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
+//printf("%s:%d >   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
+//printf("%s:%d >   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
+//printf("%s:%d >   %g %g\n", __FILE__, __LINE__, xeld - outer, xbld - outer);
+      }
+
+      double x_small = x_begin_line;
+      double x_large = x_begin_line;
+
+      if (x_end_line < x_small) { x_small = x_end_line; }
+      if (x_end_line > x_large) { x_large = x_end_line; }
+
+      x_small = round(x_small);
+      x_large = round(x_large);
+
+      for (int x = (int)x_small; x <= (int)x_large; x++) {
+         poke_canvas(canvas, center_x + x, center_y + y, strokecolor);
+      }
+   }
+}
+
 /// @brief A step value used by arc_canvas()
 #define THETA_STEP(x) (2.0 * 180.0/(((double)(x)) * 2.0 * M_PI))
 
@@ -530,7 +892,7 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
 /// @param end_deg The ending angle for the arc
 /// @return void
 void
-arc_canvas(Canvas * canvas,
+arc_canvas_old(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
       double begin_deg, double end_deg) {
@@ -633,6 +995,8 @@ arc_canvas_shaded(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
       double begin_deg, double end_deg) {
+   arc_canvas(canvas, center_x, center_y, radius, strokewidth, strokecolor, begin_deg, end_deg);
+   return;
    float theta;
 
    if (strokewidth < 3) {

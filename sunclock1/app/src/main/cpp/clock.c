@@ -572,7 +572,7 @@ do_moon_draw(Context *context, Canvas * canvas,
    int cxm;
    if (lunar_phase < 90.0) {
       interior_color = COLOR_BLACK;
-      chunk_color = COLOR_LIGHTGRAY;
+      chunk_color = COLOR_MAGENTA;
       if (lunar_bright_limb < 180.0) {
          cxm = 1;
       }
@@ -581,7 +581,7 @@ do_moon_draw(Context *context, Canvas * canvas,
       }
    }
    else {
-      interior_color = COLOR_LIGHTGRAY;
+      interior_color = COLOR_MAGENTA;
       chunk_color = COLOR_BLACK;
       if (lunar_bright_limb < 180.0) {
          cxm = -1;
@@ -622,7 +622,7 @@ do_moon_draw(Context *context, Canvas * canvas,
    // shading for moon
    for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
       for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
-         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_LIGHTGRAY) {
+         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_MAGENTA) {
             int d2 = dx * dx + dy * dy;
             unsigned int color = COLOR_LIGHTGRAY & 0xFF;
             color =
@@ -662,12 +662,12 @@ do_moon_draw(Context *context, Canvas * canvas,
    }
    // outline
    if (is_up == 1) {
-      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_WHITE, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_WHITE, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_WHITE, 0, 360.0);
    }
    else {
-      arc_canvas(canvas, cx, cy, SCALE(40), 1, COLOR_BLACK, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 1, COLOR_BLACK, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_BLACK, 0, 360.0);
+      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_BLACK, 0, 360.0);
    }
 }
 

@@ -16,21 +16,24 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#LAT=30
-#LON=-80
-LAT=-70
-LON=0
+LAT=30
+LON=-80
+#LAT=-70
+#LON=0
 
-#DATE=0
+DATE=0
 
-DATE=2023/12/21
-DATE=2023/10/21
+#DATE=2023/12/21
+#DATE=2023/10/21
 
 #LD=0
 LD=257
 
 rm out*
+#echo ./calcdata $LAT $LON $DATE 0.000 $LD
+#echo convert -size 1024x1024 -depth 8 RGBA:out.bin out_000.png
 ./calcdata $LAT $LON $DATE 0.000 $LD;convert -size 1024x1024 -depth 8 RGBA:out.bin out_000.png
+#exit 0
 ./calcdata $LAT $LON $DATE 0.005 $LD;convert -size 1024x1024 -depth 8 RGBA:out.bin out_001.png
 ./calcdata $LAT $LON $DATE 0.010 $LD;convert -size 1024x1024 -depth 8 RGBA:out.bin out_002.png
 ./calcdata $LAT $LON $DATE 0.015 $LD;convert -size 1024x1024 -depth 8 RGBA:out.bin out_003.png

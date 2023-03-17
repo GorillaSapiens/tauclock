@@ -565,17 +565,9 @@ arc_canvas_helper(Canvas * canvas,
       double begin_deg, double end_deg, bool rotated) {
 
    // assumes we're already broken into pieces of 8
-   // and normalized
 
    dprintf("!!! begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
       begin_deg, end_deg, strokecolor, radius, rotated);
-
-#if 0
-   if (!rotated) {
-      dprintf("    return %d\n", 0);
-      return;
-   }
-#endif
 
    // sane normalization
    while (begin_deg < 0.0) {

@@ -1,9 +1,9 @@
-/**
+/*
  * Example for a sine/cosine table lookup
  *
  * (main file that uses sin1.h/sin1.c)
  *
- * @file sinlookup.c
+ * @file trig1.main.c
  * @author stfwi
  *
  */
@@ -14,7 +14,7 @@
 #include <math.h>
 #include <sys/types.h>
 
-/**
+/*
  * Generate the lookup tables for sin1() in a way that the text can be pasted
  * into a C source code.
  *
@@ -33,7 +33,7 @@ void generate_tables() {
    printf("0x7fff\n};\n");
 }
 
-/**
+/*
  * Run a test comparing the real floating point sine with the sin1 function.
  * Output CSV: "ANGLE in DEG", "REAL SINE", "SIN1", "ERROR".
  *
@@ -51,7 +51,7 @@ void run() {
    }
 }
 
-/**
+/*
  * Test main function
  *
  * @param int argc

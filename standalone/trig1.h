@@ -1,4 +1,4 @@
-/**
+/*
  * Example for a interpolated sine/cosine table lookup
  *
  * @file sin1.h
@@ -13,7 +13,7 @@ extern "C" {
 
 #include <sys/types.h>
 
-/**
+/*
  * Sine calculation using interpolated table lookup.
  * Instead of radiants or degrees we use "turns" here. Means this
  * sine does NOT return one phase for 0 to 2*PI, but for 0 to 1.
@@ -23,9 +23,9 @@ extern "C" {
  * @param int16_t angle Q15
  * @return int16_t Q15
  */
-   int16_t sin1(int16_t angle);
+int16_t sin1(int16_t angle);
 
-/**
+/*
  * Cosine calculation using interpolated table lookup.
  * Instead of radiants or degrees we use "turns" here. Means this
  * cosine does NOT return one phase for 0 to 2*PI, but for 0 to 1.
@@ -35,7 +35,7 @@ extern "C" {
  * @param int16_t angle Q15
  * @return int16_t Q15
  */
-   int16_t cos1(int16_t angle);
+int16_t cos1(int16_t angle);
 
 #ifdef  __cplusplus
 }

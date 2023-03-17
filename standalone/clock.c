@@ -734,7 +734,7 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
             case EVENT_SET:
                start_angle = (last - base) * 360.0 - up_angle + 270.0;
                if (!sign_only) {
-                  arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+                  arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
                      radius, SCALE(5), color, start_angle, angle);
                }
                if (events[i].type == EVENT_SET) {
@@ -766,7 +766,7 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
          (now + .5 - base) * 360.0 - up_angle + 270.0;
 
       if (!sign_only) {
-         arc_canvas_shaded(canvas, canvas->w / 2, canvas->h / 2,
+         arc_canvas(canvas, canvas->w / 2, canvas->h / 2,
             radius, SCALE(5), color, start_angle, stop_angle);
       }
    }
@@ -1703,7 +1703,7 @@ void do_sun_bands(Context *context,
 
                arcd = true;
                // main band
-               arc_canvas_shaded(canvas,
+               arc_canvas(canvas,
                      midw, midh, midw / 2, midh / 2,
                      color, start_angle, stop_angle);
                // border bands
@@ -1843,7 +1843,7 @@ void do_sun_bands(Context *context,
 
    if (!arcd || start_angle != stop_angle) {
       // main band
-      arc_canvas_shaded(canvas,
+      arc_canvas(canvas,
             midw, midh, midw / 2, midh / 2,
             color, start_angle, stop_angle);
       // border bands

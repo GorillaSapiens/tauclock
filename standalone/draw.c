@@ -16,6 +16,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -25,28 +26,27 @@
 
 #define INCLUDE_FONT_DATA
 #include "draw.h"
+#include "trig1.h"
 
-static double mysin(double arg) {
-   if (arg > M_PI) {
-      arg -= 2.0 * M_PI;
-   }
-   if (arg < -M_PI) {
-      arg += 2.0 * M_PI;
-   }
-   return sin(arg);
-}
-#define sin(x) mysin(x)
+#define FILELINE __FILE__, __LINE__
+//#define dprintf(format, ...) printf("%s:%d " format, FILELINE, __VA_ARGS__)
+#define dprintf(format, ...)
 
-static double mycos(double arg) {
-   if (arg > M_PI) {
-      arg -= 2.0 * M_PI;
-   }
-   if (arg < -M_PI) {
-      arg += 2.0 * M_PI;
-   }
-   return cos(arg);
+// 0 to 2PI == 0 to 32767
+static double sin_deg(double arg) {
+   int16_t arg1 = 32768.0 * arg / 360.0;
+   return (double)sin1(arg1) / 32767.0;
 }
-#define cos(x) mycos(x)
+
+static double cos_deg(double arg) {
+   int16_t arg1 = 32768.0 * arg / 360.0;
+   return (double)cos1(arg1) / 32767.0;
+}
+
+#define FNORD exit(0)
+#define sin(x) FNORD
+#define cos(x) FNORD
+#define tan(x) FNORD
 
 /// @brief Create a new canvas suitable for drawing on
 ///
@@ -550,32 +550,32 @@ static double smallest4(double a, double b, double c, double d) {
    return ret;
 }
 
-static double distance(double x, double y) {
-   return sqrt(x*x+y*y);
-}
+//static double distance(double x, double y) {
+//   return sqrt(x*x+y*y);
+//}
 
-/// @brief Draw an arc on the canvas
-///
-/// This function uses the recursive line_canvas to draw short segments of arc
-///
-/// @param canvas The Canvas to draw on
-/// @param center_x The center X coordinate used by the arc
-/// @param center_y The center Y coordinate used by the arc
-/// @param radius The radius of the arc
-/// @param strokewidth The width of the drawn arc
-/// @param strokecolor The color to draw inside the arc
-/// @param begin_deg The starting angle for the arc
-/// @param end_deg The ending angle for the arc
-/// @return void
-void
-arc_canvas(Canvas * canvas,
+// values of sin/cos less than SMALL are avoided during
+// fixups
+#define SMALL .000001
+
+static void
+arc_canvas_helper(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
-      double begin_deg, double end_deg) {
+      double begin_deg, double end_deg, bool rotated) {
 
-   if (strokecolor == COLOR_NONE) {
+   // assumes we're already broken into pieces of 8
+   // and normalized
+
+   dprintf("!!! begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
+      begin_deg, end_deg, strokecolor, radius, rotated);
+
+#if 0
+   if (!rotated) {
+      dprintf("    return %d\n", 0);
       return;
    }
+#endif
 
    // sane normalization
    while (begin_deg < 0.0) {
@@ -590,91 +590,26 @@ arc_canvas(Canvas * canvas,
       end_deg += 360.0;
    }
 
-   // recursively break into quadrants
-   if (begin_deg >= 0.0 && begin_deg < 90.0) {
-      if (end_deg > 90.0) {
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg, 90.0);
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            90.0, end_deg);
-         return;
-      }
-   }
-   else if (begin_deg >= 90.0 && begin_deg < 180.0) {
-      if (end_deg > 180.0) {
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg, 180.0);
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            180.0, end_deg);
-         return;
-      }
-   }
-   else if (begin_deg >= 180.0 && begin_deg < 270.0) {
-      if (end_deg > 270.0) {
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg, 270.0);
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            270.0, end_deg);
-         return;
-      }
-   }
-   else if (begin_deg >= 270.0 && begin_deg < 360.0) {
-      if (end_deg > 360.0) {
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg, 360.0);
-         arc_canvas(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            360.0, end_deg);
-         return;
-      }
-   }
-
-//printf("%s:%d !!! %g %g %08X %d\n", __FILE__, __LINE__,
-//   begin_deg, end_deg, strokecolor, radius);
+   dprintf("222 begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
+      begin_deg, end_deg, strokecolor, radius, rotated);
 
    // we are now guaranteed to have a begin and end in
    // the same quadrant
 
    // stuff we're going to use a lot
-   double begin_rad = begin_deg * M_PI / 180.0;
-   double end_rad = end_deg * M_PI / 180.0;
+   double sin_begin = sin_deg(begin_deg);
+   double cos_begin = cos_deg(begin_deg);
 
-   double sin_begin = sin(begin_rad);
-   double cos_begin = cos(begin_rad);
-   double sin_end = sin(end_rad);
-   double cos_end = cos(end_rad);
+   double sin_end = sin_deg(end_deg);
+   double cos_end = cos_deg(end_deg);
 
-   // fix stupd trig rounding errors
-   if (fabs(cos_begin) > 0.5) {
-      if (signbit(cos_begin) != signbit(cos_end)) {
-         cos_end = -cos_end;
-      }
-   }
-   if (fabs(cos_end) > 0.5) {
-      if (signbit(cos_begin) != signbit(cos_end)) {
-         cos_begin = -cos_begin;
-      }
-   }
-   if (fabs(sin_begin) > 0.5) {
-      if (signbit(sin_begin) != signbit(sin_end)) {
-         sin_end = -sin_end;
-      }
-   }
-   if (fabs(sin_end) > 0.5) {
-      if (signbit(sin_begin) != signbit(sin_end)) {
-         sin_begin = -sin_begin;
-      }
-   }
+   double sin_middle = sin_deg((begin_deg + end_deg) / 2.0);
+   double cos_middle = cos_deg((begin_deg + end_deg) / 2.0);
 
    double outer = (double)radius + round((double)strokewidth / 2.0 + .5);
    double inner = (double)radius - round((double)strokewidth / 2.0 + .5);
+
+   dprintf("!!! inner=%f outer=%f\n", inner, outer);
 
    // disregard the center for now...
 
@@ -696,187 +631,184 @@ arc_canvas(Canvas * canvas,
    y_large = round(y_large);
    y_small = round(y_small);
 
+   dprintf("y_small=%f y_large=%f\n", y_small, y_large);
+
    // for each scanline
    for (double y = y_small; y <= y_large; y++) {
       // find start and stop points on scanline
       // it'll be on the line, or on the curve
       double square;
 
-      double x_begin_line;
+      double x_inner;
       square = inner*inner - y*y;
       if (square < 0.0) {
-         x_begin_line = 0.0;
+         x_inner = 0.0;
       }
       else {
-         x_begin_line = sqrt(square);
-      }
-      if (signbit(cos_begin) || signbit(cos_end)) {
-         x_begin_line = -x_begin_line;
+         x_inner = sqrt(square);
+         if (signbit(cos_middle)) {
+            x_inner = -x_inner;
+         }
       }
 
-      double x_end_line;
+      double x_outer;
       square = outer*outer - y*y;
       if (square < 0.0) {
-         x_end_line = 0.0;
+         x_outer = 0.0;
       }
       else {
-         x_end_line = sqrt(square);
-      }
-      if (signbit(cos_begin) || signbit(cos_end)) {
-         x_end_line = -x_end_line;
+         x_outer = sqrt(square);
+         if (signbit(cos_middle)) {
+            x_outer = -x_outer;
+         }
       }
 
-//printf("%s:%d ]]] y=%g xbl=%g xel=%g\n", __FILE__, __LINE__,
-//   y, x_begin_line, x_end_line);
+      dprintf("]]] y=%f xbl=%f xel=%f\n", y, x_inner, x_outer);
 
       // TANGENT BASED FIXUPS
+      // tangent based fixups
+
       double tmp;
 
-      if (fabs(y) < 1.0) {
-         if (cos_begin < 0) {
-            x_begin_line = -inner;
+      if (fabs(y) < 2.0) {
+         if (cos_middle < 0.0) {
+            x_inner = -inner;
          }
          else {
-            x_begin_line = inner;
+            x_inner = inner;
          }
-         if (cos_end < 0) {
-            x_end_line = -outer;
+         if (cos_middle < 0.0) {
+            x_outer = -outer;
          }
          else {
-            x_end_line = outer;
+            x_outer = outer;
          }
       }
       else if (begin_deg < 90.0) {
-         tmp = y / tan(end_rad);
-         // tmp = sqrt(inner*inner-y*y);
-         if (x_begin_line < tmp) {
-//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
-            x_begin_line = tmp;
+         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
+            tmp = y * cos_end / sin_end;
+            if (tmp < outer) {
+               if (x_inner < tmp) {
+                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+                  x_inner = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
-         tmp = y / tan(begin_rad);
-         // tmp = sqrt(outer*outer-y*y);
-         if (x_end_line > tmp) {
-//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
-            x_end_line = tmp;
+         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
+            tmp = y * cos_begin / sin_begin;
+            if (tmp < outer) {
+               if (x_outer > tmp) {
+                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+                  x_outer = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
       }
       else if (begin_deg < 180.0) {
-         tmp = y / tan(begin_rad);
-         //tmp = -sqrt(inner*inner-y*y);
-         if (x_begin_line > tmp) {
-//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
-            x_begin_line = tmp;
+         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
+            tmp = y * cos_begin / sin_begin;
+            if (tmp > -outer) {
+               if (x_inner > tmp) {
+                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+                  x_inner = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
-         tmp = y / tan(end_rad);
-         //tmp = -sqrt(outer*outer-y*y);
-         if (x_end_line < tmp) {
-//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
-            x_end_line = tmp;
+         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
+            tmp = y * cos_end / sin_end;
+            if (tmp > -outer) {
+               if (x_outer < tmp) {
+                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+                  x_outer = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
       }
       else if (begin_deg < 270.0) {
-         tmp = y / tan(end_rad - M_PI);
-         // tmp = -sqrt(inner*inner-y*y);
-         if (x_begin_line > tmp) {
-//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
-            x_begin_line = tmp;
+         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
+            tmp = y * cos_end / sin_end;
+            if (tmp > -outer) {
+               if (x_inner > tmp) {
+                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+                  x_inner = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
-         tmp = y / tan(begin_rad - M_PI);
-         // tmp = -sqrt(outer*outer-y*y);
-         if (x_end_line < tmp) {
-//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
-            x_end_line = tmp;
+         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
+            tmp = y * cos_begin / sin_begin;
+            if (tmp > -outer) {
+               if (x_outer < tmp) {
+                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+                  x_outer = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
       }
       else { // < 360.0
-         tmp = y / tan(begin_rad - M_PI);
-         if (x_begin_line < tmp) {
-//printf("%s:%d ... xbl=%g sug=%g\n", __FILE__, __LINE__, x_begin_line, tmp);
-            x_begin_line = tmp;
+         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
+            tmp = y * cos_begin / sin_begin;
+            if (tmp < outer) {
+               if (x_inner < tmp) {
+                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+                  x_inner = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
-         tmp = y / tan(end_rad - M_PI);
-         if (x_end_line > tmp) {
-//printf("%s:%d ... xel=%g sug=%g\n", __FILE__, __LINE__, x_end_line, tmp);
-            x_end_line = tmp;
+         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
+            tmp = y * cos_end / sin_end;
+            if (tmp < outer) {
+               if (x_outer > tmp) {
+                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+                  x_outer = tmp;
+               }
+            }
+            else {
+               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+            }
          }
       }
+      dprintf("[[[ y=%f xbl=%f xel=%f\n", y, x_inner, x_outer);
 
-      // ITERATIVE FIXUPS
-      double slop = 1.0;
-      for (double d = distance(x_begin_line,y);
-           d > outer + slop;
-           d = distance(x_begin_line, y)) {
-         if (x_begin_line < 0.0) {
-            x_begin_line++;
-         }
-         else {
-            x_begin_line--;
-         }
-      }
-      for (double d = distance(x_begin_line,y);
-           d < inner - slop;
-           d = distance(x_begin_line, y)) {
-         if (x_begin_line < 0.0) {
-            x_begin_line--;
-         }
-         else {
-            x_begin_line++;
-         }
-      }
-      for (double d = distance(x_end_line,y);
-           d > outer + slop;
-           d = distance(x_end_line, y)) {
-         if (x_end_line < 0.0) {
-            x_end_line++;
-         }
-         else {
-            x_end_line--;
-         }
-      }
-      for (double d = distance(x_end_line,y);
-           d < inner - slop;
-           d = distance(x_end_line, y)) {
-         if (x_end_line < 0.0) {
-            x_end_line--;
-         }
-         else {
-            x_end_line++;
-         }
-      }
+      double x_small = x_inner;
+      double x_large = x_inner;
 
-
-      double xeld = distance(x_end_line,y);
-      double xbld = distance(x_begin_line,y);
-      if ((xeld - inner) < -1.0 || (xbld - inner) < -1.0) {
-//printf("%s:%d <<< y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
-//printf("%s:%d <   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
-//printf("%s:%d <   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
-//printf("%s:%d <   %g %g\n", __FILE__, __LINE__, xeld - inner, xbld - inner);
-      }
-      if ((xeld - outer) > 1.0 || (xbld - outer) > 1.0) {
-//printf("%s:%d >>> y=%g begin=%g end=%g radius=%d strokew=%d\n", __FILE__, __LINE__, y, begin_deg, end_deg, radius, strokewidth);
-//printf("%s:%d >   inner=%g outer=%g\n", __FILE__, __LINE__, inner, outer);
-//printf("%s:%d >   xbl=%g xel=%g xbld=%g xeld=%g\n", __FILE__, __LINE__, x_begin_line, x_end_line, xbld, xeld);
-//printf("%s:%d >   %g %g\n", __FILE__, __LINE__, xeld - outer, xbld - outer);
-      }
-
-      double x_small = x_begin_line;
-      double x_large = x_begin_line;
-
-      if (x_end_line < x_small) { x_small = x_end_line; }
-      if (x_end_line > x_large) { x_large = x_end_line; }
+      if (x_outer < x_small) { x_small = x_outer; }
+      if (x_outer > x_large) { x_large = x_outer; }
 
       x_small = round(x_small);
       x_large = round(x_large);
 
       for (int x = (int)x_small; x <= (int)x_large; x++) {
-         poke_canvas(canvas, center_x + x, center_y + y, strokecolor);
+         if (!rotated) {
+            poke_canvas(canvas, center_x + x, center_y + y, strokecolor);
+         }
+         else {
+            poke_canvas(canvas, center_x - y, center_y + x, strokecolor);
+         }
       }
    }
 }
-
-/// @brief A step value used by arc_canvas()
-#define THETA_STEP(x) (2.0 * 180.0/(((double)(x)) * 2.0 * M_PI))
 
 /// @brief Draw an arc on the canvas
 ///
@@ -892,140 +824,69 @@ arc_canvas(Canvas * canvas,
 /// @param end_deg The ending angle for the arc
 /// @return void
 void
-arc_canvas_old(Canvas * canvas,
+arc_canvas(Canvas * canvas,
       int center_x, int center_y, int radius,
       int strokewidth, unsigned int strokecolor,
       double begin_deg, double end_deg) {
-   float theta;
 
+   static const bool rotations[8] = {
+      true, false, false, true,
+      true, false, false, true
+   };
+
+   if (strokecolor == COLOR_NONE) {
+      return;
+   }
+
+   dprintf("=== begin_deg=%f end_deg=%f color=%08X radius=%d\n",
+      begin_deg, end_deg, strokecolor, radius);
+
+   // sane normalization
+   while (begin_deg < 0.0) {
+      begin_deg += 360.0;
+      end_deg += 360.0;
+   }
+   while (begin_deg >= 360.0) {
+      begin_deg -= 360.0;
+      end_deg -= 360.0;
+   }
    while (end_deg < begin_deg) {
       end_deg += 360.0;
    }
 
-   if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg;
-           theta < end_deg;
-           theta += THETA_STEP(radius+strokewidth)) {
-         int x1, y1, x2, y2;
-         double sin_theta = sin(theta * M_PI / 180.0);
-         double cos_theta = cos(theta * M_PI / 180.0);
-         x1 = center_x + ((float)radius -
-               ((float)strokewidth) / 2.0) * cos_theta;
-         y1 = center_y + ((float)radius -
-               ((float)strokewidth) / 2.0) * sin_theta;
-         x2 = center_x + ((float)radius +
-               ((float)strokewidth) / 2.0) * cos_theta;
-         y2 = center_y + ((float)radius +
-               ((float)strokewidth) / 2.0) * sin_theta;
-         line_canvas(canvas, x1, y1, x2, y2, strokecolor);
+   dprintf(">>> begin_deg=%f end_deg=%f color=%08X radius=%d\n",
+      begin_deg, end_deg, strokecolor, radius);
+
+   // sweep eigths
+   int i = 0;
+   for (double a = 0.0; a < end_deg; a += 45.0) {
+      double b = a + 45.0;
+      double rot = rotations[i % 8] ? -90.0 : 0.0;
+
+      if (begin_deg >= a && end_deg < b) {
+         // do it all
+         arc_canvas_helper(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg+rot, end_deg+rot, rotations[i % 8]);
       }
-   }
-}
-
-/// @brief helper function to compute shaded color
-///
-/// @param color The base color
-/// @param x The x coordinate being drawn
-/// @param y The y coordinate being drawn
-/// @param cx The center x coordinate
-/// @param cy The center y coordinate
-/// @param l The total length of the line
-/// @return a new shaded color
-unsigned int shade(unsigned int color, int x, int y, int cx, int cy, int l) {
-   int mask = color >> 24;
-   int r = 0xFF & (color >> 16);
-   int g = 0xFF & (color >> 8);
-   int b = 0xFF & (color);
-
-   int d = ((x - cx) * (x - cx) + (y - cy) * (y - cy));
-   l = l * l / 4;
-
-   r = r * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
-   g = g * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
-   b = b * (.8 + .2 * (1.0 - (2.0 * (double)d / (double)l)));
-
-   return (mask << 24) | (r << 16) | (g << 8) | b;
-}
-
-/// @brief Draw a shadedline
-///
-/// This function uses recursion to draw the line
-///
-/// @param canvas The Canvas to draw on
-/// @param x1 The start X coordinate
-/// @param y1 The start Y coordinate
-/// @param x2 The end X coordinate
-/// @param y2 The end Y coordinate
-/// @param color The color to draw
-/// @param cx The center x coordinate
-/// @param cy The center y coordinate
-/// @param l The total length of the line
-/// @return void
-void
-line_canvas_shaded(Canvas * canvas, int x1, int y1, int x2, int y2,
-      unsigned int color, int cx, int cy, int l) {
-   blur_poke_canvas(canvas, x1, y1, shade(color, x1, y1, cx, cy, l), 1);
-   blur_poke_canvas(canvas, x2, y2, shade(color, x2, y2, cx, cy, l), 1);
-
-   int d = ((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2));
-
-   if (d > 2) {
-      int mx = (x1 + x2) / 2;
-      int my = (y1 + y2) / 2;
-      line_canvas_shaded(canvas, x1, y1, mx, my, color, cx, cy, l);
-      line_canvas_shaded(canvas, mx, my, x2, y2, color, cx, cy, l);
-   }
-}
-
-/// @brief Draw a shaded arc on the canvas
-///
-/// This function uses the recursive line_canvas to draw short segments of arc
-///
-/// @param canvas The Canvas to draw on
-/// @param center_x The center X coordinate used by the arc
-/// @param center_y The center Y coordinate used by the arc
-/// @param radius The radius of the arc
-/// @param strokewidth The width of the drawn arc
-/// @param strokecolor The color to draw inside the arc
-/// @param begin_deg The starting angle for the arc
-/// @param end_deg The ending angle for the arc
-/// @return void
-void
-arc_canvas_shaded(Canvas * canvas,
-      int center_x, int center_y, int radius,
-      int strokewidth, unsigned int strokecolor,
-      double begin_deg, double end_deg) {
-   arc_canvas(canvas, center_x, center_y, radius, strokewidth, strokecolor, begin_deg, end_deg);
-   return;
-   float theta;
-
-   if (strokewidth < 3) {
-      strokewidth =  3;
-   }
-
-   if (end_deg < begin_deg) {
-      end_deg += 360.0;
-   }
-
-   if (strokecolor != COLOR_NONE) {
-      for (theta = begin_deg;
-           theta < end_deg;
-           theta += THETA_STEP(radius+strokewidth)) {
-         int x1, y1, x2, y2;
-         double sin_theta = sin(theta * M_PI / 180.0);
-         double cos_theta = cos(theta * M_PI / 180.0);
-         x1 = center_x + ((float)radius -
-               ((float)strokewidth) / 2.0) * cos_theta;
-         y1 = center_y + ((float)radius -
-               ((float)strokewidth) / 2.0) * sin_theta;
-         x2 = center_x + ((float)radius +
-               ((float)strokewidth) / 2.0) * cos_theta;
-         y2 = center_y + ((float)radius +
-               ((float)strokewidth) / 2.0) * sin_theta;
-         line_canvas_shaded(canvas, x1, y1, x2, y2, strokecolor,
-               (x1 + x2) / 2, (y1 + y2) / 2,
-               sqrt((x1 - x2) * (x1 - x2) +
-                  (y1 - y2) * (y1 - y2)));
+      else if (begin_deg >= a && begin_deg < b && end_deg >= b) {
+         // do the beginning
+         arc_canvas_helper(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            begin_deg+rot, b+rot, rotations[i % 8]);
       }
+      else if (begin_deg < a && end_deg >= b) {
+         // do the whole thing
+         arc_canvas_helper(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            a+rot, b+rot, rotations[i % 8]);
+      }
+      else if (begin_deg < a && end_deg < b) {
+         // do the end
+         arc_canvas_helper(canvas, center_x, center_y, radius,
+            strokewidth, strokecolor,
+            a+rot, end_deg+rot, rotations[i % 8]);
+      }
+      i++;
    }
 }

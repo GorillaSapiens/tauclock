@@ -1,4 +1,4 @@
-/**
+/*
  * Example for a sine/cosine table lookup
  * Implementation of sin1() / cos1().
  * We "outsource" this implementation so that the precompiler constants/macros
@@ -6,7 +6,7 @@
  *
  * @file sin1.c
  * @author stfwi
- **/
+ */
 
 #include "trig1.h"
 
@@ -38,7 +38,7 @@
 #define INTERP_BITS (INT16_BITS-1-LOOKUP_BITS)
 #define INTERP_MASK ((1<<INTERP_BITS)-1)
 
-/**
+/*
  * "5 bit" lookup table for the offsets. These are the sines for exactly
  * at 0deg, 11.25deg, 22.5deg etc. The values are from -1 to 1 in Q15.
  */
@@ -50,7 +50,7 @@ static int16_t sin90[TABLE_SIZE + 1] = {
    0x7fff
 };
 
-/**
+/*
  * Sine calculation using interpolated table lookup.
  * Instead of radiants or degrees we use "turns" here. Means this
  * sine does NOT return one phase for 0 to 2*PI, but for 0 to 1.
@@ -87,7 +87,7 @@ int16_t sin1(int16_t angle) {
    return v1;
 }
 
-/**
+/*
  * Cosine calculation using interpolated table lookup.
  * Instead of radiants or degrees we use "turns" here. Means this
  * cosine does NOT return one phase for 0 to 2*PI, but for 0 to 1.

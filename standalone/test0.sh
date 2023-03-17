@@ -17,6 +17,7 @@
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #./weather.pl 34.0007 -81.0348 > weather.txt
+echo ./calcdata 34.0007 -81.0348 $1 $2
 ./calcdata 34.0007 -81.0348 $1 $2
 convert -size 1024x1024 -depth 8 RGBA:out.bin tmp.png
 mv tmp.png out.png

@@ -33,11 +33,11 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.c draw.c draw.h clock.c libnova.a
-	gcc -g -Wall -DSTANDALONE draw.c clock.c main.c libnova.a -I libnova-0.15.0/src -lm -o calcdata
+calcdata: main.c trig1.c draw.c draw.h clock.c libnova.a
+	gcc -g -Wall -DSTANDALONE $^ -I libnova-0.15.0/src -lm -o calcdata
 
-calcrange: mainrange.c draw.c draw.h clock.c libnova.a
-	gcc -g -Wall -DSTANDALONE draw.c clock.c mainrange.c libnova.a -I libnova-0.15.0/src -lm -o calcrange
+calcrange: mainrange.c trig1.c draw.c draw.h clock.c libnova.a
+	gcc -g -Wall -DSTANDALONE $^ libnova.a -I libnova-0.15.0/src -lm -o calcrange
 
 libnova-0.15.0/doc/html:
 	(cd libnova-0.15.0/doc; doxygen doxyfile.in )

@@ -534,7 +534,7 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
-static double biggest4(double a, double b, double c, double d) {
+static inline double biggestof4(double a, double b, double c, double d) {
    double ret = a;
    if (b > ret) { ret = b; }
    if (c > ret) { ret = c; }
@@ -542,7 +542,7 @@ static double biggest4(double a, double b, double c, double d) {
    return ret;
 }
 
-static double smallest4(double a, double b, double c, double d) {
+static inline double smallestof4(double a, double b, double c, double d) {
    double ret = a;
    if (b < ret) { ret = b; }
    if (c < ret) { ret = c; }
@@ -550,8 +550,7 @@ static double smallest4(double a, double b, double c, double d) {
    return ret;
 }
 
-static void
-arc_normalize (double *begin_deg, double *end_deg) {
+static inline void arc_normalize (double *begin_deg, double *end_deg) {
    double b = *begin_deg;
    double e = *end_deg;
 
@@ -590,7 +589,11 @@ arc_canvas_helper(Canvas * canvas,
       begin_deg, end_deg, strokecolor, radius, rotated);
 
    // we are now guaranteed to have a begin and end in
-   // the same quadrant
+   // the same quadrant, and same octant
+
+   // we are also guaranteed to be in octants 2, 3, 6, or 7
+   // (because that's how we get called, with rotated set if
+   // we're in octants 1, 4, 5, or 8)
 
    // stuff we're going to use a lot
    double sin_begin = sin_deg(begin_deg);
@@ -599,15 +602,12 @@ arc_canvas_helper(Canvas * canvas,
    double sin_end = sin_deg(end_deg);
    double cos_end = cos_deg(end_deg);
 
-   //double sin_middle = sin_deg((begin_deg + end_deg) / 2.0);
    double cos_middle = cos_deg((begin_deg + end_deg) / 2.0);
 
-   double outer = (double)radius + round((double)strokewidth / 2.0 + .5);
    double inner = (double)radius - round((double)strokewidth / 2.0 + .5);
+   double outer = inner + (double) strokewidth;
 
    dprintf("!!! inner=%f outer=%f\n", inner, outer);
-
-   // disregard the center for now...
 
    // we shall consider 4 points:
    // the end point of each of the outer and inner arcs.
@@ -620,9 +620,9 @@ arc_canvas_helper(Canvas * canvas,
 
    // now find the largest and smallest
    double y_large =
-      biggest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+      biggestof4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
    double y_small =
-      smallest4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
+      smallestof4(y_outer_begin, y_outer_end, y_inner_begin, y_inner_end);
 
    y_large = round(y_large);
    y_small = round(y_small);

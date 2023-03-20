@@ -515,9 +515,9 @@ void do_location(Canvas * canvas, struct ln_lnlat_posn *observer) {
       // border bands
       int mid = canvas->w / 2;
       arc_canvas(canvas,
-         mid, mid, mid / 2 - SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+         mid, mid, mid / 2 - SCALE(126), 7, COLOR_WHITE, 0, 360.0);
       arc_canvas(canvas,
-         mid, mid, mid / 2 + SCALE(128), 1, COLOR_WHITE, 0, 360.0);
+         mid, mid, mid / 2 + SCALE(126), 7, COLOR_WHITE, 0, 360.0);
 
    }
    else {
@@ -661,14 +661,8 @@ do_moon_draw(Context *context, Canvas * canvas,
       }
    }
    // outline
-   if (is_up == 1) {
-      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_WHITE, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_WHITE, 0, 360.0);
-   }
-   else {
-      arc_canvas(canvas, cx, cy, SCALE(40), 2, COLOR_BLACK, 0, 360.0);
-      arc_canvas(canvas, cx, cy, SCALE(43), 2, COLOR_BLACK, 0, 360.0);
-   }
+   arc_canvas(canvas, cx, cy, SCALE(43), 7,
+      is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
 }
 
 /// @brief Draw the perimeter planet band

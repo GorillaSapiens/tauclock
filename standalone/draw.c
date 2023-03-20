@@ -550,13 +550,28 @@ static double smallest4(double a, double b, double c, double d) {
    return ret;
 }
 
-//static double distance(double x, double y) {
-//   return sqrt(x*x+y*y);
-//}
+static void
+arc_normalize (double *begin_deg, double *end_deg) {
+   double b = *begin_deg;
+   double e = *end_deg;
 
-// values of sin/cos less than SMALL are avoided during
-// fixups
-#define SMALL .000001
+   // sane normalization
+   // faster than some other solutions which involve division
+   while (b < 0.0) {
+      b += 360.0;
+      e += 360.0;
+   }
+   while (b >= 360.0) {
+      b -= 360.0;
+      e -= 360.0;
+   }
+   while (e < b) {
+      e += 360.0;
+   }
+
+   *begin_deg = b;
+   *end_deg = e;
+}
 
 static void
 arc_canvas_helper(Canvas * canvas,
@@ -569,18 +584,7 @@ arc_canvas_helper(Canvas * canvas,
    dprintf("!!! begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
       begin_deg, end_deg, strokecolor, radius, rotated);
 
-   // sane normalization
-   while (begin_deg < 0.0) {
-      begin_deg += 360.0;
-      end_deg += 360.0;
-   }
-   while (begin_deg >= 360.0) {
-      begin_deg -= 360.0;
-      end_deg -= 360.0;
-   }
-   while (end_deg < begin_deg) {
-      end_deg += 360.0;
-   }
+   arc_normalize(&begin_deg, &end_deg);
 
    dprintf("222 begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
       begin_deg, end_deg, strokecolor, radius, rotated);
@@ -595,7 +599,7 @@ arc_canvas_helper(Canvas * canvas,
    double sin_end = sin_deg(end_deg);
    double cos_end = cos_deg(end_deg);
 
-   double sin_middle = sin_deg((begin_deg + end_deg) / 2.0);
+   //double sin_middle = sin_deg((begin_deg + end_deg) / 2.0);
    double cos_middle = cos_deg((begin_deg + end_deg) / 2.0);
 
    double outer = (double)radius + round((double)strokewidth / 2.0 + .5);
@@ -662,122 +666,96 @@ arc_canvas_helper(Canvas * canvas,
 
       double tmp;
 
-      if (fabs(y) < 2.0) {
-         if (cos_middle < 0.0) {
-            x_inner = -inner;
+      if (begin_deg < 90.0) {
+         tmp = y * cos_end / sin_end;
+         if (tmp < outer) {
+            if (x_inner < tmp) {
+               dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+               x_inner = tmp;
+            }
          }
          else {
-            x_inner = inner;
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
          }
-         if (cos_middle < 0.0) {
-            x_outer = -outer;
+
+         tmp = y * cos_begin / sin_begin;
+         if (tmp < outer) {
+            if (x_outer > tmp) {
+               dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+               x_outer = tmp;
+            }
          }
          else {
-            x_outer = outer;
-         }
-      }
-      else if (begin_deg < 90.0) {
-         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
-            tmp = y * cos_end / sin_end;
-            if (tmp < outer) {
-               if (x_inner < tmp) {
-                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
-                  x_inner = tmp;
-               }
-            }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
-            }
-         }
-         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
-            tmp = y * cos_begin / sin_begin;
-            if (tmp < outer) {
-               if (x_outer > tmp) {
-                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
-                  x_outer = tmp;
-               }
-            }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
-            }
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
          }
       }
       else if (begin_deg < 180.0) {
-         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
-            tmp = y * cos_begin / sin_begin;
-            if (tmp > -outer) {
-               if (x_inner > tmp) {
-                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
-                  x_inner = tmp;
-               }
-            }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         tmp = y * cos_begin / sin_begin;
+         if (tmp > -outer) {
+            if (x_inner > tmp) {
+               dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+               x_inner = tmp;
             }
          }
-         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
-            tmp = y * cos_end / sin_end;
-            if (tmp > -outer) {
-               if (x_outer < tmp) {
-                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
-                  x_outer = tmp;
-               }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         }
+
+         tmp = y * cos_end / sin_end;
+         if (tmp > -outer) {
+            if (x_outer < tmp) {
+               dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+               x_outer = tmp;
             }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
-            }
+         }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
          }
       }
       else if (begin_deg < 270.0) {
-         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
-            tmp = y * cos_end / sin_end;
-            if (tmp > -outer) {
-               if (x_inner > tmp) {
-                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
-                  x_inner = tmp;
-               }
-            }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         tmp = y * cos_end / sin_end;
+         if (tmp > -outer) {
+            if (x_inner > tmp) {
+               dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+               x_inner = tmp;
             }
          }
-         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
-            tmp = y * cos_begin / sin_begin;
-            if (tmp > -outer) {
-               if (x_outer < tmp) {
-                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
-                  x_outer = tmp;
-               }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         }
+
+         tmp = y * cos_begin / sin_begin;
+         if (tmp > -outer) {
+            if (x_outer < tmp) {
+               dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+               x_outer = tmp;
             }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
-            }
+         }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
          }
       }
       else { // < 360.0
-         if (fabs(sin_begin) > SMALL && fabs(cos_begin) > SMALL) {
-            tmp = y * cos_begin / sin_begin;
-            if (tmp < outer) {
-               if (x_inner < tmp) {
-                  dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
-                  x_inner = tmp;
-               }
-            }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         tmp = y * cos_begin / sin_begin;
+         if (tmp < outer) {
+            if (x_inner < tmp) {
+               dprintf("... y=%f xbl=%f sug=%f\n", y, x_inner, tmp);
+               x_inner = tmp;
             }
          }
-         if (fabs(sin_end) > SMALL && fabs(cos_end) > SMALL) {
-            tmp = y * cos_end / sin_end;
-            if (tmp < outer) {
-               if (x_outer > tmp) {
-                  dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
-                  x_outer = tmp;
-               }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
+         }
+
+         tmp = y * cos_end / sin_end;
+         if (tmp < outer) {
+            if (x_outer > tmp) {
+               dprintf("... y=%g xel=%f sug=%f\n", y, x_outer, tmp);
+               x_outer = tmp;
             }
-            else {
-               dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
-            }
+         }
+         else {
+            dprintf("### %f %f %f\n", x_inner, tmp, x_outer);
          }
       }
       dprintf("[[[ y=%f xbl=%f xel=%f\n", y, x_inner, x_outer);
@@ -833,52 +811,29 @@ arc_canvas(Canvas * canvas,
    dprintf("=== begin_deg=%f end_deg=%f color=%08X radius=%d\n",
       begin_deg, end_deg, strokecolor, radius);
 
-   // sane normalization
-   while (begin_deg < 0.0) {
-      begin_deg += 360.0;
-      end_deg += 360.0;
-   }
-   while (begin_deg >= 360.0) {
-      begin_deg -= 360.0;
-      end_deg -= 360.0;
-   }
-   while (end_deg < begin_deg) {
-      end_deg += 360.0;
-   }
+   arc_normalize(&begin_deg, &end_deg);
 
    dprintf(">>> begin_deg=%f end_deg=%f color=%08X radius=%d\n",
       begin_deg, end_deg, strokecolor, radius);
 
    // sweep eigths
    int i = 0;
-   for (double a = 0.0; a < end_deg; a += 45.0) {
-      double b = a + 45.0;
-      double rot = rotations[i % 8] ? -90.0 : 0.0;
+   double a = 0.0;
+   double b = 45.0;
+   while (a <= end_deg) {
+      if (!(end_deg < a || begin_deg > b)) {
+         bool rotated = rotations[i & 7];
+         double rot = rotated ? -90.0 : 0.0;
+         double from = fmax(a, begin_deg);
+         double to = fmin(b, end_deg);
 
-      if (begin_deg >= a && end_deg < b) {
-         // do it all
          arc_canvas_helper(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg+rot, end_deg+rot, rotations[i % 8]);
+               strokewidth, strokecolor,
+               from+rot, to+rot, rotated);
       }
-      else if (begin_deg >= a && begin_deg < b && end_deg >= b) {
-         // do the beginning
-         arc_canvas_helper(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            begin_deg+rot, b+rot, rotations[i % 8]);
-      }
-      else if (begin_deg < a && end_deg >= b) {
-         // do the whole thing
-         arc_canvas_helper(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            a+rot, b+rot, rotations[i % 8]);
-      }
-      else if (begin_deg < a && end_deg < b) {
-         // do the end
-         arc_canvas_helper(canvas, center_x, center_y, radius,
-            strokewidth, strokecolor,
-            a+rot, end_deg+rot, rotations[i % 8]);
-      }
+
       i++;
+      a = b;
+      b += 45.0;
    }
 }

@@ -14,7 +14,10 @@ struct αδ {
 
 double time_t2julian(time_t t);
 
+// Ecliptic to equatorial coordinate conversion
 struct αδ sec27(double jd, double λ, double β);
+
+// Calculating the position of the Sun
 struct αδ sec46(double jd);
 
 #ifdef  __cplusplus

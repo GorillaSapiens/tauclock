@@ -572,7 +572,7 @@ do_moon_draw(Context *context, Canvas * canvas,
    int cxm;
    if (lunar_phase < 90.0) {
       interior_color = COLOR_BLACK;
-      chunk_color = COLOR_MAGENTA;
+      chunk_color = COLOR_SILVER;
       if (lunar_bright_limb < 180.0) {
          cxm = 1;
       }
@@ -581,7 +581,7 @@ do_moon_draw(Context *context, Canvas * canvas,
       }
    }
    else {
-      interior_color = COLOR_MAGENTA;
+      interior_color = COLOR_SILVER;
       chunk_color = COLOR_BLACK;
       if (lunar_bright_limb < 180.0) {
          cxm = -1;
@@ -615,26 +615,6 @@ do_moon_draw(Context *context, Canvas * canvas,
             else {
                poke_canvas(canvas, cx + dx, cy + dy, interior_color);
             }
-         }
-      }
-   }
-
-   // shading for moon
-   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
-      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
-         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_MAGENTA) {
-            int d2 = dx * dx + dy * dy;
-            unsigned int color = COLOR_LIGHTGRAY & 0xFF;
-            color =
-               color * (.8 +
-                     .2 * (1.0 -
-                        (2.0 * (double)(d2) /
-                         (double)(SCALE(40) * SCALE(40)))));
-            color =
-               (COLOR_LIGHTGRAY & 0xFF000000) | (color << 16) | (color << 8) |
-               (color);
-
-            poke_canvas(canvas, cx + dx, cy + dy, color);
          }
       }
    }

@@ -70,6 +70,8 @@
 #define COLOR_WHITE      RGB(255, 255, 255)
 #define COLOR_YELLOW     RGB(255, 255,   0)
 
+#define COLOR_SILVER     RGB(190, 194, 203)
+
 #define COLOR_LOCK       0x80000000
 #define LOCK(x)          ((x) & 0xFEFFFFFF)
 #define ISLOCKED(x)      (!((x) & 0x01000000))

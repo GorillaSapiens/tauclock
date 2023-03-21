@@ -11,7 +11,7 @@ double time_t2julian(time_t t) {
 }
 
 // Ecliptic to equatorial coordinate conversion
-struct αδ sec27(double jd, double λ, double β) {
+struct αδ ə27(double jd, double λ, double β) {
    // tested, works
    double T = (jd - 2451545.0) / 36525.0;
    double DE = (46.815 * T + 0.0006 * T * T - 0.00181*T*T*T) / 3600.0;
@@ -32,7 +32,7 @@ struct αδ sec27(double jd, double λ, double β) {
 }
 
 // Calculating the position of the Sun
-struct αδ sec46(double jd) {
+struct αδ ə46(double jd) {
    // tested, works
 
    // 2010 January 0.0 (JD = 2 455 196.5)
@@ -71,5 +71,5 @@ struct αδ sec46(double jd) {
    while (λ < 0.0) λ += 360.0;
    while (λ >= 360.0) λ -= 360.0;
 
-   return sec27(jd, λ, 0.0);
+   return ə27(jd, λ, 0.0);
 }

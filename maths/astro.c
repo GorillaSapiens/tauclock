@@ -10,6 +10,22 @@ double time_t2julian(time_t t) {
    return (double)t / 86400.0 + 2440587.5;
 }
 
+// Conversion of GST to UT
+double ə13(double jd, double GST) {
+}
+
+// Converting LST to GST
+double ə15(double λ, double LST) {
+   LST -= λ / 15.0;
+   while (LST < 0.0) {
+      LST += 24.0;
+   }
+   while (LST >= 24.0) {
+      LST -= 24.0;
+   }
+   return LST;
+}
+
 // Ecliptic to equatorial coordinate conversion
 struct αδ ə27(double jd, double λ, double β) {
    // tested, works
@@ -28,7 +44,13 @@ struct αδ ə27(double jd, double λ, double β) {
          (sin_deg(λ)*cos_deg(ε) - tan_deg(β)*sin_deg(ε)),
          cos_deg(λ));
 
+   ret.α /= 15.0; // convert to hours
+
    return ret;
+}
+
+// Rising and setting
+struct αδ ə33(double jd, double λ, double β) {
 }
 
 // Calculating the position of the Sun
@@ -47,11 +69,11 @@ struct αδ ə46(double jd) {
    // e (eccentricity of orbit at epoch 2010.0) = 0.016705
    static const double e  = 0.016705;
 
-   // r0 (semi-major axis) = 1.495985×10^8 km
-   static const double r0 = 1.495985e8;
+   // // r0 (semi-major axis) = 1.495985×10^8 km
+   // static const double r0 = 1.495985e8;
 
-   // θ0 (angular diameter at r = r0) = 0.533128 degrees
-   static const double θ0 = 0.533128;
+   // // θ0 (angular diameter at r = r0) = 0.533128 degrees
+   // static const double θ0 = 0.533128;
 
    // ==================
 

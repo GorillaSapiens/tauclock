@@ -8,8 +8,18 @@ extern "C" {
 #endif
 
 struct αδ {
-   double α;
-   double δ;
+   double α; // right ascension, hrs
+   double δ; // declination, degrees
+};
+
+struct φλ {
+   double φ; // latitude (N/S, S neg)
+   double λ; // longitude (E/W, W neg)
+};
+
+struct UTrs {
+   double r; // rise time
+   double s; // set time
 };
 
 double time_t2julian(time_t t);
@@ -24,7 +34,7 @@ double ə15(double λ, double LST);
 struct αδ ə27(double jd, double λ, double β);
 
 // Rising and setting
-struct αδ ə33(double jd, double λ, double β);
+struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v);
 
 // Calculating the position of the Sun
 struct αδ ə46(double jd);

@@ -32,14 +32,14 @@
 //#define dprintf(format, ...) printf("%s:%d " format, FILELINE, __VA_ARGS__)
 #define dprintf(format, ...)
 
-// 0 to 2PI == 0 to 32767
+// 0 to 2PI == 0 to 32768
 static double sin_deg(double arg) {
-   int16_t arg1 = 32767.0 * arg / 360.0;
+   int16_t arg1 = 32768.0 * arg / 360.0;
    return (double)sin1(arg1) / 32767.0;
 }
 
 static double cos_deg(double arg) {
-   int16_t arg1 = 32767.0 * arg / 360.0;
+   int16_t arg1 = 32768.0 * arg / 360.0;
    return (double)cos1(arg1) / 32767.0;
 }
 

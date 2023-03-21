@@ -16,6 +16,8 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+echo LC_ALL=$LC_ALL
+echo LANG=$LANG
 #./weather.pl 34.0007 -81.0348 > weather.txt
 echo ./calcdata 34.0007 -81.0348 $1 $2
 ./calcdata 34.0007 -81.0348 $1 $2

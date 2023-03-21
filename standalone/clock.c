@@ -27,6 +27,8 @@
 
 #include <math.h>
 
+#include <locale.h>
+
 #include <assert.h>
 
 #include "trig1.h"
@@ -89,33 +91,6 @@ uint8_t *FONT_ITALIC_MED;
 #endif
 
 #define SCALE(x) ((double)((double)(x) * SIZE / 1024))
-
-/// @brief An array containing month names.
-const char *months[] = {
-   "January",
-   "February",
-   "March",
-   "April",
-   "May",
-   "June",
-   "July",
-   "August",
-   "September",
-   "October",
-   "November",
-   "December"
-};
-
-/// @brief An array containing weekday names.
-const char *weekdays[] = {
-   "Sunday",
-   "Monday",
-   "Tuesday",
-   "Wednesday",
-   "Thursday",
-   "Friday",
-   "Saturday"
-};
 
 /// @brief enumeration type for events
 ///
@@ -475,8 +450,10 @@ void do_now_weekday(Canvas * canvas, double now) {
 
    unsigned int dow = ln_get_day_of_week(&date);
 
-   char text[32];
-   sprintf(text, "%s", weekdays[dow]);
+   char text[64];
+   struct tm tm;
+   tm.tm_wday = dow;
+   strftime(text, sizeof(text), "%A", &tm);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
          canvas->h / 2 - (int)SCALE(90), COLOR_WHITE, COLOR_BLACK, text,
          1, 2);
@@ -488,10 +465,15 @@ void do_now_weekday(Canvas * canvas, double now) {
 /// @param now The current Julian Date
 /// @return void
 void do_now_date(Canvas * canvas, double now) {
-   char time[32];
+   char time[64];
    struct ln_zonedate zonedate;
    my_get_local_date(now, &zonedate);
-   sprintf(time, "%s-%d", months[zonedate.months - 1], zonedate.days);
+
+   struct tm tm;
+   tm.tm_mon = zonedate.months - 1;
+   strftime(time, sizeof(time), "%B", &tm);
+
+   sprintf(time + strlen(time), "-%d", zonedate.days);
    text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
          canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, time,
          1, 2);
@@ -2361,6 +2343,8 @@ double to_the_minute(double jd) {
 Canvas *do_all(double lat, double lon, double offset, int width,
       const char *provider, const char *tzprovider, const char *tz,
       int lightdark) {
+
+   setlocale(LC_ALL, "");
 
    static Context *context = NULL;
    if (context == NULL) {

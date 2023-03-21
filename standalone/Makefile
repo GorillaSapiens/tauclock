@@ -34,16 +34,16 @@ icons:
 	rm -rf weather-underground-icons
 
 calcdata: main.c trig1.c draw.c draw.h clock.c libnova.a
-	gcc -g -Wall -DSTANDALONE $^ -I libnova-0.15.0/src -lm -o calcdata
+	gcc -g -pg -Ofast -Wall -DSTANDALONE $^ -I libnova-0.15.0/src -lm -o calcdata
 
 calcrange: mainrange.c trig1.c draw.c draw.h clock.c libnova.a
-	gcc -g -Wall -DSTANDALONE $^ libnova.a -I libnova-0.15.0/src -lm -o calcrange
+	gcc -g -pg -Ofast -Wall -DSTANDALONE $^ libnova.a -I libnova-0.15.0/src -lm -o calcrange
 
 libnova-0.15.0/doc/html:
 	(cd libnova-0.15.0/doc; doxygen doxyfile.in )
 
 libnova.a: libnova-0.15.0/Makefile.am
-	(cd libnova-0.15.0/src; gcc -Ofast -c *.c -I.)
+	(cd libnova-0.15.0/src; gcc -pg -Ofast -c *.c -I.)
 	ar r libnova.a libnova-0.15.0/src/*.o
 
 libnova-0.15.0/Makefile.am: libnova-0.15.0.tar.gz

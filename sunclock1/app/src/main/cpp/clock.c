@@ -29,6 +29,8 @@
 
 #include <assert.h>
 
+#include "trig1.h"
+
 #ifdef STANDALONE
 
 #include <libnova/solar.h>
@@ -59,6 +61,21 @@
 
 #include "draw.h"
 
+static double sin_deg(double arg) {
+   int16_t arg1 = 32768.0 * arg / 360.0;
+   return (double)sin1(arg1) / 32767.0;
+}
+
+static double cos_deg(double arg) {
+   int16_t arg1 = 32768.0 * arg / 360.0;
+   return (double)cos1(arg1) / 32767.0;
+}
+
+#define FNORD KNARF
+#define sin(x) FNORD
+#define cos(x) FNORD
+#define tan(x) FNORD
+
 #define ORIG
 
 #ifdef ORIG
@@ -72,12 +89,6 @@ uint8_t *FONT_ITALIC_MED;
 #endif
 
 #define SCALE(x) ((double)((double)(x) * SIZE / 1024))
-
-/// @brief A macro to convert Degrees to Radians
-#define DEG2RAD(x) ((double)(x) * M_PI / 180.0)
-
-// /// @brief A macro to convert Radians to Degrees
-// #define RAD2DEG(x) ((x) * 180.0 / M_PI)
 
 /// @brief An array containing month names.
 const char *months[] = {
@@ -380,14 +391,14 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
 
       double angle = frac(mark) * 360.0;
 
-      xa = x + (r - SCALE(8)) * cos(DEG2RAD(angle - up_angle + 270.0));
-      ya = y + (r - SCALE(8)) * sin(DEG2RAD(angle - up_angle + 270.0));
-      xc = x + r * cos(DEG2RAD(angle - up_angle + 270.0));
-      yc = y + r * sin(DEG2RAD(angle - up_angle + 270.0));
+      xa = x + (r - SCALE(8)) * cos_deg(angle - up_angle + 270.0);
+      ya = y + (r - SCALE(8)) * sin_deg(angle - up_angle + 270.0);
+      xc = x + r * cos_deg(angle - up_angle + 270.0);
+      yc = y + r * sin_deg(angle - up_angle + 270.0);
       line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, LOCK(COLOR_BLACK));
 
-      xa = x + (r - SCALE(30)) * cos(DEG2RAD(angle - up_angle + 270.0));
-      ya = y + (r - SCALE(30)) * sin(DEG2RAD(angle - up_angle + 270.0));
+      xa = x + (r - SCALE(30)) * cos_deg(angle - up_angle + 270.0);
+      ya = y + (r - SCALE(30)) * sin_deg(angle - up_angle + 270.0);
       char buf[32];
       sprintf(buf, "%02d", hour);
       text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
@@ -414,16 +425,16 @@ void do_now_hand(Canvas * canvas, double up, double now) {
    double now_angle = frac(now) * 360.0 - up_angle + 270.0;
    double xc =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-            SCALE(128)) * cos(DEG2RAD(now_angle));
+            SCALE(128)) * cos_deg(now_angle);
    double yc =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-            SCALE(128)) * sin(DEG2RAD(now_angle));
+            SCALE(128)) * sin_deg(now_angle);
    double xc2 =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-            SCALE(128)) * cos(DEG2RAD(now_angle));
+            SCALE(128)) * cos_deg(now_angle);
    double yc2 =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-            SCALE(128)) * sin(DEG2RAD(now_angle));
+            SCALE(128)) * sin_deg(now_angle);
 
    thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_WHITE,
          3);
@@ -563,16 +574,16 @@ do_moon_draw(Context *context, Canvas * canvas,
    int cx, cy;
 
    cx = canvas->w / 2 +
-      (int)((10.0 + canvas->w / 6.0) * cos(DEG2RAD(where_angle)));
+      (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
    cy = canvas->h / 2 +
-      (int)((10.0 + canvas->h / 6.0) * sin(DEG2RAD(where_angle)));
+      (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
 
    unsigned int interior_color;
    unsigned int chunk_color;
    int cxm;
    if (lunar_phase < 90.0) {
       interior_color = COLOR_BLACK;
-      chunk_color = COLOR_MAGENTA;
+      chunk_color = COLOR_SILVER;
       if (lunar_bright_limb < 180.0) {
          cxm = 1;
       }
@@ -581,7 +592,7 @@ do_moon_draw(Context *context, Canvas * canvas,
       }
    }
    else {
-      interior_color = COLOR_MAGENTA;
+      interior_color = COLOR_SILVER;
       chunk_color = COLOR_BLACK;
       if (lunar_bright_limb < 180.0) {
          cxm = -1;
@@ -615,26 +626,6 @@ do_moon_draw(Context *context, Canvas * canvas,
             else {
                poke_canvas(canvas, cx + dx, cy + dy, interior_color);
             }
-         }
-      }
-   }
-
-   // shading for moon
-   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
-      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
-         if (peek_canvas(canvas, cx + dx, cy + dy) == COLOR_MAGENTA) {
-            int d2 = dx * dx + dy * dy;
-            unsigned int color = COLOR_LIGHTGRAY & 0xFF;
-            color =
-               color * (.8 +
-                     .2 * (1.0 -
-                        (2.0 * (double)(d2) /
-                         (double)(SCALE(40) * SCALE(40)))));
-            color =
-               (COLOR_LIGHTGRAY & 0xFF000000) | (color << 16) | (color << 8) |
-               (color);
-
-            poke_canvas(canvas, cx + dx, cy + dy, color);
          }
       }
    }
@@ -742,10 +733,10 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
          // always do a tick, regardless of type
          double x1, y1, x2, y2;
 
-         x1 = canvas->w / 2 + (radius - 16) * cos(DEG2RAD(angle));
-         y1 = canvas->h / 2 + (radius - 16) * sin(DEG2RAD(angle));
-         x2 = canvas->w / 2 + (radius + 16) * cos(DEG2RAD(angle));
-         y2 = canvas->h / 2 + (radius + 16) * sin(DEG2RAD(angle));
+         x1 = canvas->w / 2 + (radius - 16) * cos_deg(angle);
+         y1 = canvas->h / 2 + (radius - 16) * sin_deg(angle);
+         x2 = canvas->w / 2 + (radius + 16) * cos_deg(angle);
+         y2 = canvas->h / 2 + (radius + 16) * sin_deg(angle);
 
          line_canvas(canvas, x1, y1, x2, y2, color);
       }
@@ -776,8 +767,8 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
             double angle =
                (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
-            x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + offset));
-            y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + offset));
+            x = (canvas->w / 2) + radius * cos_deg(angle + offset);
+            y = (canvas->h / 2) + radius * sin_deg(angle + offset);
             text_canvas(canvas, ASTRO_FONT, x, y, color,
                   COLOR_BLACK, sym, 1, 1);
             drawn = true;
@@ -793,8 +784,8 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
                double angle =
                   (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
-               x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
-               y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
+               x = (canvas->w / 2) + radius * cos_deg(angle + 3.0);
+               y = (canvas->h / 2) + radius * sin_deg(angle + 3.0);
                text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
                drawn = true;
             }
@@ -810,8 +801,8 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
                double angle =
                   (events[i].jd - base) * 360.0 - up_angle + 270.0;
 
-               x = (canvas->w / 2) + radius * cos(DEG2RAD(angle + 3.0));
-               y = (canvas->h / 2) + radius * sin(DEG2RAD(angle + 3.0));
+               x = (canvas->w / 2) + radius * cos_deg(angle + 3.0);
+               y = (canvas->h / 2) + radius * sin_deg(angle + 3.0);
                text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
                drawn = true;
             }
@@ -821,9 +812,9 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
 
    if (is_up && !drawn) { // shazbat
       double x = (canvas->w / 2) +
-         (radius + 15) * cos(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+         (radius + 15) * cos_deg((int)(category - CAT_LUNAR) * (360 / 6));
       double y = (canvas->h / 2) +
-         (radius + 15) * sin(DEG2RAD((int)(category - CAT_LUNAR) * (360 / 6)));
+         (radius + 15) * sin_deg((int)(category - CAT_LUNAR) * (360 / 6));
       text_canvas(canvas, ASTRO_FONT, x, y, color, COLOR_BLACK, sym, 1, 1);
    }
 }
@@ -1504,8 +1495,8 @@ accum_helper(Context *context, Canvas * canvas,
    int collision;
    int radius = (canvas->w / 4);
    do {
-      x = (canvas->w / 2) + radius * cos(DEG2RAD(draw_angle));
-      y = (canvas->h / 2) + radius * sin(DEG2RAD(draw_angle));
+      x = (canvas->w / 2) + radius * cos_deg(draw_angle);
+      y = (canvas->h / 2) + radius * sin_deg(draw_angle);
 
       collision = check(context, x, y, w, h);
 
@@ -1580,8 +1571,8 @@ do_tr_time_sun(Context *context, Canvas * canvas, double now, double jd, double 
    int x, y;
 
    do {
-      x = (canvas->w / 2) + radius * cos(DEG2RAD(theta));
-      y = (canvas->h / 2) + radius * sin(DEG2RAD(theta));
+      x = (canvas->w / 2) + radius * cos_deg(theta);
+      y = (canvas->h / 2) + radius * sin_deg(theta);
 
       collision = check(context, x, y, w, h);
 

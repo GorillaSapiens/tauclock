@@ -1049,6 +1049,30 @@ int64_t sin1(int16_t angle) {
    }
 }
 
+double sin_deg(double angle) {
+   return (double) sin1(angle * 32768.0) / 32767.0;
+}
+
 int64_t cos1(int16_t angle) {
    return sin1(angle + 8192);
+}
+
+double cos_deg(double angle) {
+   return (double) cos1(angle * 32768.0) / 32767.0;
+}
+
+double tan_deg(double angle) {
+   return sin_deg(angle) / cos_deg(angle);
+}
+
+double asin_deg(double sine) {
+   return 0;
+}
+
+double acos_deg(double cosine) {
+   return 0;
+}
+
+double atan_deg(double tangent) {
+   return 0;
 }

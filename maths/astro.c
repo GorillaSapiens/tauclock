@@ -70,7 +70,6 @@ double ə15(double λ, double LST) {
 
 // Ecliptic to equatorial coordinate conversion
 struct αδ ə27(double jd, double λ, double β) {
-   // tested, works
    double T = (jd - 2451545.0) / 36525.0;
    double DE = (46.815 * T + 0.0006 * T * T - 0.00181*T*T*T) / 3600.0;
    double ε = 23.439292 - DE;
@@ -93,28 +92,26 @@ struct αδ ə27(double jd, double λ, double β) {
 
 // Rising and setting
 struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
-   double cosH =
+   struct UTrs UTrs;
+
+   UTrs.cosH =
       -(
          (sin_deg(v) + sin_deg(φλ.φ) * sin_deg(αδ.δ)) /
          (cos_deg(φλ.φ) * cos_deg(αδ.δ))
        );
-printf("cosH=%f\n", cosH);
 
-   struct UTrs UTrs;
-
-   if (cosH < -1.0) {
+   if (UTrs.cosH < -1.0) {
       // circumpolar
       UTrs.r = +INFINITY;
       UTrs.s = +INFINITY;
    }
-   else if (cosH > 1.0) {
+   else if (UTrs.cosH > 1.0) {
       // never rises
       UTrs.r = -INFINITY;
       UTrs.s = -INFINITY;
    }
    else {
-      double H = acos_deg(cosH) / 15.0;
-printf("H=%f\n", H);
+      double H = acos_deg(UTrs.cosH) / 15.0;
 
       double LSTr = αδ.α - H;
       ZRANGE(LSTr, 24.0);
@@ -134,8 +131,6 @@ printf("H=%f\n", H);
 
 // Calculating the position of the Sun
 struct αδ ə46(double jd) {
-   // tested, works
-
    // 2010 January 0.0 (JD = 2 455 196.5)
    static const double epoch = 2455196.5;
 
@@ -174,27 +169,26 @@ struct αδ ə46(double jd) {
 
 // Twilight
 struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) {
-   double cosH =
+   struct UTrs UTrs;
+
+   UTrs.cosH =
       (
          (cos_deg(horizon) - sin_deg(φλ.φ) * sin_deg(αδ.δ) - sin_deg(0.566666666)) /
          (cos_deg(φλ.φ) * cos_deg(αδ.δ))
        );
-printf("cosH'=%f\n",cosH);
-   struct UTrs UTrs;
 
-   if (cosH < -1.0) {
+   if (UTrs.cosH < -1.0) {
       // circumpolar
       UTrs.r = +INFINITY;
       UTrs.s = +INFINITY;
    }
-   else if (cosH > 1.0) {
+   else if (UTrs.cosH > 1.0) {
       // never rises
       UTrs.r = -INFINITY;
       UTrs.s = -INFINITY;
    }
    else {
-      double H = acos_deg(cosH) / 15.0;
-printf("H'=%f\n",H);
+      double H = acos_deg(UTrs.cosH) / 15.0;
 
       double LSTr = αδ.α - H;
       ZRANGE(LSTr, 24.0);
@@ -274,6 +268,62 @@ struct αδ ə54(double jd, int planet) {
    return ə27(jd, λ, β);
 }
 
+// Calculating the Moon's position
+struct αδ ə65(double jd) {
+   // much of this copied from ə46
+
+   static const double epoch = 2455196.5;
+   static const double εg_sun = 279.557208;
+   static const double ϖg_sun = 283.112438;
+   static const double e_sun  = 0.016705;
+
+   double D = jd - epoch;
+
+   double N_sun = (360.0 * D / 365.242191);
+   ZRANGE(N_sun, 360.0);
+   double M_sun = N_sun + εg_sun - ϖg_sun;
+   ZRANGE(M_sun, 360.0);
+   double Ec_sun = (360.0 / M_PI) * e_sun * sin_deg(M_sun);
+   double λ_sun = N_sun + Ec_sun + εg_sun;
+   ZRANGE(λ_sun, 360.0);
+
+   static const double l0 = 91.929336;
+   static const double P0 = 130.143076;
+   static const double N0 = 291.682547;
+   static const double i = 5.145396;
+
+   double l = 13.1763966 * D + l0;
+   ZRANGE(l, 360.0);
+
+   double M_moon = l - 0.1114041 * D - P0;
+   ZRANGE(M_moon, 360.0);
+
+   double N = N0 - 0.0529539 * D;
+   ZRANGE(N, 360.0);
+
+   double C = l - λ_sun;
+   double Ev = 1.2739 * sin_deg(2.0 * C - M_moon);
+   double Ae = 0.1858 * sin_deg(M_sun);
+   double A3 = 0.37 * sin_deg(M_sun);
+
+   double Mp_moon = M_moon + Ev - Ae - A3;
+   double Ec = 6.2886 * sin_deg(Mp_moon);
+   double A4 = 0.214 * sin_deg(2.0 * Mp_moon);
+   double lp = l + Ev + Ec - Ae + A4;
+
+   double V = 0.6583 * sin_deg(2.0 * (lp - λ_sun));
+   double lpp = lp + V;
+
+   double Np = N - 0.16 * sin_deg(M_sun);
+   double λ_moon = atan2_deg(
+                        sin_deg(lpp - Np) * cos_deg(i),
+                        cos_deg(lpp - Np)
+                     ) + Np;
+   double β_moon = asin_deg(sin_deg(lpp-Np)*sin_deg(i));
+
+   return ə27(jd, λ_moon, β_moon);
+}
+
 #ifdef TEST
 
 #include <stdio.h>
@@ -338,8 +388,8 @@ int main(int argc, char **argv) {
                αδ,
                108.0);
    printf("δ=%f\n", αδ.δ);
-   assert(close(UTrs.r, 3.2, 0.01));
-   assert(close(UTrs.s, 20.716666, 0.01));
+   assert(close(UTrs.r, 3.209, 0.01));
+   assert(close(UTrs.s, 20.662838, 0.01));
    printf("pass\n");
 
    // struct αδ ə54(double jd, int planet) {
@@ -352,6 +402,14 @@ int main(int argc, char **argv) {
    assert(close(αδ.α, 16.82, 0.002));
    assert(close(αδ.δ, -24.5025, 0.02));
    printf("pass\n");
+
+   // struct αδ ə65(double jd) {
+   printf("test ə65\n");
+   αδ = ə65(2452883.50000);
+   assert(close(αδ.α, 14.2166667, 0.02));
+   assert(close(αδ.δ, -11.52722222, 0.02));
+   printf("pass\n");
+
 }
 
 #endif

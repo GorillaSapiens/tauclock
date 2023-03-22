@@ -20,6 +20,7 @@ struct φλ {
 struct UTrs {
    double r; // rise time
    double s; // set time
+   double cosH;
 };
 
 double time_t2julian(time_t t);
@@ -44,6 +45,9 @@ struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon);
 
 // Calculating the coordinates of a planet
 struct αδ ə54(double jd, int planet);
+
+// Calculating the Moon's position
+struct αδ ə65(double jd);
 
 #ifdef  __cplusplus
 }

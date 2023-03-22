@@ -330,12 +330,16 @@ struct αδ ə65(double jd) {
 #include <math.h>
 #include <assert.h>
 
+#ifndef VERBOSE
+#define printf //
+#endif
+
 int close(double a, double b, double delta) {
    printf("close %f %f %f\n", a, b, delta);
    return fabs(a-b) < delta;
 }
 
-int main(int argc, char **argv) {
+int old_main(int argc, char **argv) {
    double tmp;
    struct αδ αδ;
    struct UTrs UTrs;
@@ -410,6 +414,12 @@ int main(int argc, char **argv) {
    assert(close(αδ.δ, -11.52722222, 0.02));
    printf("pass\n");
 
+}
+
+int main(int argc, char **argv) {
+   for (int i = 0; i < 10 * 24 * 60 * 60; i++) {
+      old_main(argc, argv);
+   }
 }
 
 #endif

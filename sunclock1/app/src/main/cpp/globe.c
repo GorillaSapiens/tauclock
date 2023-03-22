@@ -161,7 +161,6 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
             // int y = -RADIUS * sin(lat);
 
             double lat = asin_deg(-yy / (double) radius);
-            //double lon = atan2(xx, -zz) * 180.0 / M_PI;
             double lon = atan2_deg(xx, -zz);
 
             // now convert to bitmap coordinates

@@ -1132,7 +1132,7 @@ double atan2_deg(double y, double x) {
          return mid;
       }
       mid += 180.0;
-      while (mid >= 360.0) {
+      while (mid >= 180.0) {
          mid -= 360.0;
       }
    }

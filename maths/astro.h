@@ -39,6 +39,9 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v);
 // Calculating the position of the Sun
 struct αδ ə46(double jd);
 
+// Calculating the coordinates of a planet
+struct αδ ə54(double jd, int planet);
+
 #ifdef  __cplusplus
 }
 #endif

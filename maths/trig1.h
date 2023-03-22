@@ -58,6 +58,7 @@ double cos_deg(double angle);
 double tan_deg(double angle);
 double asin_deg(double sine);
 double acos_deg(double cosine);
+double atan_deg(double tangent);
 double atan2_deg(double y, double x);
 
 #ifdef  __cplusplus

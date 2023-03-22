@@ -1138,3 +1138,19 @@ double atan2_deg(double y, double x) {
    }
    return mid;
 }
+
+double atan_deg(double tangent) {
+   // gadzooks!
+   double low = -90.0;
+   double high = 90.0;
+   double mid = (high + low) / 2.0;
+
+   for (int i = 0; i < 14; i++) { // 2^14 = 16384, bigger than our table
+      double x = tan_deg(mid);
+      if (x > tangent) high = mid;
+      if (x < tangent) low = mid;
+      mid = (high + low) / 2.0;
+   }
+
+   return mid;
+}

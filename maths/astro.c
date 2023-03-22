@@ -1,7 +1,3 @@
-#ifdef TEST
-#include <stdio.h>
-#endif
-
 #include "trig1.h"
 #include "astro.h"
 
@@ -9,6 +5,7 @@
 #define INFINITY (__builtin_inff ())
 #endif
 
+static const
 struct Elements {
    double Tp;     // (tropical years)
    double ε;      // (degrees)
@@ -96,17 +93,11 @@ struct αδ ə27(double jd, double λ, double β) {
 
 // Rising and setting
 struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
-printf("jd=%f\n", jd);
-printf("φλ=%f,%f\n", φλ.φ, φλ.λ);
-printf("αδ=%f,%f\n", αδ.α, αδ.δ);
-printf("v=%f\n", v);
-
    double cosH =
       -(
          (sin_deg(v) + sin_deg(φλ.φ) * sin_deg(αδ.δ)) /
          (cos_deg(φλ.φ) * cos_deg(αδ.δ))
        );
-printf("cosH=%f\n", cosH);
 
    struct UTrs UTrs;
 
@@ -122,21 +113,16 @@ printf("cosH=%f\n", cosH);
    }
    else {
       double H = acos_deg(cosH) / 15.0;
-printf("H=%f\n", H);
 
       double LSTr = αδ.α - H;
       ZRANGE(LSTr, 24.0);
-printf("LSTr=%f\n", LSTr);
       double LSTs = αδ.α + H;
       ZRANGE(LSTs, 24.0);
-printf("LSTs=%f\n", LSTs);
 
       double GSTr = ə15(φλ.λ, LSTr);
       ZRANGE(GSTr, 24.0);
-printf("GSTr=%f\n", GSTr);
       double GSTs = ə15(φλ.λ, LSTs);
       ZRANGE(GSTs, 24.0);
-printf("GSTs=%f\n", GSTs);
 
       UTrs.r = ə13(jd, GSTr);
       UTrs.s = ə13(jd, GSTs);
@@ -184,6 +170,68 @@ struct αδ ə46(double jd) {
    return ə27(jd, λ, 0.0);
 }
 
+static void ə54_helper(double jd, const struct Elements *elem,
+      double *l, double *r) {
+
+   // 2010 January 0.0 (JD = 2 455 196.5)
+   static const double epoch = 2455196.5;
+
+   double M = (360.0 / 365.242191) *
+      ((jd - epoch) / elem->Tp) +
+      elem->ε -
+      elem->ϖ;
+   ZRANGE(M, 360.0);
+
+   double ν = M + (360.0 / M_PI) * elem->e * sin_deg(M);
+   ZRANGE(ν, 360.0);
+
+   *l = ν + elem->ϖ;
+   ZRANGE(*l, 360.0);
+
+   *r = ((elem->a * (1 - elem->e * elem->e)) /
+         (1 + elem->e * cos_deg(ν)));
+}
+
+// Calculating the coordinates of a planet
+struct αδ ə54(double jd, int planet) {
+
+   const struct Elements *elem = planets + planet;
+   const struct Elements *earth = planets + 2;
+
+   double l, r;
+   double L, R;
+
+   ə54_helper(jd, elem, &l, &r);
+   ə54_helper(jd, earth, &L, &R);
+
+   double ψ = asin_deg(sin_deg(l - elem->Ω) * sin_deg(elem->i));
+
+   double lp = atan2_deg (
+                  sin_deg(l - elem->Ω) * cos_deg(elem->i),
+                  cos_deg(l - elem->Ω)) + elem->Ω;
+
+   double rp = r*cos_deg(ψ);
+
+   double λ;
+
+   if (planet < 2) { // inner planet
+      λ = atan2_deg(
+         rp * sin_deg(L - lp),
+         R - rp * cos_deg(L - lp)) + 180.0 + L;
+   }
+   else { // outer planet
+      λ = atan_deg(
+         (R * sin_deg(lp - L)) / 
+         (rp - R * cos_deg(lp - L))) + lp;
+   }
+
+   double β = atan_deg(
+               (rp * tan_deg(ψ) * sin_deg(λ - lp)) /
+               (R * sin_deg(lp - L)));
+
+   return ə27(jd, λ, β);
+}
+
 #ifdef TEST
 
 #include <stdio.h>
@@ -225,6 +273,14 @@ int main(int argc, char **argv) {
    αδ = ə46(2455196.5 - 2349);
    assert(close(αδ.α, 8.39277777, 0.001));
    assert(close(αδ.δ, 19.35277777, 0.01));
+
+   // struct αδ ə54(double jd, int planet) {
+   αδ = ə54(2452965.5, 4);
+   assert(close(αδ.α, 11.18722222, 0.002));
+   assert(close(αδ.δ, 6.356944444, 0.02));
+   αδ = ə54(2452965.5, 0);
+   assert(close(αδ.α, 16.82, 0.002));
+   assert(close(αδ.δ, -24.5025, 0.02));
 }
 
 #endif

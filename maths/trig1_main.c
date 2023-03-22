@@ -48,6 +48,17 @@ void run() {
    printf("error^2=%f\n", total_error);
 }
 
+void do_atan(void) {
+   for (double y = -1.0; y <= 1.0; y += .05) {
+      for (double x = -1.0; x <= 1.0; x += .05) {
+         double math = atan2(y, x) * 180.0 / M_PI;
+         double us = atan2_deg(y, x);
+         double delta = fabs(math - us);
+         printf("%f %f %f %f %f\n", delta, us, math, y, x);
+      }
+   }
+}
+
 /// @brief a silly useless function
 /// @param argc The number of args
 /// @param argv argument values
@@ -65,6 +76,9 @@ int main(int argc, char **argv) {
    }
    else if (!strcmp(argv[1], "-r")) {
       run();
+   }
+   else if (!strcmp(argv[1], "-atan")) {
+      do_atan();
    }
    else if (!isnan(atof(argv[1]))) {
       int16_t l = (int16_t)atof(argv[1]);

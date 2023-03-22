@@ -98,6 +98,7 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
          (sin_deg(v) + sin_deg(φλ.φ) * sin_deg(αδ.δ)) /
          (cos_deg(φλ.φ) * cos_deg(αδ.δ))
        );
+printf("cosH=%f\n", cosH);
 
    struct UTrs UTrs;
 
@@ -113,6 +114,7 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
    }
    else {
       double H = acos_deg(cosH) / 15.0;
+printf("H=%f\n", H);
 
       double LSTr = αδ.α - H;
       ZRANGE(LSTr, 24.0);
@@ -168,6 +170,46 @@ struct αδ ə46(double jd) {
    ZRANGE(λ, 360.0);
 
    return ə27(jd, λ, 0.0);
+}
+
+// Twilight
+struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) {
+   double cosH =
+      (
+         (cos_deg(horizon) - sin_deg(φλ.φ) * sin_deg(αδ.δ) - sin_deg(0.566666666)) /
+         (cos_deg(φλ.φ) * cos_deg(αδ.δ))
+       );
+printf("cosH'=%f\n",cosH);
+   struct UTrs UTrs;
+
+   if (cosH < -1.0) {
+      // circumpolar
+      UTrs.r = +INFINITY;
+      UTrs.s = +INFINITY;
+   }
+   else if (cosH > 1.0) {
+      // never rises
+      UTrs.r = -INFINITY;
+      UTrs.s = -INFINITY;
+   }
+   else {
+      double H = acos_deg(cosH) / 15.0;
+printf("H'=%f\n",H);
+
+      double LSTr = αδ.α - H;
+      ZRANGE(LSTr, 24.0);
+      double LSTs = αδ.α + H;
+      ZRANGE(LSTs, 24.0);
+
+      double GSTr = ə15(φλ.λ, LSTr);
+      ZRANGE(GSTr, 24.0);
+      double GSTs = ə15(φλ.λ, LSTs);
+      ZRANGE(GSTs, 24.0);
+
+      UTrs.r = ə13(jd, GSTr);
+      UTrs.s = ə13(jd, GSTs);
+   }
+   return UTrs;
 }
 
 static void ə54_helper(double jd, const struct Elements *elem,
@@ -249,38 +291,67 @@ int main(int argc, char **argv) {
    struct UTrs UTrs;
 
    // double ə13(double jd, double GST) {
+   printf("test ə13\n");
    tmp = ə13(2444351.5, 4.668119);
    assert(close(tmp, 14.614353, 0.001));
+   printf("pass\n");
 
    // double ə15(double λ, double LST) {
+   printf("test ə15\n");
    tmp = ə15(-64.0, 0.401453);
    assert(close(tmp, 4.668119, 0.001));
+   printf("pass\n");
 
    // struct αδ ə27(double jd, double λ, double β) {
+   printf("test ə27\n");
    αδ = ə27(2455018.5, 139.686111, 4.875278);
    assert(close(αδ.α, 9.581478, 0.001));
    assert(close(αδ.δ, 19.535003, 0.02));
+   printf("pass\n");
 
    // struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
+   printf("test ə33\n");
    UTrs = ə33(2455432.5,
                (struct φλ) { 30.0, 64.0 },
                (struct αδ) { 23.655558, 21.700000 },
                0.5666666666);
-   assert(close(UTrs.r,  14.271670, 0.0015));
-   assert(close(UTrs.s,  4.166990, 0.0015));
+   assert(close(UTrs.r, 14.271670, 0.0015));
+   assert(close(UTrs.s, 4.166990, 0.0015));
+   printf("pass\n");
 
    // struct αδ ə46(double jd) {
+   printf("test ə46\n");
    αδ = ə46(2455196.5 - 2349);
    assert(close(αδ.α, 8.39277777, 0.001));
    assert(close(αδ.δ, 19.35277777, 0.01));
+   printf("pass\n");
+
+   // struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) {
+   printf("test ə50\n");
+   αδ = ə46(2444124.0);
+   UTrs = ə33(2444124.0,
+               (struct φλ) { 52.0, 0.0 },
+               αδ,
+               0.0);
+   UTrs = ə50(2444124.0,
+               (struct φλ) { 52.0, 0.0 },
+               αδ,
+               108.0);
+   printf("δ=%f\n", αδ.δ);
+   assert(close(UTrs.r, 3.2, 0.01));
+   assert(close(UTrs.s, 20.716666, 0.01));
+   printf("pass\n");
 
    // struct αδ ə54(double jd, int planet) {
+   printf("test ə54 (inner)\n");
    αδ = ə54(2452965.5, 4);
    assert(close(αδ.α, 11.18722222, 0.002));
    assert(close(αδ.δ, 6.356944444, 0.02));
+   printf("test ə54 (outer)\n");
    αδ = ə54(2452965.5, 0);
    assert(close(αδ.α, 16.82, 0.002));
    assert(close(αδ.δ, -24.5025, 0.02));
+   printf("pass\n");
 }
 
 #endif

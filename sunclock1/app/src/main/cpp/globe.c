@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "trig1.h"
 #include "draw.h"
 #include "globei.h"
 
@@ -107,18 +108,18 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
 
    int radius = size / 2;
 
-   double xspin = -lat * M_PI / 180.0;
-   double yspin = -lon * M_PI / 180.0;
-   double zspin = -spin * M_PI / 180.0; // TODO FIX is the sign right?
+   double xspin = -lat;
+   double yspin = -lon;
+   double zspin = -spin; // TODO FIX is the sign right?
 
-   double coshalfx = cos(xspin/2.0);
-   double sinhalfx = sin(xspin/2.0);
+   double coshalfx = cos_deg(xspin/2.0);
+   double sinhalfx = sin_deg(xspin/2.0);
 
-   double coshalfy = cos(yspin/2.0);
-   double sinhalfy = sin(yspin/2.0);
+   double coshalfy = cos_deg(yspin/2.0);
+   double sinhalfy = sin_deg(yspin/2.0);
 
-   double coshalfz = cos(zspin/2.0);
-   double sinhalfz = sin(zspin/2.0);
+   double coshalfz = cos_deg(zspin/2.0);
+   double sinhalfz = sin_deg(zspin/2.0);
 
    quat qx = { coshalfx, sinhalfx, 0, 0 };
    quat qy = { coshalfy, 0, sinhalfy, 0 };
@@ -159,8 +160,9 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
             // int x = RADIUS * cos(lat) * sin(lon);
             // int y = -RADIUS * sin(lat);
 
-            double lat = asin(-yy / (double) radius) * 180.0 / M_PI;
-            double lon = atan2(xx, -zz) * 180.0 / M_PI;
+            double lat = asin_deg(-yy / (double) radius);
+            //double lon = atan2(xx, -zz) * 180.0 / M_PI;
+            double lon = atan2_deg(xx, -zz);
 
             // now convert to bitmap coordinates
             int by = round((180.0 - (lat + 90.0)) * ((double) rows) / 180.0);

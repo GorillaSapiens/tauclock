@@ -63,16 +63,6 @@
 
 #include "draw.h"
 
-static double sin_deg(double arg) {
-   int16_t arg1 = 32768.0 * arg / 360.0;
-   return (double)sin1(arg1) / 32767.0;
-}
-
-static double cos_deg(double arg) {
-   int16_t arg1 = 32768.0 * arg / 360.0;
-   return (double)cos1(arg1) / 32767.0;
-}
-
 #define FNORD KNARF
 #define sin(x) FNORD
 #define cos(x) FNORD

@@ -36,6 +36,9 @@ double ə12(double jd);
 // Conversion of GST to UT
 double ə13(double jd, double GST);
 
+// Local sidereal time (LST)
+double ə14(double GST, struct φλ φλ) {
+
 // Converting LST to GST
 double ə15(double λ, double LST);
 

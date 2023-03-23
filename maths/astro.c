@@ -105,7 +105,10 @@ double ə15(double λ, double LST) {
 // Converting between right ascension and hour angle
 double ə24(double jd, struct φλ φλ, struct αδ αδ) {
    double GST = ə12(jd);
-   //double LST =
+   double LST = ə14(GST, φλ);
+   double H = LST - αδ.α;
+   ZRANGE(H, 24.0);
+   return H;
 }
 
 // Equatorial to horizon coordinate conversion
@@ -414,6 +417,10 @@ int old_main(int argc, char **argv) {
 
    // double ə24(double jd, struct φλ φλ, struct αδ αδ) {
    printf("test ə24\n");
+   tmp = ə24(2444351.5 + +  18.614353 / 24.0,
+      (struct φλ) { 0.0, -64.0 },
+      (struct αδ) { 18.539167, 0.0 });
+   assert(close(tmp, 9.873237, 0.001));
    printf("pass\n");
 
    // struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {

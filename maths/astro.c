@@ -113,6 +113,21 @@ double ə24(double jd, struct φλ φλ, struct αδ αδ) {
 
 // Equatorial to horizon coordinate conversion
 struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {
+   double H = ə24(jd, φλ, αδ);
+   H *= 15.0;
+   double sina =
+      sin_deg(αδ.δ) * sin_deg(φλ.φ) +
+      cos_deg(αδ.δ) * cos_deg(φλ.φ) * cos_deg(H);
+   double a = asin_deg(sina);
+   double cosA =
+      (sin_deg(αδ.δ) - sin_deg(φλ.φ) * sin_deg(a)) /
+      (cos_deg(φλ.φ) * cos_deg(a));
+   double A = acos_deg(cosA);
+   double sinH = sin_deg(H);
+   if (sinH >= 0.0) {
+      A = 360.0 - A;
+   }
+   return (struct Aa) { A, a };
 }
 
 // Ecliptic to equatorial coordinate conversion

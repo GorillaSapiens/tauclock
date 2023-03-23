@@ -1,6 +1,4 @@
-#ifdef TEST
 #include <stdio.h>
-#endif
 
 #include "trig1.h"
 #include "astro.h"
@@ -322,12 +320,17 @@ struct αδ ə54(double jd, int planet) {
          (R * sin_deg(lp - L)) / 
          (rp - R * cos_deg(lp - L))) + lp;
    }
+printf("λ=%f\n", λ);
 
    double β = atan_deg(
                (rp * tan_deg(ψ) * sin_deg(λ - lp)) /
                (R * sin_deg(lp - L)));
 
-   return ə27(jd, λ, β);
+printf("β=%f\n", β);
+
+   struct αδ αδ = ə27(jd, λ, β);
+printf("α=%f δ=%f\n", αδ.α, αδ.δ);
+   return αδ;
 }
 
 // Calculating the Moon's position
@@ -402,104 +405,128 @@ int close(double a, double b, double delta) {
 }
 
 int old_main(int argc, char **argv) {
-   double tmp;
-   struct αδ αδ;
-   struct UTrs UTrs;
+   // double ə12(double jd)
+   {
+      printf("test ə12\n");
+      double tmp = ə12(2444351.5 + 14.614353 / 24.0);
+      assert(close(tmp, 4.668119444, 0.001));
+      printf("pass\n");
+   }
 
-   // double ə12(double jd);
-   printf("test ə12\n");
-   tmp = ə12(2444351.5 + 14.614353 / 24.0);
-   assert(close(tmp, 4.668119444, 0.001));
-   printf("pass\n");
+   // double ə13(double jd, double GST)
+   {
+      printf("test ə13\n");
+      double tmp = ə13(2444351.5, 4.668119);
+      assert(close(tmp, 14.614353, 0.001));
+      printf("pass\n");
+   }
 
-   // double ə13(double jd, double GST) {
-   printf("test ə13\n");
-   tmp = ə13(2444351.5, 4.668119);
-   assert(close(tmp, 14.614353, 0.001));
-   printf("pass\n");
+   // double ə14(double GST, struct φλ φλ)
+   {
+      printf("test ə14\n");
+      double tmp = ə14(4.668119, (struct φλ) { 0.0, -64.0 });
+      assert(close(tmp, 0.401453, 0.001));
+      printf("pass\n");
+   }
 
-   // double ə14(double GST, struct φλ φλ) {
-   printf("test ə14\n");
-   tmp = ə14(4.668119, (struct φλ) { 0.0, -64.0 });
-   assert(close(tmp, 0.401453, 0.001));
-   printf("pass\n");
+   // double ə15(double λ, double LST)
+   {
+      printf("test ə15\n");
+      double tmp = ə15(-64.0, 0.401453);
+      assert(close(tmp, 4.668119, 0.001));
+      printf("pass\n");
+   }
 
-   // double ə15(double λ, double LST) {
-   printf("test ə15\n");
-   tmp = ə15(-64.0, 0.401453);
-   assert(close(tmp, 4.668119, 0.001));
-   printf("pass\n");
+   // double ə24(double jd, struct φλ φλ, struct αδ αδ)
+   {
+      printf("test ə24\n");
+      double tmp = ə24(2444351.5 + +  18.614353 / 24.0,
+            (struct φλ) { 0.0, -64.0 },
+            (struct αδ) { 18.539167, 0.0 });
+      assert(close(tmp, 9.873237, 0.001));
+      printf("pass\n");
+   }
 
-   // double ə24(double jd, struct φλ φλ, struct αδ αδ) {
-   printf("test ə24\n");
-   tmp = ə24(2444351.5 + +  18.614353 / 24.0,
-      (struct φλ) { 0.0, -64.0 },
-      (struct αδ) { 18.539167, 0.0 });
-   assert(close(tmp, 9.873237, 0.001));
-   printf("pass\n");
+   // struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ)
+   {
+      printf("test ə25\n");
+      printf("pass\n");
+   }
 
-   // struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {
-   printf("test ə25\n");
-   printf("pass\n");
+   // struct αδ ə27(double jd, double λ, double β)
+   {
+      printf("test ə27\n");
+      struct αδ αδ = ə27(2455018.5, 139.686111, 4.875278);
+      assert(close(αδ.α, 9.581478, 0.001));
+      assert(close(αδ.δ, 19.535003, 0.02));
+      printf("pass\n");
+   }
 
-   // struct αδ ə27(double jd, double λ, double β) {
-   printf("test ə27\n");
-   αδ = ə27(2455018.5, 139.686111, 4.875278);
-   assert(close(αδ.α, 9.581478, 0.001));
-   assert(close(αδ.δ, 19.535003, 0.02));
-   printf("pass\n");
+   // struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v)
+   {
+      printf("test ə33\n");
+      struct UTrs UTrs = ə33(2455432.5,
+                             (struct φλ) { 30.0, 64.0 },
+                             (struct αδ) { 23.655558, 21.700000 },
+                             0.5666666666);
+      assert(close(UTrs.r, 14.271670, 0.0015));
+      assert(close(UTrs.s, 4.166990, 0.0015));
+      printf("pass\n");
+   }
 
-   // struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
-   printf("test ə33\n");
-   UTrs = ə33(2455432.5,
-               (struct φλ) { 30.0, 64.0 },
-               (struct αδ) { 23.655558, 21.700000 },
-               0.5666666666);
-   assert(close(UTrs.r, 14.271670, 0.0015));
-   assert(close(UTrs.s, 4.166990, 0.0015));
-   printf("pass\n");
+   // struct αδ ə46(double jd)
+   {
+      printf("test ə46\n");
+      struct αδ αδ = ə46(2455196.5 - 2349);
+      assert(close(αδ.α, 8.39277777, 0.001));
+      assert(close(αδ.δ, 19.35277777, 0.01));
+      printf("pass\n");
+   }
 
-   // struct αδ ə46(double jd) {
-   printf("test ə46\n");
-   αδ = ə46(2455196.5 - 2349);
-   assert(close(αδ.α, 8.39277777, 0.001));
-   assert(close(αδ.δ, 19.35277777, 0.01));
-   printf("pass\n");
+   // struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon)
+   {
+      printf("test ə50\n");
+      struct αδ αδ = ə46(2444124.0);
+//      struct UTrs Utrs = ə33(2444124.0,
+//                             (struct φλ) { 52.0, 0.0 },
+//                             αδ,
+//                             0.0);
+      struct UTrs UTrs = ə50(2444124.0,
+                             (struct φλ) { 52.0, 0.0 },
+                             αδ,
+                             108.0);
+      printf("δ=%f\n", αδ.δ);
+      assert(close(UTrs.r, 3.209, 0.01));
+      assert(close(UTrs.s, 20.662838, 0.01));
+      printf("pass\n");
+   }
 
-   // struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) {
-   printf("test ə50\n");
-   αδ = ə46(2444124.0);
-   UTrs = ə33(2444124.0,
-               (struct φλ) { 52.0, 0.0 },
-               αδ,
-               0.0);
-   UTrs = ə50(2444124.0,
-               (struct φλ) { 52.0, 0.0 },
-               αδ,
-               108.0);
-   printf("δ=%f\n", αδ.δ);
-   assert(close(UTrs.r, 3.209, 0.01));
-   assert(close(UTrs.s, 20.662838, 0.01));
-   printf("pass\n");
+   // struct αδ ə54(double jd, int planet)
+   {
+      {
+         printf("test ə54 (inner)\n");
+         struct αδ αδ = ə54(2452965.5, 4);
+         assert(close(αδ.α, 11.18722222, 0.002));
+         assert(close(αδ.δ, 6.356944444, 0.02));
+         printf("pass\n");
+      }
+      {
+         printf("test ə54 (outer)\n");
+         struct αδ αδ = ə54(2452965.5, 0);
+         assert(close(αδ.α, 16.82, 0.002));
+         assert(close(αδ.δ, -24.5025, 0.02));
+         printf("pass\n");
+      }
+   }
 
-   // struct αδ ə54(double jd, int planet) {
-   printf("test ə54 (inner)\n");
-   αδ = ə54(2452965.5, 4);
-   assert(close(αδ.α, 11.18722222, 0.002));
-   assert(close(αδ.δ, 6.356944444, 0.02));
-   printf("test ə54 (outer)\n");
-   αδ = ə54(2452965.5, 0);
-   assert(close(αδ.α, 16.82, 0.002));
-   assert(close(αδ.δ, -24.5025, 0.02));
-   printf("pass\n");
-
-   // struct αδ ə65(double jd) {
-   printf("test ə65\n");
-   αδ = ə65(2452883.50000);
-   assert(close(αδ.α, 14.2166667, 0.02));
-   assert(close(αδ.δ, -11.52722222, 0.02));
-   printf("pass\n");
-
+   // struct αδ ə65(double jd)
+   {
+      printf("test ə65\n");
+      struct αδ αδ = ə65(2452883.50000);
+      assert(close(αδ.α, 14.2166667, 0.02));
+      assert(close(αδ.δ, -11.52722222, 0.02));
+      printf("pass\n");
+   }
 }
 
 int main(int argc, char **argv) {

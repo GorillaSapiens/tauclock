@@ -48,7 +48,7 @@ void run() {
    printf("error^2=%f\n", total_error);
 }
 
-void do_atan(void) {
+void do_atan2(void) {
    for (double y = -1.0; y <= 1.0; y += .05) {
       for (double x = -1.0; x <= 1.0; x += .05) {
          double math = atan2(y, x) * 180.0 / M_PI;
@@ -56,6 +56,33 @@ void do_atan(void) {
          double delta = fabs(math - us);
          printf("%f %f %f %f %f\n", delta, us, math, y, x);
       }
+   }
+}
+
+void do_asin(void) {
+   for (double x = -1.0; x <= 1.0; x += .05) {
+      double math = asin(x) * 180.0 / M_PI;
+      double us = asin_deg(x);
+      double delta = fabs(math - us);
+      printf("%f %f %f %f\n", delta, us, math, x);
+   }
+}
+
+void do_acos(void) {
+   for (double x = -1.0; x <= 1.0; x += .05) {
+      double math = acos(x) * 180.0 / M_PI;
+      double us = acos_deg(x);
+      double delta = fabs(math - us);
+      printf("%f %f %f %f\n", delta, us, math, x);
+   }
+}
+
+void do_atan(void) {
+   for (double x = -100.0; x <= 100.0; x += .5) {
+      double math = atan(x) * 180.0 / M_PI;
+      double us = atan_deg(x);
+      double delta = fabs(math - us);
+      printf("%f %f %f %f\n", delta, us, math, x);
    }
 }
 
@@ -76,6 +103,15 @@ int main(int argc, char **argv) {
    }
    else if (!strcmp(argv[1], "-r")) {
       run();
+   }
+   else if (!strcmp(argv[1], "-atan2")) {
+      do_atan2();
+   }
+   else if (!strcmp(argv[1], "-asin")) {
+      do_asin();
+   }
+   else if (!strcmp(argv[1], "-acos")) {
+      do_acos();
    }
    else if (!strcmp(argv[1], "-atan")) {
       do_atan();

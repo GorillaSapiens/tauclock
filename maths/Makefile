@@ -1,5 +1,5 @@
 .PHONY: all
-all: trigmain tests fasttests
+all: trigmain tests fasttests oneday
 
 trigmain: trig1.c trig1_main.c
 	gcc -g -Ofast $^ -lm -o trigmain
@@ -9,3 +9,6 @@ tests: astro.c trig1.c
 
 fasttests: astro.c trig1.c
 	gcc -DTEST -g -Ofast $^ -o fasttests
+
+oneday: astro.c trig1.c
+	gcc -DONEDAY -g -Ofast $^ -o oneday

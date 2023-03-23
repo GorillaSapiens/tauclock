@@ -7,6 +7,11 @@
 extern "C" {
 #endif
 
+struct Aa {
+   double A; // azimuth
+   double a; // altitude
+};
+
 struct αδ {
    double α; // right ascension, hrs
    double δ; // declination, degrees
@@ -25,11 +30,20 @@ struct UTrs {
 
 double time_t2julian(time_t t);
 
+// Conversion of UT to Greenwich sidereal time (GST)
+double ə12(double jd);
+
 // Conversion of GST to UT
 double ə13(double jd, double GST);
 
 // Converting LST to GST
 double ə15(double λ, double LST);
+
+// Converting between right ascension and hour angle
+double ə24(double jd, struct φλ φλ, struct αδ αδ);
+
+// Equatorial to horizon coordinate conversion
+struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ);
 
 // Ecliptic to equatorial coordinate conversion
 struct αδ ə27(double jd, double λ, double β);

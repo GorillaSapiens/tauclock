@@ -1,3 +1,7 @@
+#ifdef TEST
+#include <stdio.h>
+#endif
+
 #include "trig1.h"
 #include "astro.h"
 
@@ -46,6 +50,29 @@ double time_t2julian(time_t t) {
       }                                                        \
    } while(0)
 
+// Conversion of UT to Greenwich sidereal time (GST)
+double ə12(double jd) {
+   double jd0 = (int)jd;
+   double frac = jd - (double)((int)jd);
+   if (frac >= 0.5) {
+      jd0 += .5;
+   }
+   else {
+      jd0 -= .5;
+   }
+   double UT = (jd - jd0) * 24.0;
+
+   double S = jd0 - 2451545.0;
+   double T = S / 36525.0;
+   double T0 = 6.697374558 + (2400.051336 * T) + (0.000025862 * T * T);
+   ZRANGE(T0, 24.0);
+
+   double GST = T0 + UT * 1.002737909;
+   ZRANGE(GST, 24.0);
+
+   return GST;
+}
+
 // Conversion of GST to UT
 double ə13(double jd, double GST) {
    double S = jd - 2451545.0;
@@ -61,11 +88,28 @@ double ə13(double jd, double GST) {
    return UT;
 }
 
+// Local sidereal time (LST)
+double ə14(double GST, struct φλ φλ) {
+   double LST = GST + φλ.λ / 15.0;
+   ZRANGE(LST, 24.0);
+   return LST;
+}
+
 // Converting LST to GST
 double ə15(double λ, double LST) {
    LST -= λ / 15.0;
    ZRANGE(LST, 24.0);
    return LST;
+}
+
+// Converting between right ascension and hour angle
+double ə24(double jd, struct φλ φλ, struct αδ αδ) {
+   double GST = ə12(jd);
+   //double LST =
+}
+
+// Equatorial to horizon coordinate conversion
+struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {
 }
 
 // Ecliptic to equatorial coordinate conversion
@@ -344,16 +388,36 @@ int old_main(int argc, char **argv) {
    struct αδ αδ;
    struct UTrs UTrs;
 
+   // double ə12(double jd);
+   printf("test ə12\n");
+   tmp = ə12(2444351.5 + 14.614353 / 24.0);
+   assert(close(tmp, 4.668119444, 0.001));
+   printf("pass\n");
+
    // double ə13(double jd, double GST) {
    printf("test ə13\n");
    tmp = ə13(2444351.5, 4.668119);
    assert(close(tmp, 14.614353, 0.001));
    printf("pass\n");
 
+   // double ə14(double GST, struct φλ φλ) {
+   printf("test ə14\n");
+   tmp = ə14(4.668119, (struct φλ) { 0.0, -64.0 });
+   assert(close(tmp, 0.401453, 0.001));
+   printf("pass\n");
+
    // double ə15(double λ, double LST) {
    printf("test ə15\n");
    tmp = ə15(-64.0, 0.401453);
    assert(close(tmp, 4.668119, 0.001));
+   printf("pass\n");
+
+   // double ə24(double jd, struct φλ φλ, struct αδ αδ) {
+   printf("test ə24\n");
+   printf("pass\n");
+
+   // struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {
+   printf("test ə25\n");
    printf("pass\n");
 
    // struct αδ ə27(double jd, double λ, double β) {
@@ -421,5 +485,33 @@ int main(int argc, char **argv) {
       old_main(argc, argv);
    }
 }
+#endif
 
+#ifdef ONEDAY
+#include <stdio.h>
+
+struct αδ αδ[7][24*60];
+
+int main(int argc, char **argv) {
+   time_t now = time(NULL);
+
+   for (int i = 0; i < 24*60; i++) {
+      time_t when = now - (12*60*60) + i*60;
+      double jd = time_t2julian(when);
+
+      αδ[0][i] = ə46(jd); // sun
+      αδ[1][i] = ə65(jd); // moon
+      αδ[2][i] = ə54(jd, 0); // mercury
+      αδ[3][i] = ə54(jd, 1); // venus
+      αδ[4][i] = ə54(jd, 3); // mars
+      αδ[5][i] = ə54(jd, 4); // jupiter
+      αδ[6][i] = ə54(jd, 5); // saturn
+   }
+   for (int i = 0; i < 24*60; i++) {
+      printf("== %d\n", i);
+      for (int j = 0; j < 7; j++) {
+         printf("%f\n", αδ[j][i].δ);
+      }
+   }
+}
 #endif

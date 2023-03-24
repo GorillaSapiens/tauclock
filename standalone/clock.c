@@ -2200,6 +2200,15 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
    static const double HORIZON_NAUTICAL = -12.56;
    static const double HORIZON_ASTRONOMICAL = -18.56;
 
+   double night = 0.0;
+   double astronomical = 0.0;
+   double nautical = 0.0;
+   double civil = 0.0;
+   double sunup = 0.0;
+
+   double light = 0.0;
+   double dark = 0.0;
+
    unsigned int lightdark_civil = COLOR_TWILIGHT;
    unsigned int lightdark_nautical = COLOR_TWILIGHT;
    unsigned int lightdark_astronomical = COLOR_TWILIGHT;
@@ -2306,6 +2315,25 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
          arc_canvas(canvas,
             SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
             oldcolor, start_angle, stop_angle);
+
+         switch(oldcolor) {
+            case COLOR_SUNUP:
+               sunup += (stop_angle - start_angle);
+               break;
+            case COLOR_CIVIL:
+               civil += (stop_angle - start_angle);
+               break;
+            case COLOR_NAUTICAL:
+               nautical += (stop_angle - start_angle);
+               break;
+            case COLOR_ASTRONOMICAL:
+               astronomical += (stop_angle - start_angle);
+               break;
+            case COLOR_NIGHT:
+               night += (stop_angle - start_angle);
+               break;
+         }
+
          // borders
          arc_canvas(canvas,
                SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
@@ -2313,6 +2341,15 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
          arc_canvas(canvas,
                SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
                oldbandcolor, start_angle, stop_angle);
+
+         switch (oldbandcolor) {
+            case COLOR_LIGHT:
+               light += (stop_angle - start_angle);
+               break;
+            case COLOR_DARK:
+               dark += (stop_angle - start_angle);
+               break;
+         }
 
          oldcolor = color;
          oldbandcolor = bandcolor;
@@ -2326,6 +2363,25 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
    arc_canvas(canvas,
       SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
       color, start_angle, stop_angle);
+
+   switch(oldcolor) {
+      case COLOR_SUNUP:
+         sunup += (stop_angle - start_angle);
+         break;
+      case COLOR_CIVIL:
+         civil += (stop_angle - start_angle);
+         break;
+      case COLOR_NAUTICAL:
+         nautical += (stop_angle - start_angle);
+         break;
+      case COLOR_ASTRONOMICAL:
+         astronomical += (stop_angle - start_angle);
+         break;
+      case COLOR_NIGHT:
+         night += (stop_angle - start_angle);
+         break;
+   }
+
    // borders
    arc_canvas(canvas,
          SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
@@ -2333,6 +2389,15 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
    arc_canvas(canvas,
          SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
          oldbandcolor, start_angle, stop_angle);
+
+   switch (oldbandcolor) {
+      case COLOR_LIGHT:
+         light += (stop_angle - start_angle);
+         break;
+      case COLOR_DARK:
+         dark += (stop_angle - start_angle);
+         break;
+   }
 
    return up_angle;
 }

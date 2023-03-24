@@ -2210,9 +2210,9 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ) {
       }
    }
 
-   double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0)) + 270.0;
+   double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0));
+   up_angle = 270.0 - up_angle;
    ZRANGE(up_angle, 360.0);
-   up_angle = 0.0;
 
    unsigned int color;
    unsigned int oldcolor;

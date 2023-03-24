@@ -142,10 +142,11 @@ struct αδ ə27(double jd, double λ, double β) {
 
    αδ.α =
       atan2_deg(
-         (sin_deg(λ)*cos_deg(ε) - tan_deg(β)*sin_deg(ε)),
+         (sin_deg(λ) * cos_deg(ε) - tan_deg(β) * sin_deg(ε)),
          cos_deg(λ));
 
    αδ.α /= 15.0; // convert to hours
+   ZRANGE(αδ.α, 24.0);
 
    return αδ;
 }

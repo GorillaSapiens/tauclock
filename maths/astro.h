@@ -80,6 +80,16 @@ struct αδ ə65(double jd);
 // The phases of the Moon
 struct FD ə67(double jd);
 
+#define ZRANGE(x, high)                                        \
+   do {                                                        \
+      if ((x) < 0.0) {                                         \
+         (x) += (double)(1 - (int)((x) / (high))) * (high);    \
+      }                                                        \
+      if ((x) >= high) {                                       \
+         (x) -= (double)((int)((x) / (high))) * (high);        \
+      }                                                        \
+   } while(0)
+
 #ifdef  __cplusplus
 }
 #endif

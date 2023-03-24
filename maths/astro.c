@@ -36,16 +36,6 @@ double time_t2julian(time_t t) {
    return (double)t / 86400.0 + 2440587.5;
 }
 
-#define ZRANGE(x, high)                                        \
-   do {                                                        \
-      if ((x) < 0.0) {                                         \
-         (x) += (double)(1 - (int)((x) / (high))) * (high);    \
-      }                                                        \
-      if ((x) >= high) {                                       \
-         (x) -= (double)((int)((x) / (high))) * (high);        \
-      }                                                        \
-   } while(0)
-
 // Conversion of UT to Greenwich sidereal time (GST)
 double ə12(double jd) {
    double jd0 = (int)jd;

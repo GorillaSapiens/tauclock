@@ -149,6 +149,7 @@ struct αδ ə27(double jd, double λ, double β) {
    return αδ;
 }
 
+#if 0
 // Rising and setting
 struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
    struct UTrs UTrs;
@@ -187,6 +188,7 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
    }
    return UTrs;
 }
+#endif
 
 // Calculating the position of the Sun
 struct αδ ə46(double jd) {
@@ -226,6 +228,7 @@ struct αδ ə46(double jd) {
    return ə27(jd, λ, 0.0);
 }
 
+#if 0
 // Twilight
 struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) {
    struct UTrs UTrs;
@@ -264,6 +267,7 @@ struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon) 
    }
    return UTrs;
 }
+#endif
 
 static void ə54_helper(double jd, const struct Elements *elem,
       double *l, double *r) {
@@ -462,6 +466,7 @@ int old_main(int argc, char **argv) {
       printf("pass\n");
    }
 
+#if 0
    // struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v)
    {
       printf("test ə33\n");
@@ -473,6 +478,7 @@ int old_main(int argc, char **argv) {
       assert(close(UTrs.s, 4.166990, 0.0015));
       printf("pass\n");
    }
+#endif
 
    // struct αδ ə46(double jd)
    {
@@ -483,14 +489,11 @@ int old_main(int argc, char **argv) {
       printf("pass\n");
    }
 
+#if 0
    // struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon)
    {
       printf("test ə50\n");
       struct αδ αδ = ə46(2444124.0);
-//      struct UTrs Utrs = ə33(2444124.0,
-//                             (struct φλ) { 52.0, 0.0 },
-//                             αδ,
-//                             0.0);
       struct UTrs UTrs = ə50(2444124.0,
                              (struct φλ) { 52.0, 0.0 },
                              αδ,
@@ -500,6 +503,7 @@ int old_main(int argc, char **argv) {
       assert(close(UTrs.s, 20.662838, 0.01));
       printf("pass\n");
    }
+#endif
 
    // struct αδ ə54(double jd, int planet)
    {
@@ -541,15 +545,16 @@ int main(int argc, char **argv) {
 #include <stdlib.h>
 #include <time.h>
 
-struct Aa Aa[7][24*60];
-const char *names[7] = {
+struct Aa Aa[8][24*60];
+const char *names[8] = {
    "solar",
    "lunar",
    "mercury",
    "venus",
    "mars",
    "jupiter",
-   "saturn"
+   "saturn",
+   "aries"
 };
 
 int main(int argc, char **argv) {
@@ -566,7 +571,7 @@ int main(int argc, char **argv) {
    αδ[3] = ə54(now, 4); // jupiter
    αδ[4] = ə54(now, 5); // saturn
 
-   int max[7] = { -1, -1, -1, -1, -1, -1, -1 };
+   int max[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
    for (int i = 0; i < 24*60; i++) {
       time_t when = now - (12*60*60) + i*60;
@@ -576,11 +581,12 @@ int main(int argc, char **argv) {
       Aa[1][i] = ə25(jd, φλ, ə65(jd)); // moon
       Aa[2][i] = ə25(jd, φλ, αδ[0]); // mercury
       Aa[3][i] = ə25(jd, φλ, αδ[1]); // venus
-      Aa[4][i] = ə25(jd, φλ, αδ[3]); // mars
-      Aa[5][i] = ə25(jd, φλ, αδ[4]); // jupiter
-      Aa[6][i] = ə25(jd, φλ, αδ[5]); // saturn
+      Aa[4][i] = ə25(jd, φλ, αδ[2]); // mars
+      Aa[5][i] = ə25(jd, φλ, αδ[3]); // jupiter
+      Aa[6][i] = ə25(jd, φλ, αδ[4]); // saturn
+      Aa[7][i] = ə25(jd, φλ, (struct αδ) { 0.0, 0.0 }); // aries
 
-      for (int j = 0; j < 7; j++) {
+      for (int j = 0; j < 8; j++) {
          if (max[j] == -1 || Aa[j][i].a > Aa[j][max[j]].a) {
             max[j] = i;
          }
@@ -620,7 +626,7 @@ int main(int argc, char **argv) {
          else {
             printf("solar down\t: %s", ctime(&when));
          }
-         for (int j = 1; j < 7; j++) {
+         for (int j = 1; j < 8; j++) {
             if (Aa[j][0].a > HORIZON) {
                printf("%s up\t: %s", names[j], ctime(&when));
             }
@@ -630,7 +636,7 @@ int main(int argc, char **argv) {
          }
       }
       else {
-         for (int j = 0; j < 7; j++) {
+         for (int j = 0; j < 8; j++) {
             if (i == max[j]) {
                printf("%s transit\t: %s", names[j], ctime(&when));
             }
@@ -643,7 +649,7 @@ int main(int argc, char **argv) {
             printf("solar set\t: %s", ctime(&when));
          }
 
-         for (int j = 1; j < 7; j++) {
+         for (int j = 1; j < 8; j++) {
             if (Aa[j][i-1].a < HORIZON && Aa[j][i].a >= HORIZON) {
                printf("%s rise\t: %s", names[j], ctime(&when));
             }

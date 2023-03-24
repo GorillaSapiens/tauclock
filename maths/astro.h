@@ -22,11 +22,13 @@ struct φλ {
    double λ; // longitude (E/W, W neg)
 };
 
+#if 0
 struct UTrs {
    double r; // rise time
    double s; // set time
    double cosH;
 };
+#endif
 
 double time_t2julian(time_t t);
 
@@ -51,14 +53,18 @@ struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ);
 // Ecliptic to equatorial coordinate conversion
 struct αδ ə27(double jd, double λ, double β);
 
+#if 0
 // Rising and setting
 struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v);
+#endif
 
 // Calculating the position of the Sun
 struct αδ ə46(double jd);
 
+#if 0
 // Twilight
 struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon);
+#endif
 
 // Calculating the coordinates of a planet
 struct αδ ə54(double jd, int planet);

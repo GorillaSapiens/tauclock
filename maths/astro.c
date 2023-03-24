@@ -564,13 +564,6 @@ int main(int argc, char **argv) {
 
    struct φλ φλ = { atof(argv[1]), atof(argv[2]) };
 
-   struct αδ αδ[5];
-   αδ[0] = ə54(now, 0); // mercury
-   αδ[1] = ə54(now, 1); // venus
-   αδ[2] = ə54(now, 3); // mars
-   αδ[3] = ə54(now, 4); // jupiter
-   αδ[4] = ə54(now, 5); // saturn
-
    int max[8] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 
    for (int i = 0; i < 24*60; i++) {
@@ -579,11 +572,11 @@ int main(int argc, char **argv) {
 
       Aa[0][i] = ə25(jd, φλ, ə46(jd)); // sun
       Aa[1][i] = ə25(jd, φλ, ə65(jd)); // moon
-      Aa[2][i] = ə25(jd, φλ, αδ[0]); // mercury
-      Aa[3][i] = ə25(jd, φλ, αδ[1]); // venus
-      Aa[4][i] = ə25(jd, φλ, αδ[2]); // mars
-      Aa[5][i] = ə25(jd, φλ, αδ[3]); // jupiter
-      Aa[6][i] = ə25(jd, φλ, αδ[4]); // saturn
+      Aa[2][i] = ə25(jd, φλ, ə54(now, 0)); // mercury
+      Aa[3][i] = ə25(jd, φλ, ə54(now, 1)); // venus
+      Aa[4][i] = ə25(jd, φλ, ə54(now, 3)); // mars
+      Aa[5][i] = ə25(jd, φλ, ə54(now, 4)); // jupiter
+      Aa[6][i] = ə25(jd, φλ, ə54(now, 5)); // saturn
       Aa[7][i] = ə25(jd, φλ, (struct αδ) { 0.0, 0.0 }); // aries
 
       for (int j = 0; j < 8; j++) {
@@ -598,6 +591,7 @@ int main(int argc, char **argv) {
 #define NAUTICAL     -12.00
 #define CIVIL         -6.00
 #define SOLAR         -0.80
+#define LUNAR         -0.80
 
    for (int i = 0; i < 24*60; i++) {
       time_t when = now - (12*60*60) + i*60;
@@ -626,7 +620,13 @@ int main(int argc, char **argv) {
          else {
             printf("solar down\t: %s", ctime(&when));
          }
-         for (int j = 1; j < 8; j++) {
+         if (Aa[0][0].a > LUNAR) {
+            printf("lunar up\t: %s", ctime(&when));
+         }
+         else {
+            printf("lunar down\t: %s", ctime(&when));
+         }
+         for (int j = 2; j < 8; j++) {
             if (Aa[j][0].a > HORIZON) {
                printf("%s up\t: %s", names[j], ctime(&when));
             }

@@ -572,12 +572,24 @@ int main(int argc, char **argv) {
 
       Aa[0][i] = ə25(jd, φλ, ə46(jd)); // sun
       Aa[1][i] = ə25(jd, φλ, ə65(jd)); // moon
-      Aa[2][i] = ə25(jd, φλ, ə54(now, 0)); // mercury
-      Aa[3][i] = ə25(jd, φλ, ə54(now, 1)); // venus
-      Aa[4][i] = ə25(jd, φλ, ə54(now, 3)); // mars
-      Aa[5][i] = ə25(jd, φλ, ə54(now, 4)); // jupiter
-      Aa[6][i] = ə25(jd, φλ, ə54(now, 5)); // saturn
+      Aa[2][i] = ə25(jd, φλ, ə54(jd, 0)); // mercury
+      Aa[3][i] = ə25(jd, φλ, ə54(jd, 1)); // venus
+      Aa[4][i] = ə25(jd, φλ, ə54(jd, 3)); // mars
+      Aa[5][i] = ə25(jd, φλ, ə54(jd, 4)); // jupiter
+      Aa[6][i] = ə25(jd, φλ, ə54(jd, 5)); // saturn
       Aa[7][i] = ə25(jd, φλ, (struct αδ) { 0.0, 0.0 }); // aries
+
+#if 0
+      printf("==\n");
+      printf("%f %f %s\n", Aa[0][i].A, Aa[0][i].a, names[0]);
+      printf("%f %f %s\n", Aa[1][i].A, Aa[1][i].a, names[1]);
+      printf("%f %f %s\n", Aa[2][i].A, Aa[2][i].a, names[2]);
+      printf("%f %f %s\n", Aa[3][i].A, Aa[3][i].a, names[3]);
+      printf("%f %f %s\n", Aa[4][i].A, Aa[4][i].a, names[4]);
+      printf("%f %f %s\n", Aa[5][i].A, Aa[5][i].a, names[5]);
+      printf("%f %f %s\n", Aa[6][i].A, Aa[6][i].a, names[6]);
+      printf("%f %f %s\n", Aa[7][i].A, Aa[7][i].a, names[7]);
+#endif
 
       for (int j = 0; j < 8; j++) {
          if (max[j] == -1 || Aa[j][i].a > Aa[j][max[j]].a) {
@@ -657,8 +669,26 @@ int main(int argc, char **argv) {
                printf("%s set\t: %s", names[j], ctime(&when));
             }
          }
-
       }
    }
+}
+#endif
+
+#ifdef PLANET
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int main(int argc, char **argv) {
+   time_t now = time(NULL);
+   now /= 60;
+   now *= 60;
+
+   struct φλ φλ = { atof(argv[1]), atof(argv[2]) };
+   int planet = atoi(argv[3]);
+
+   struct αδ αδ = ə54(time_t2julian(now), planet);
+   printf("%f %f\n", αδ.α, αδ.δ);
+
 }
 #endif

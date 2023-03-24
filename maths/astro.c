@@ -444,7 +444,6 @@ struct FD ə67(double jd) {
    // NB, this new D is **NOT** the D from above!
    struct FD FD;
 
-printf("%f %f\n", lpp, λ_sun);
    FD.D = lpp - λ_sun;
    ZRANGE(FD.D, 360.0);
 

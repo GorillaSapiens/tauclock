@@ -599,11 +599,11 @@ int main(int argc, char **argv) {
    }
 
 #define HORIZON        0.00
-#define ASTRONOMICAL -18.00
-#define NAUTICAL     -12.00
-#define CIVIL         -6.00
-#define SOLAR         -0.80
-#define LUNAR         -0.80
+#define ASTRONOMICAL -18.56
+#define NAUTICAL     -12.56
+#define CIVIL         -6.56
+#define SOLAR         -1.00
+#define LUNAR         -1.00
 
    for (int i = 0; i < 24*60; i++) {
       time_t when = now - (12*60*60) + i*60;
@@ -659,6 +659,24 @@ int main(int argc, char **argv) {
          }
          if (Aa[0][i-1].a >= SOLAR && Aa[0][i].a < SOLAR) {
             printf("solar set\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a < CIVIL && Aa[0][i].a >= CIVIL) {
+            printf("civil rise\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a >= CIVIL && Aa[0][i].a < CIVIL) {
+            printf("civil set\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a < NAUTICAL && Aa[0][i].a >= NAUTICAL) {
+            printf("nautical rise\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a >= NAUTICAL && Aa[0][i].a < NAUTICAL) {
+            printf("nautical set\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a < ASTRONOMICAL && Aa[0][i].a >= ASTRONOMICAL) {
+            printf("astronomical rise\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a >= ASTRONOMICAL && Aa[0][i].a < ASTRONOMICAL) {
+            printf("astronomical set\t: %s", ctime(&when));
          }
 
          for (int j = 1; j < 8; j++) {

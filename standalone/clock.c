@@ -613,6 +613,9 @@ do_planet_band(Context *context, Canvas * canvas, double up, double now,
    for (int i = 0; i < event_spot; i++) {
       if (events[i].prune == 0 && events[i].category == category) {
          if (events[i].type == EVENT_RISE || events[i].type == EVENT_SET) {
+   //char sym[2] = { 0, 0 };
+   //sym[0] = 'B' + (category - CAT_LUNAR);
+   //if (category == CAT_ARIES) { sym[0] = 'a'; }
             double offset = (events[i].type == EVENT_SET) ? 3.0 : -3.0;
             double x, y;
             double angle =
@@ -2194,7 +2197,11 @@ static void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
-double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) {
+double do_sun_bands(Canvas *canvas,
+                    double jd,
+                    struct φλ φλ,
+                    int lightdark) {
+
    static const double HORIZON_SUN = -1.0;
    static const double HORIZON_CIVIL = -6.56;
    static const double HORIZON_NAUTICAL = -12.56;
@@ -2402,6 +2409,133 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) 
    return up_angle;
 }
 
+void do_planet_bands(Canvas *canvas,
+                     double up_angle,
+                     double jd,
+                     struct φλ φλ) {
+
+   static const int HORIZON = 0.0;
+   static const unsigned int colors[] = {
+      COLOR_MOONBAND,
+      COLOR_MERCURY,
+      COLOR_VENUS,
+      COLOR_MARS,
+      COLOR_JUPITER,
+      COLOR_SATURN,
+      COLOR_ARIES,
+   };
+   static const char *syms = "BCDEFGa";
+
+   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
+
+   struct symxy {
+      int x;
+      int y;
+      int p;
+   } symxy[32];
+
+   int symxy_spot = 0;
+
+   for (int p = 0; p < 7; p++) {
+      double a[24*60];
+      int max = -1;
+      for (int i = 0; i < 24 * 60; i++) {
+         double when = jd - 0.5 + (double) i / (24.0* 60.0);
+         struct Aa Aa;
+
+         if (p == 0) Aa = ə25(when, φλ, ə65(when));
+         else if (p < 3) Aa = ə25(when, φλ, ə54(when, p - 1));
+         else if (p < 6) Aa = ə25(when, φλ, ə54(when, p - 2));
+         else Aa = ə25(when, φλ, (struct αδ) { 0.0, 0.0 });
+
+         a[i] = Aa.a;
+         if (max == -1 || Aa.a > a[max]) {
+            max = i;
+         }
+      }
+
+      unsigned int color = COLOR_NONE;
+
+      if (a[0] > HORIZON) {
+         color = colors[p];
+      }
+      unsigned int oldcolor = color;
+
+      double start_angle = up_angle - 180.0;
+
+      for (int i = 1; i < 24 * 60; i++) {
+         if (a[i-1] < HORIZON && a[i] >= HORIZON) {
+            color = colors[p];
+         }
+         if (a[i-1] >= HORIZON && a[i] < HORIZON) {
+            color = COLOR_NONE;
+         }
+
+         if (color != oldcolor) {
+            double stop_angle =
+               up_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
+
+            arc_canvas(canvas, SIZE / 2, SIZE / 2,
+               radius, SCALE(5), oldcolor, start_angle, stop_angle);
+
+            {
+               double offset =
+                  (oldcolor == COLOR_NONE) ? -3.0 : 3.0;
+               symxy[symxy_spot].p = p;
+               symxy[symxy_spot].x =
+                  (SIZE / 2) + radius * cos_deg(stop_angle + offset);
+               symxy[symxy_spot].y =
+                  (SIZE / 2) + radius * sin_deg(stop_angle + offset);
+               symxy_spot++;
+            }
+
+            oldcolor = color;
+            start_angle = stop_angle;
+
+            double x1, y1, x2, y2;
+
+            x1 = canvas->w / 2 + (radius - 16) * cos_deg(stop_angle);
+            y1 = canvas->h / 2 + (radius - 16) * sin_deg(stop_angle);
+            x2 = canvas->w / 2 + (radius + 16) * cos_deg(stop_angle);
+            y2 = canvas->h / 2 + (radius + 16) * sin_deg(stop_angle);
+
+            line_canvas(canvas, x1, y1, x2, y2, colors[p]);
+         }
+      }
+
+      double stop_angle = up_angle + 180.0;
+
+      arc_canvas(canvas, SIZE / 2, SIZE / 2,
+         radius, SCALE(5), oldcolor, start_angle, stop_angle);
+
+      if (a[max] > HORIZON) {
+         double transit_angle =
+            up_angle - 180.0 + 360.0 * ((double) max / (24.0 * 60.0));
+
+         double x1, y1, x2, y2;
+
+         x1 = canvas->w / 2 + (radius - 16) * cos_deg(transit_angle);
+         y1 = canvas->h / 2 + (radius - 16) * sin_deg(transit_angle);
+         x2 = canvas->w / 2 + (radius + 16) * cos_deg(transit_angle);
+         y2 = canvas->h / 2 + (radius + 16) * sin_deg(transit_angle);
+
+         line_canvas(canvas, x1, y1, x2, y2, colors[p]);
+      }
+
+      radius += SCALE(15);
+      max = -1;
+   }
+
+   for (int i = 0; i < symxy_spot; i++) {
+      char sym[2] = { syms[symxy[i].p], 0 };
+      text_canvas(canvas, ASTRO_FONT,
+         symxy[i].x, 
+         symxy[i].y, 
+         colors[symxy[i].p],
+            COLOR_BLACK, sym, 1, 1);
+   }
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2430,7 +2564,7 @@ Canvas *do_all(double lat, double lon,
       tzset();
    }
 
-   double JD;
+   double jd;
    double up;
 
    // assign global SIZE used for scaling
@@ -2449,7 +2583,7 @@ Canvas *do_all(double lat, double lon,
    now /= 60;
    now *= 60;
 
-   JD = time_t2julian(now);
+   jd = time_t2julian(now);
 
    struct tm local = *localtime(&now);
 
@@ -2457,7 +2591,9 @@ Canvas *do_all(double lat, double lon,
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
    int mid = canvas->w / 2;
 
-   double up_angle = do_sun_bands(canvas, JD, φλ, lightdark);
+   double up_angle = do_sun_bands(canvas, jd, φλ, lightdark);
+
+   do_planet_bands(canvas, up, jd, φλ);
 
 #if 0
 

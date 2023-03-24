@@ -2194,11 +2194,32 @@ static void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
-double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ) {
+double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ, int lightdark) {
    static const double HORIZON_SUN = -1.0;
    static const double HORIZON_CIVIL = -6.56;
    static const double HORIZON_NAUTICAL = -12.56;
    static const double HORIZON_ASTRONOMICAL = -18.56;
+
+   unsigned int lightdark_civil = COLOR_TWILIGHT;
+   unsigned int lightdark_nautical = COLOR_TWILIGHT;
+   unsigned int lightdark_astronomical = COLOR_TWILIGHT;
+
+   if (lightdark != 0) {
+      int light = lightdark >> 8;
+      int dark = lightdark & 0xFF;
+
+      switch (light) {
+         case 3: lightdark_astronomical = COLOR_LIGHT; // fallthrough
+         case 2: lightdark_nautical = COLOR_LIGHT;     // fallthrough
+         case 1: lightdark_civil = COLOR_LIGHT;        // fallthrough
+      }
+
+      switch (dark) {
+         case 3: lightdark_civil = COLOR_DARK;        // fallthrough
+         case 2: lightdark_nautical = COLOR_DARK;     // fallthrough
+         case 1: lightdark_astronomical = COLOR_DARK; // fallthrough
+      }
+   }
 
    double a[24*60];
    int max = -1;
@@ -2216,56 +2237,67 @@ double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ) {
 
    unsigned int color;
    unsigned int oldcolor;
+   unsigned int bandcolor;
+   unsigned int oldbandcolor;
+
    if (a[0] < HORIZON_ASTRONOMICAL) {
       color = COLOR_NIGHT;
+      bandcolor = COLOR_DARK;
    }
    else if (a[0] < HORIZON_NAUTICAL) {
       color = COLOR_ASTRONOMICAL;
+      bandcolor = lightdark_astronomical;
    }
    else if (a[0] < HORIZON_CIVIL) {
       color = COLOR_NAUTICAL;
+      bandcolor = lightdark_nautical;
    }
    else if (a[0] < HORIZON_SUN) {
       color = COLOR_CIVIL;
+      bandcolor = lightdark_civil;
    }
    else {
       color = COLOR_SUNUP;
+      bandcolor = COLOR_LIGHT;
    }
+
    oldcolor = color;
+   oldbandcolor = bandcolor;
+
    double start_angle = up_angle - 180.0;
 
    for (int i = 1; i < 24*60; i++) {
       if (a[i-1] < HORIZON_SUN && a[i] >= HORIZON_SUN) {
          color = COLOR_SUNUP;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = COLOR_LIGHT;
       }
       if (a[i-1] >= HORIZON_SUN && a[i] < HORIZON_SUN) {
          color = COLOR_CIVIL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_civil;
       }
       if (a[i-1] < HORIZON_CIVIL && a[i] >= HORIZON_CIVIL) {
          color = COLOR_CIVIL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_civil;
       }
       if (a[i-1] >= HORIZON_CIVIL && a[i] < HORIZON_CIVIL) {
          color = COLOR_NAUTICAL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_nautical;
       }
       if (a[i-1] < HORIZON_NAUTICAL && a[i] >= HORIZON_NAUTICAL) {
          color = COLOR_NAUTICAL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_nautical;
       }
       if (a[i-1] >= HORIZON_NAUTICAL && a[i] < HORIZON_NAUTICAL) {
          color = COLOR_ASTRONOMICAL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_astronomical;
       }
       if (a[i-1] < HORIZON_ASTRONOMICAL && a[i] >= HORIZON_ASTRONOMICAL) {
          color = COLOR_ASTRONOMICAL;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = lightdark_astronomical;
       }
       if (a[i-1] >= HORIZON_ASTRONOMICAL && a[i] < HORIZON_ASTRONOMICAL) {
          color = COLOR_NIGHT;
-printf("%d %d %08x\n", __LINE__, i, color);
+         bandcolor = COLOR_DARK;
       }
       if (color != oldcolor) {
          double stop_angle =
@@ -2274,8 +2306,16 @@ printf("%d %d %08x\n", __LINE__, i, color);
          arc_canvas(canvas,
             SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
             oldcolor, start_angle, stop_angle);
+         // borders
+         arc_canvas(canvas,
+               SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
+               oldbandcolor, start_angle, stop_angle);
+         arc_canvas(canvas,
+               SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
+               oldbandcolor, start_angle, stop_angle);
 
          oldcolor = color;
+         oldbandcolor = bandcolor;
          start_angle = stop_angle;
       }
    }
@@ -2286,6 +2326,13 @@ printf("%d %d %08x\n", __LINE__, i, color);
    arc_canvas(canvas,
       SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
       color, start_angle, stop_angle);
+   // borders
+   arc_canvas(canvas,
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
+         oldbandcolor, start_angle, stop_angle);
+   arc_canvas(canvas,
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
+         oldbandcolor, start_angle, stop_angle);
 
    return up_angle;
 }
@@ -2345,7 +2392,7 @@ Canvas *do_all(double lat, double lon,
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
    int mid = canvas->w / 2;
 
-   double up_angle = do_sun_bands(canvas, JD, φλ);
+   double up_angle = do_sun_bands(canvas, JD, φλ, lightdark);
 
 #if 0
 

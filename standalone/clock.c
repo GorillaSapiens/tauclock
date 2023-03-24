@@ -253,140 +253,6 @@ void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
    delete_canvas(shadow);
 }
 
-/// @brief Draw the "now" hand
-///
-/// The now hand is drawn using xor logic
-///
-/// @param canvas The Canvas to draw on
-/// @param up The Julian Date used as "up"
-/// @param now The current Julian Date
-/// @return void
-void do_now_hand(Canvas * canvas, double up, double now) {
-
-   //Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
-
-   double up_angle = frac(up) * 360.0;
-   double now_angle = frac(now) * 360.0 - up_angle + 270.0;
-   double xc =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-            SCALE(128)) * cos_deg(now_angle);
-   double yc =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-            SCALE(128)) * sin_deg(now_angle);
-   double xc2 =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-            SCALE(128)) * cos_deg(now_angle);
-   double yc2 =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-            SCALE(128)) * sin_deg(now_angle);
-
-   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_WHITE,
-         3);
-   //xor_canvas(shadow, canvas);
-
-   //delete_canvas(shadow);
-}
-
-/// @brief Draw the moon
-///
-/// @param context Pointer to computation context
-/// @param canvas The Canvas to draw on
-/// @param now The current Julian Date
-/// @param lunar_phase The current lunar_phase as returned by libnova
-/// @param lunar_bright_limb The current lunar_bright_limb as returned by libnova
-/// @param where_angle The clock angle at which to draw the moon
-/// @return void
-void
-do_moon_draw(Context *context, Canvas * canvas,
-      double now,
-      float lunar_phase, float lunar_bright_limb, double where_angle) {
-
-   // this is, quite tedious.  here we go...
-   int cx, cy;
-
-   cx = canvas->w / 2 +
-      (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
-   cy = canvas->h / 2 +
-      (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
-
-   unsigned int interior_color;
-   unsigned int chunk_color;
-   int cxm;
-   if (lunar_phase < 90.0) {
-      interior_color = COLOR_BLACK;
-      chunk_color = COLOR_SILVER;
-      if (lunar_bright_limb < 180.0) {
-         cxm = 1;
-      }
-      else {
-         cxm = -1;
-      }
-   }
-   else {
-      interior_color = COLOR_SILVER;
-      chunk_color = COLOR_BLACK;
-      if (lunar_bright_limb < 180.0) {
-         cxm = -1;
-      }
-      else {
-         cxm = 1;
-      }
-   }
-
-   // from wolfram alpha
-   // a circle passing through points (0,a), (0,-a), and (b,0)
-   int b = abs((int)(lunar_phase - 90)) * SCALE(40) / 90;
-   if (b == 0) {
-      b++;
-   }
-   int chunk_x = (b * b - SCALE(40) * SCALE(40)) / (2 * b);
-   int chunk_r = abs(chunk_x - b);
-
-   // this won't make sense, because it's derived from earlier code...
-   // but it really does draw the moon...
-   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
-      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
-         double d_interior = sqrt(dx * dx + dy * dy);
-         double d_chunk = sqrt((dx - chunk_x * cxm) * (dx - chunk_x * cxm) +
-               dy * dy);
-
-         if (d_interior <= SCALE(40.0)) {
-            if (d_chunk < chunk_r) {
-               poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
-            }
-            else {
-               poke_canvas(canvas, cx + dx, cy + dy, interior_color);
-            }
-         }
-      }
-   }
-
-   int is_up = -1;
-   for (int i = 0; i < event_spot; i++) {
-      if (events[i].jd > now) {
-         break;
-      }
-      if (events[i].category == CAT_LUNAR) {
-         switch (events[i].type) {
-            case EVENT_UP:
-            case EVENT_RISE:
-               is_up = 1;
-               break;
-            case EVENT_DOWN:
-            case EVENT_SET:
-               is_up = 0;
-               break;
-            case EVENT_TRANSIT:
-               // do nothing
-               break;
-         }
-      }
-   }
-   // outline
-   arc_canvas(canvas, cx, cy, SCALE(43), 7,
-      is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
-}
-
 /// @brief Draw the perimeter planet band
 ///
 /// @param context Pointer to computation context
@@ -2171,6 +2037,85 @@ double do_sun_bands(Canvas *canvas,
    return up_angle;
 }
 
+/// @brief Draw the moon
+///
+/// @param context Pointer to computation context
+/// @param canvas The Canvas to draw on
+/// @param now The current Julian Date
+/// @param lunar_phase The current lunar_phase as returned by libnova
+/// @param lunar_bright_limb The current lunar_bright_limb as returned by libnova
+/// @param where_angle The clock angle at which to draw the moon
+/// @return void
+void
+do_moon_draw(Canvas * canvas, double up_angle, double jd, int is_up) {
+   struct FD FD = ə67(jd);
+
+   double where_angle = FD.D + up_angle;
+
+   // this is, quite tedious.  here we go...
+   int cx, cy;
+
+   cx = canvas->w / 2 +
+      (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
+   cy = canvas->h / 2 +
+      (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
+
+   unsigned int interior_color;
+   unsigned int chunk_color;
+   int cxm;
+   if (FD.F < 90.0) {
+      interior_color = COLOR_BLACK;
+      chunk_color = COLOR_SILVER;
+      if (FD.D < 180.0) {
+         cxm = 1;
+      }
+      else {
+         cxm = -1;
+      }
+   }
+   else {
+      interior_color = COLOR_SILVER;
+      chunk_color = COLOR_BLACK;
+      if (FD.D < 180.0) {
+         cxm = -1;
+      }
+      else {
+         cxm = 1;
+      }
+   }
+
+   // from wolfram alpha
+   // a circle passing through points (0,a), (0,-a), and (b,0)
+   int b = abs((int)(FD.F - 90)) * SCALE(40) / 90;
+   if (b == 0) {
+      b++;
+   }
+   int chunk_x = (b * b - SCALE(40) * SCALE(40)) / (2 * b);
+   int chunk_r = abs(chunk_x - b);
+
+   // this won't make sense, because it's derived from earlier code...
+   // but it really does draw the moon...
+   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
+      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+         double d_interior = sqrt(dx * dx + dy * dy);
+         double d_chunk = sqrt((dx - chunk_x * cxm) * (dx - chunk_x * cxm) +
+               dy * dy);
+
+         if (d_interior <= SCALE(40.0)) {
+            if (d_chunk < chunk_r) {
+               poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
+            }
+            else {
+               poke_canvas(canvas, cx + dx, cy + dy, interior_color);
+            }
+         }
+      }
+   }
+
+   arc_canvas(canvas, cx, cy, SCALE(43), 7,
+      is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
+}
+
 void do_planet_bands(Canvas *canvas,
                      double up_angle,
                      double jd,
@@ -2286,6 +2231,10 @@ void do_planet_bands(Canvas *canvas,
 
       radius += SCALE(15);
       max = -1;
+
+      if (p == 0) {
+         do_moon_draw(canvas, up_angle, jd, a[12*60] > HORIZON);
+      }
    }
 
    for (int i = 0; i < symxy_spot; i++) {
@@ -2504,6 +2453,35 @@ void do_provider_info(Canvas * canvas, const char *provider) {
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
 }
 
+/// @brief Draw the "now" hand
+///
+/// The now hand is drawn using xor logic
+///
+/// @param canvas The Canvas to draw on
+/// @param up The Julian Date used as "up"
+/// @param now The current Julian Date
+/// @return void
+void do_now_hand(Canvas * canvas, double up_angle, double now) {
+
+   //Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
+
+   double xc =
+      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
+            SCALE(128)) * cos_deg(up_angle);
+   double yc =
+      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
+            SCALE(128)) * sin_deg(up_angle);
+   double xc2 =
+      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
+            SCALE(128)) * cos_deg(up_angle);
+   double yc2 =
+      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
+            SCALE(128)) * sin_deg(up_angle);
+
+   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_WHITE, 3);
+}
+
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -2558,9 +2536,13 @@ Canvas *do_all(double lat, double lon,
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
       double up_angle = do_sun_bands(canvas, jd, φλ, lightdark);
       do_planet_bands(canvas, up_angle, jd, φλ);
+
+      // our rotating "now" hand
+      do_now_hand(canvas, up_angle, jd);
    }
    else {
    }
+
 
 #if 0
 
@@ -2606,8 +2588,6 @@ Canvas *do_all(double lat, double lon,
    // redraw some text, to make things pretty
    replayTimeDrawnMemory(context, canvas);
 
-   // our rotating "now" hand
-   do_now_hand(canvas, up, JD);
 
    // draw the moon
    double moon_angle;

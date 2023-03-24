@@ -1049,6 +1049,108 @@ int64_t sin1(int16_t angle) {
    }
 }
 
+double sin_deg(double angle) {
+   return (double) sin1(angle * 32768.0 / 360.0) / 32768.0;
+}
+
 int64_t cos1(int16_t angle) {
    return sin1(angle + 8192);
+}
+
+double cos_deg(double angle) {
+   return (double) cos1(angle * 32768.0 / 360.0) / 32768.0;
+}
+
+double tan_deg(double angle) {
+   return sin_deg(angle) / cos_deg(angle);
+}
+
+double asin_deg(double sine) {
+   double absine = sine * 32768.0;
+   if (absine < 0.0) {
+      absine = -absine;
+   }
+   int target = (uint16_t) absine;
+   int low = 0;
+   int high = TABLE_SIZE - 1;
+   int mid = (high + low) / 2;
+
+   do {
+      if (sin90[mid] > target) {
+         high = mid;
+      }
+      else if (sin90[mid] <= target) {
+         low = mid;
+      }
+      mid = (high + low) / 2;
+   } while (high - low > 1);
+
+   double ret;
+   if (sin90[high] == target) {
+      ret = 90.0 * (double) high / 8192.0;
+   }
+   else if (sin90[low] == target) {
+      ret = 90.0 * (double) low / 8192.0;
+   }
+   else {
+      ret = 90.0 * (double) (low + high) / 16384.0;
+   }
+
+   if (sine < 0) {
+      ret = -ret;
+   }
+
+   return ret;
+}
+
+double acos_deg(double cosine) {
+   double ret = 180.0 - (asin_deg(cosine) + 90.0);
+   return ret;
+}
+
+#define signof(x) (((x) < 0.0) ? 1 : 0)
+
+double atan2_deg(double y, double x) {
+   // gadzooks!
+   double tangent = y/x;
+   double low = -90.0;
+   double high = 90.0;
+   double mid = (high + low) / 2.0;
+
+   for (int i = 0; i < 14; i++) { // 2^14 = 16384, bigger than our table
+      double x = tan_deg(mid);
+      if (x > tangent) high = mid;
+      if (x < tangent) low = mid;
+      mid = (high + low) / 2.0;
+   }
+
+   for (int i = 0; i < 4; i++) {
+      double sine = sin_deg(mid);
+      double cosine = cos_deg(mid);
+
+      if (signof(y) == signof(sine) && signof(x) == signof(cosine)) {
+         return mid;
+      }
+      mid += 180.0;
+      while (mid >= 180.0) {
+         mid -= 360.0;
+      }
+   }
+   return mid;
+}
+
+double atan_deg(double tangent) {
+   // gadzooks!
+   double low = -90.0;
+   double high = 90.0;
+   double mid = (high + low) / 2.0;
+
+   for (int i = 0; i < 14; i++) { // 2^14 = 16384, bigger than our table
+      double x = tan_deg(mid);
+      if (x > tangent) high = mid;
+      if (x < tangent) low = mid;
+      mid = (high + low) / 2.0;
+   }
+
+   return mid;
 }

@@ -1,4 +1,4 @@
-#pragma GCC optimize("Ofast")
+//#pragma GCC optimize("Ofast")
 //  Sunclock, draw a clock with local solar and lunar information
 //  Copyright (C) 2022 Adam Wozniak / GorillaSapiens
 //
@@ -32,46 +32,8 @@
 #include <assert.h>
 
 #include "trig1.h"
-
-#ifdef STANDALONE
-
-#include <libnova/solar.h>
-#include <libnova/lunar.h>
-#include <libnova/mercury.h>
-#include <libnova/venus.h>
-#include <libnova/mars.h>
-#include <libnova/jupiter.h>
-#include <libnova/saturn.h>
-#include <libnova/julian_day.h>
-#include <libnova/rise_set.h>
-#include <libnova/transform.h>
-
-#else
-
-#include "solar.h"
-#include "lunar.h"
-#include "mercury.h"
-#include "venus.h"
-#include "mars.h"
-#include "jupiter.h"
-#include "saturn.h"
-#include "julian_day.h"
-#include "rise_set.h"
-#include "transform.h"
-
-#endif
-
+#include "astro.h"
 #include "draw.h"
-
-static double sin_deg(double arg) {
-   int16_t arg1 = 32768.0 * arg / 360.0;
-   return (double)sin1(arg1) / 32767.0;
-}
-
-static double cos_deg(double arg) {
-   int16_t arg1 = 32768.0 * arg / 360.0;
-   return (double)cos1(arg1) / 32767.0;
-}
 
 #define FNORD KNARF
 #define sin(x) FNORD
@@ -92,37 +54,6 @@ uint8_t *FONT_ITALIC_MED;
 
 #define SCALE(x) ((double)((double)(x) * SIZE / 1024))
 
-/// @brief enumeration type for events
-///
-/// Order is important, as it is used when sorting
-typedef enum EventType {
-   EVENT_UP,
-   EVENT_DOWN,
-   EVENT_RISE,
-   EVENT_TRANSIT,
-   EVENT_SET
-} EventType;
-
-/// @brief enumeration type for event categories
-typedef enum EventCategory {
-   CAT_SOLAR,
-   CAT_CIVIL,
-   CAT_NAUTICAL,
-   CAT_ASTRONOMICAL,
-   CAT_LUNAR,                   // moon and planets from here on
-   CAT_MERCURY,
-   CAT_VENUS,
-   CAT_MARS,
-   CAT_JUPITER,
-   CAT_SATURN,
-   CAT_ARIES                   // the first point of aries
-} EventCategory;
-
-/// @brief Human readable names for the CAT_* defines
-const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
-   "lunar", "mercury", "venus", "mars", "jupiter", "saturn", "aries"
-};
-
 #define COLOR_SUNUP           COLOR_YELLOW
 #define COLOR_CIVIL           COLOR_ORANGE
 #define COLOR_NAUTICAL        COLOR_LIGHTBLUE
@@ -140,37 +71,7 @@ const char *categorynames[] = { "sun", "nautical", "civil", "astronomical",
 #define COLOR_SATURN          COLOR_LIGHTBLUE
 #define COLOR_ARIES           COLOR_GREEN
 
-/// @brief Human readable names for the EVENT_* defines
-const char *typenames[] = { "up", "down", "rise", "transit", "set" };
-
-/// @brief A structure denoting a up/down/rise/transit/set event.
-typedef struct {
-   double jd;
-   EventCategory category;
-   EventType type;
-   int prune;
-} Event;
-
-/// @brief The size of the events array
-#define NUM_EVENTS 4096
-
-/// @brief JD bounds on cache
-#define CACHE_LIMIT 1.0
-
-struct CacheNode {
-   int critical;
-   double JD;
-   struct ln_equ_posn posn; // body position
-   struct ln_hrz_posn hrz_posn; // observed position
-   struct CacheNode *prev;
-   struct CacheNode *next;
-};
-
-struct Cache {
-   struct ln_lnlat_posn observer;
-   struct CacheNode *head;
-};
-
+#if 0
 /// @brief A struct used to remember where something is drawn.
 typedef struct TimeDrawnMemory {
    double now;
@@ -244,38 +145,6 @@ void init_context(Context *context) {
    memset(context,0, sizeof(Context));
 }
 
-/// @brief Get the true local date
-///
-/// The libnova ln_get_local_date is buggy in that it gives a time
-/// using the now current time zone, and NOT the time zone current
-/// at that particular time.  This causes goofy behavior when crossing
-/// standard / daylight time boundaries.
-///
-/// @param JD The Julian Date to convert
-/// @param zonedate Pointer to ln_zonedate to be filled in
-void my_get_local_date(double JD, struct ln_zonedate *zonedate) {
-   struct ln_date date;
-   time_t curtime;
-   struct tm *loctime;
-   long gmtoff;
-
-   ln_get_date(JD, &date);
-
-   /* add day light savings time and hour angle */
-#ifdef __WIN32__
-   _tzset();
-   gmtoff = _timezone;
-   if (_daylight)
-      gmtoff += 3600;
-#else
-   ln_get_timet_from_julian(JD, &curtime);      // (AND NOT!!!) curtime = time (NULL);
-   loctime = localtime(&curtime);
-   gmtoff = loctime->tm_gmtoff;
-   // otherwise there is no reasonable way how to get that:(
-   // tm_gmtoff already included DST
-#endif
-   ln_date_to_zonedate(&date, zonedate, gmtoff);
-}
 
 /// @brief Normalize an angle in the range 0.0 .. 360.0
 ///
@@ -2231,7 +2100,13 @@ void initialize_all(Context *context) {
    accumdrawnspot = 0;
 }
 
-void set_font(uint8_t ** target, uint8_t ** choices, int desire, int width) {
+
+#endif
+
+static void set_font(uint8_t ** target,
+                     uint8_t ** choices,
+                     int desire,
+                     int width) {
    int close = 0;
    // want closest desire/1024 to height/width
    int truth = desire * width / 1024;
@@ -2247,7 +2122,7 @@ void set_font(uint8_t ** target, uint8_t ** choices, int desire, int width) {
    *target = choices[close];
 }
 
-void set_astro_font(int width) {
+static void set_astro_font(int width) {
    uint8_t *choices[] = {
       astro_16_bdf,
       astro_20_bdf,
@@ -2259,7 +2134,7 @@ void set_astro_font(int width) {
    set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
 }
 
-void set_bold_big(int width) {
+static void set_bold_big(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
@@ -2274,7 +2149,7 @@ void set_bold_big(int width) {
    set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
 }
 
-void set_bold_med(int width) {
+static void set_bold_med(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
@@ -2289,7 +2164,7 @@ void set_bold_med(int width) {
    set_font(&FONT_BOLD_MED, choices, djsmb_20_bdf[1], width);
 }
 
-void set_bold_small(int width) {
+static void set_bold_small(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
@@ -2304,7 +2179,7 @@ void set_bold_small(int width) {
    set_font(&FONT_BOLD_SMALL, choices, djsmb_16_bdf[1], width);
 }
 
-void set_italic_med(int width) {
+static void set_italic_med(int width) {
    uint8_t *choices[] = {
       djsmo_8_bdf,
       djsmo_10_bdf,
@@ -2319,41 +2194,125 @@ void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
-double to_the_minute(double jd) {
-   double whole = (double) ((int) jd);
-   double fraction = jd - whole;
-   fraction *= 24*60;
-   fraction = (double)((int) fraction);
-   fraction /= 24*60;
+double do_sun_bands(Canvas *canvas, double jd, struct φλ φλ) {
+   static const double HORIZON_SUN = -1.0;
+   static const double HORIZON_CIVIL = -6.56;
+   static const double HORIZON_NAUTICAL = -12.56;
+   static const double HORIZON_ASTRONOMICAL = -18.56;
 
-   return whole + fraction + (1.0/(24.0*60.0*2.0));
+   double a[24*60];
+   int max = -1;
+   for (int i = 0; i < 24 * 60; i++) {
+      struct Aa Aa = ə25(jd - 0.5 + (double) i / (24.0* 60.0), φλ, ə46(jd));
+      a[i] = Aa.a;
+      if (max == -1 || Aa.a > a[max]) {
+         max = i;
+      }
+   }
+
+   double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0)) + 270.0;
+   ZRANGE(up_angle, 360.0);
+   up_angle = 0.0;
+
+   unsigned int color;
+   unsigned int oldcolor;
+   if (a[0] < HORIZON_ASTRONOMICAL) {
+      color = COLOR_NIGHT;
+   }
+   else if (a[0] < HORIZON_NAUTICAL) {
+      color = COLOR_ASTRONOMICAL;
+   }
+   else if (a[0] < HORIZON_CIVIL) {
+      color = COLOR_NAUTICAL;
+   }
+   else if (a[0] < HORIZON_SUN) {
+      color = COLOR_CIVIL;
+   }
+   else {
+      color = COLOR_SUNUP;
+   }
+   oldcolor = color;
+   double start_angle = up_angle - 180.0;
+
+   for (int i = 1; i < 24*60; i++) {
+      if (a[i-1] < HORIZON_SUN && a[i] >= HORIZON_SUN) {
+         color = COLOR_SUNUP;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] >= HORIZON_SUN && a[i] < HORIZON_SUN) {
+         color = COLOR_CIVIL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] < HORIZON_CIVIL && a[i] >= HORIZON_CIVIL) {
+         color = COLOR_CIVIL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] >= HORIZON_CIVIL && a[i] < HORIZON_CIVIL) {
+         color = COLOR_NAUTICAL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] < HORIZON_NAUTICAL && a[i] >= HORIZON_NAUTICAL) {
+         color = COLOR_NAUTICAL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] >= HORIZON_NAUTICAL && a[i] < HORIZON_NAUTICAL) {
+         color = COLOR_ASTRONOMICAL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] < HORIZON_ASTRONOMICAL && a[i] >= HORIZON_ASTRONOMICAL) {
+         color = COLOR_ASTRONOMICAL;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (a[i-1] >= HORIZON_ASTRONOMICAL && a[i] < HORIZON_ASTRONOMICAL) {
+         color = COLOR_NIGHT;
+printf("%d %d %08x\n", __LINE__, i, color);
+      }
+      if (color != oldcolor) {
+         double stop_angle =
+            up_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
+
+         arc_canvas(canvas,
+            SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
+            oldcolor, start_angle, stop_angle);
+
+         oldcolor = color;
+         start_angle = stop_angle;
+      }
+   }
+
+   double stop_angle =
+      up_angle + 180.0;
+
+   arc_canvas(canvas,
+      SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
+      color, start_angle, stop_angle);
+
+   return up_angle;
 }
 
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
 /// @param lon The observer's Longitude in degrees, West is negative
-/// @param offset An offset from the current Julian Date
+/// @param offset_days An offset from the current Julian Date, in days
 /// @param width Width of canvas to draw
-/// @param provider Name of the location provider to be displayed
+/// @param locprovider Name of the location provider to be displayed
 /// @param tzprovider Name of the timezone provider to be displayed
 /// @param tz Name of timezone to be used
 /// @param lightdark controls which regions are considered light and dark
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lon, double offset, int width,
-      const char *provider, const char *tzprovider, const char *tz,
+Canvas *do_all(double lat, double lon,
+      double offset_days,
+      int width,
+      const char *locprovider,
+      const char *tzprovider,
+      const char *tz,
       int lightdark) {
 
+   // clear locale, to use the system provided locale
    setlocale(LC_ALL, "");
 
-   static Context *context = NULL;
-   if (context == NULL) {
-      context = (Context *)calloc(1, sizeof(Context));
-   }
-
-   struct ln_zonedate now;
-   struct ln_lnlat_posn observer;
-
+   // set the timezone
    if (tz != NULL && tz[0] != 0) {
       setenv("TZ", tz, 1);
       tzset();
@@ -2362,46 +2321,37 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    double JD;
    double up;
 
+   // assign global SIZE used for scaling
    SIZE = width;
+
    set_astro_font(width);
    set_bold_big(width);
    set_bold_med(width);
    set_bold_small(width);
    set_italic_med(width);
-   /*
-#define ASTRO_FONT astro_32_bdf
-#define FONT_BOLD_BIG djsmb_50_bdf
-#define FONT_BOLD_MED djsmb_20_bdf
-#define FONT_BOLD_SMALL djsmb_16_bdf
-#define FONT_ITALIC_MED djsmo_20_bdf
-    */
-
-   initialize_all(context);
 
    // observer's location
-   observer.lat = lat;          // degrees, North is positive
-   observer.lng = lon;          // degrees, East is positive
+   struct φλ φλ = { lat, lon };
 
-   // get Julian day from local time
-   JD = ln_get_julian_from_sys() + offset;
-   if (offset > 2000000.0) {
-      JD = offset;
-   }
+   time_t now = time(NULL) + offset_days * 24.0 * 60.0 * 60.0;
+   now /= 60;
+   now *= 60;
 
-   JD = to_the_minute(JD);
+   JD = time_t2julian(now);
 
-   //printf("JD=%lf\n", JD);
+   struct tm local = *localtime(&now);
 
-   // local time
-   my_get_local_date(JD, &now);
+   //// drawing begins here
+   Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
+   int mid = canvas->w / 2;
 
-   // all of the data
-   events_clear(context);
-   events_populate(context, JD, &observer);
-   events_sort(context);
-   events_uniq(context);
-   events_prune(context, JD);
-   //events_dump();
+   double up_angle = do_sun_bands(canvas, JD, φλ);
+
+#if 0
+
+
+
+
 
    // get the transit time
    up = to_the_minute(events_transit(context, JD)); // rounding added to reduce jitter
@@ -2412,10 +2362,7 @@ Canvas *do_all(double lat, double lon, double offset, int width,
 
    double lunar_new = get_lunar_new(JD);
 
-   //// drawing begins here
-   Canvas *canvas = new_canvas(SIZE, SIZE, COLOR_BLACK);
 
-   int mid = canvas->w / 2;
 
    int goodloc = 1;
    if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
@@ -2475,10 +2422,12 @@ Canvas *do_all(double lat, double lon, double offset, int width,
    do_debug_info(canvas, JD, offset, tzprovider);
 
    do_provider_info(canvas, provider);
+#endif
 
    return canvas;
 }
 
+#if 0
 int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes) {
    static Context *context = NULL;
    if (context == NULL) {
@@ -2514,5 +2463,6 @@ int do_when_is_it(double lat, double lon, int category, int type, int delayMinut
    // hrm, not found...
    return -1;
 }
+#endif
 
 // vim: expandtab:noai:ts=3:sw=3

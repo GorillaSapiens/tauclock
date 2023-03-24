@@ -14,16 +14,19 @@
 ##  You should have received a copy of the GNU General Public License
 ##  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: fonts/.bdf calcdata calcrange libnova-0.15.0/doc/html html/index.html
+COLOR=-fdiagnostics-color=always
+#COLOR=
 
-html/index.html: doxygen.conf clock.c draw.c
+all: fonts/.bdf calcdata calcrange html/index.html
+
+html/index.html: doxygen.conf clock.c draw.c trig1.c astro.c
 	doxygen doxygen.conf 1>/dev/null
 
 indent:
 	indent -nbad -bap -nbc -bbo -hnl -br -brs -c33 -cd33 -ncdb -nce -ci3 \
 		-cli3 -d0 -di1 -nfc1 -i3 -ip0 -l80 -lp -npcs -nprs -npsl -sai \
-	        -saf -saw -ncs -nsc -nut -sob -nfca -cp33 -ss -ts8 -il1 -brf \
-	        *.[ch]
+		-saf -saw -ncs -nsc -nut -sob -nfca -cp33 -ss -ts8 -il1 -brf \
+		*.[ch]
 
 fonts/.bdf: fonts/Makefile
 	(cd fonts ; make)
@@ -33,33 +36,20 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.c trig1.c draw.c draw.h clock.c libnova.a
-	gcc -g -pg -Ofast -Wall -DSTANDALONE $^ -I libnova-0.15.0/src -lm -o calcdata
+calcdata: main.c trig1.c draw.c clock.c trig1.c astro.c
+	gcc $(COLOR) -g -pg -Wall -DSTANDALONE $^ -lm -o calcdata
+#gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcdata
 
-calcrange: mainrange.c trig1.c draw.c draw.h clock.c libnova.a
-	gcc -g -pg -Ofast -Wall -DSTANDALONE $^ libnova.a -I libnova-0.15.0/src -lm -o calcrange
-
-libnova-0.15.0/doc/html:
-	(cd libnova-0.15.0/doc; doxygen doxyfile.in )
-
-libnova.a: libnova-0.15.0/Makefile.am
-	(cd libnova-0.15.0/src; gcc -pg -Ofast -c *.c -I.)
-	ar r libnova.a libnova-0.15.0/src/*.o
-
-libnova-0.15.0/Makefile.am: libnova-0.15.0.tar.gz
-	tar -xzvf libnova-0.15.0.tar.gz
-	touch libnova-0.15.0/Makefile.am
-
-libnova-0.15.0.tar.gz:
-	wget https://sourceforge.net/projects/libnova/files/libnova/v%200.15.0/libnova-0.15.0.tar.gz/download -O libnova-0.15.0.tar.gz
+calcrange: mainrange.c trig1.c draw.c clock.c trig1.c astro.c
+	gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcrange
 
 tidy:
 	rm -f out* *~
 
 clean: tidy
-	rm -f libnova.a doxygen.conf.bak calcdata
+	rm -f calcdata calcrange
 	rm -rf latex html
 	( cd fonts ; make clean )
 
 squeaky:
-	rm -rf libnova-0.15.0
+	echo done

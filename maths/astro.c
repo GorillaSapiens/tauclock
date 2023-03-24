@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "trig1.h"
 #include "astro.h"
 
@@ -541,28 +538,120 @@ int main(int argc, char **argv) {
 
 #ifdef ONEDAY
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-struct αδ αδ[7][24*60];
+struct Aa Aa[7][24*60];
+const char *names[7] = {
+   "solar",
+   "lunar",
+   "mercury",
+   "venus",
+   "mars",
+   "jupiter",
+   "saturn"
+};
 
 int main(int argc, char **argv) {
    time_t now = time(NULL);
+   now /= 60;
+   now *= 60;
+
+   struct φλ φλ = { atof(argv[1]), atof(argv[2]) };
+
+   struct αδ αδ[5];
+   αδ[0] = ə54(now, 0); // mercury
+   αδ[1] = ə54(now, 1); // venus
+   αδ[2] = ə54(now, 3); // mars
+   αδ[3] = ə54(now, 4); // jupiter
+   αδ[4] = ə54(now, 5); // saturn
+
+   int max[7] = { -1, -1, -1, -1, -1, -1, -1 };
 
    for (int i = 0; i < 24*60; i++) {
       time_t when = now - (12*60*60) + i*60;
       double jd = time_t2julian(when);
 
-      αδ[0][i] = ə46(jd); // sun
-      αδ[1][i] = ə65(jd); // moon
-      αδ[2][i] = ə54(jd, 0); // mercury
-      αδ[3][i] = ə54(jd, 1); // venus
-      αδ[4][i] = ə54(jd, 3); // mars
-      αδ[5][i] = ə54(jd, 4); // jupiter
-      αδ[6][i] = ə54(jd, 5); // saturn
-   }
-   for (int i = 0; i < 24*60; i++) {
-      printf("== %d\n", i);
+      Aa[0][i] = ə25(jd, φλ, ə46(jd)); // sun
+      Aa[1][i] = ə25(jd, φλ, ə65(jd)); // moon
+      Aa[2][i] = ə25(jd, φλ, αδ[0]); // mercury
+      Aa[3][i] = ə25(jd, φλ, αδ[1]); // venus
+      Aa[4][i] = ə25(jd, φλ, αδ[3]); // mars
+      Aa[5][i] = ə25(jd, φλ, αδ[4]); // jupiter
+      Aa[6][i] = ə25(jd, φλ, αδ[5]); // saturn
+
       for (int j = 0; j < 7; j++) {
-         printf("%f\n", αδ[j][i].δ);
+         if (max[j] == -1 || Aa[j][i].a > Aa[j][max[j]].a) {
+            max[j] = i;
+         }
+      }
+   }
+
+#define HORIZON        0.00
+#define ASTRONOMICAL -18.00
+#define NAUTICAL     -12.00
+#define CIVIL         -6.00
+#define SOLAR         -0.80
+
+   for (int i = 0; i < 24*60; i++) {
+      time_t when = now - (12*60*60) + i*60;
+      if (i == 0) {
+         if (Aa[0][0].a > ASTRONOMICAL) {
+            printf("astro up\t: %s", ctime(&when));
+         }
+         else {
+            printf("astro down\t: %s", ctime(&when));
+         }
+         if (Aa[0][0].a > NAUTICAL) {
+            printf("nautical up\t: %s", ctime(&when));
+         }
+         else {
+            printf("nautical down\t: %s", ctime(&when));
+         }
+         if (Aa[0][0].a > CIVIL) {
+            printf("civil up\t: %s", ctime(&when));
+         }
+         else {
+            printf("civil down\t: %s", ctime(&when));
+         }
+         if (Aa[0][0].a > SOLAR) {
+            printf("solar up\t: %s", ctime(&when));
+         }
+         else {
+            printf("solar down\t: %s", ctime(&when));
+         }
+         for (int j = 1; j < 7; j++) {
+            if (Aa[j][0].a > HORIZON) {
+               printf("%s up\t: %s", names[j], ctime(&when));
+            }
+            else {
+               printf("%s down\t: %s", names[j], ctime(&when));
+            }
+         }
+      }
+      else {
+         for (int j = 0; j < 7; j++) {
+            if (i == max[j]) {
+               printf("%s transit\t: %s", names[j], ctime(&when));
+            }
+         }
+
+         if (Aa[0][i-1].a < SOLAR && Aa[0][i].a >= SOLAR) {
+            printf("solar rise\t: %s", ctime(&when));
+         }
+         if (Aa[0][i-1].a >= SOLAR && Aa[0][i].a < SOLAR) {
+            printf("solar set\t: %s", ctime(&when));
+         }
+
+         for (int j = 1; j < 7; j++) {
+            if (Aa[j][i-1].a < HORIZON && Aa[j][i].a >= HORIZON) {
+               printf("%s rise\t: %s", names[j], ctime(&when));
+            }
+            if (Aa[j][i-1].a >= HORIZON && Aa[j][i].a < HORIZON) {
+               printf("%s set\t: %s", names[j], ctime(&when));
+            }
+         }
+
       }
    }
 }

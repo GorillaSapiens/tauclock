@@ -410,7 +410,7 @@ struct FD ə67(double jd) {
    static const double l0 = 91.929336;
    static const double P0 = 130.143076;
    static const double N0 = 291.682547;
-   static const double i = 5.145396;
+   // static const double i = 5.145396;
 
    double l = 13.1763966 * D + l0;
    ZRANGE(l, 360.0);
@@ -434,12 +434,12 @@ struct FD ə67(double jd) {
    double V = 0.6583 * sin_deg(2.0 * (lp - λ_sun));
    double lpp = lp + V;
 
-   double Np = N - 0.16 * sin_deg(M_sun);
-   double λ_moon = atan2_deg(
-                        sin_deg(lpp - Np) * cos_deg(i),
-                        cos_deg(lpp - Np)
-                     ) + Np;
-   double β_moon = asin_deg(sin_deg(lpp-Np)*sin_deg(i));
+//   double Np = N - 0.16 * sin_deg(M_sun);
+//   double λ_moon = atan2_deg(
+//                        sin_deg(lpp - Np) * cos_deg(i),
+//                        cos_deg(lpp - Np)
+//                     ) + Np;
+//   double β_moon = asin_deg(sin_deg(lpp-Np)*sin_deg(i));
 
    // NB, this new D is **NOT** the D from above!
    struct FD FD;
@@ -459,7 +459,7 @@ struct FD ə67(double jd) {
 #include <assert.h>
 
 #ifndef VERBOSE
-#define printf //
+#define printf(format, ...)
 #endif
 
 int close(double a, double b, double delta) {
@@ -604,6 +604,8 @@ int old_main(int argc, char **argv) {
       assert(close(FD.F, 0.225, 0.02));
       printf("pass\n");
    }
+
+   return 0;
 }
 
 int main(int argc, char **argv) {

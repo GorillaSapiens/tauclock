@@ -12,6 +12,11 @@ struct Aa {
    double a; // altitude
 };
 
+struct FD {
+   double F; // % illuminated
+   double D; // age of the moon
+};
+
 struct αδ {
    double α; // right ascension, hrs
    double δ; // declination, degrees
@@ -71,6 +76,9 @@ struct αδ ə54(double jd, int planet);
 
 // Calculating the Moon's position
 struct αδ ə65(double jd);
+
+// The phases of the Moon
+struct FD ə67(double jd);
 
 #ifdef  __cplusplus
 }

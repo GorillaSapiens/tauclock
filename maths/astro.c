@@ -388,6 +388,71 @@ struct αδ ə65(double jd) {
    return ə27(jd, λ_moon, β_moon);
 }
 
+// The phases of the Moon
+struct FD ə67(double jd) {
+   // much of this copied from ə65
+
+   static const double epoch = 2455196.5;
+   static const double εg_sun = 279.557208;
+   static const double ϖg_sun = 283.112438;
+   static const double e_sun  = 0.016705;
+
+   double D = jd - epoch;
+
+   double N_sun = (360.0 * D / 365.242191);
+   ZRANGE(N_sun, 360.0);
+   double M_sun = N_sun + εg_sun - ϖg_sun;
+   ZRANGE(M_sun, 360.0);
+   double Ec_sun = (360.0 / M_PI) * e_sun * sin_deg(M_sun);
+   double λ_sun = N_sun + Ec_sun + εg_sun;
+   ZRANGE(λ_sun, 360.0);
+
+   static const double l0 = 91.929336;
+   static const double P0 = 130.143076;
+   static const double N0 = 291.682547;
+   static const double i = 5.145396;
+
+   double l = 13.1763966 * D + l0;
+   ZRANGE(l, 360.0);
+
+   double M_moon = l - 0.1114041 * D - P0;
+   ZRANGE(M_moon, 360.0);
+
+   double N = N0 - 0.0529539 * D;
+   ZRANGE(N, 360.0);
+
+   double C = l - λ_sun;
+   double Ev = 1.2739 * sin_deg(2.0 * C - M_moon);
+   double Ae = 0.1858 * sin_deg(M_sun);
+   double A3 = 0.37 * sin_deg(M_sun);
+
+   double Mp_moon = M_moon + Ev - Ae - A3;
+   double Ec = 6.2886 * sin_deg(Mp_moon);
+   double A4 = 0.214 * sin_deg(2.0 * Mp_moon);
+   double lp = l + Ev + Ec - Ae + A4;
+
+   double V = 0.6583 * sin_deg(2.0 * (lp - λ_sun));
+   double lpp = lp + V;
+
+   double Np = N - 0.16 * sin_deg(M_sun);
+   double λ_moon = atan2_deg(
+                        sin_deg(lpp - Np) * cos_deg(i),
+                        cos_deg(lpp - Np)
+                     ) + Np;
+   double β_moon = asin_deg(sin_deg(lpp-Np)*sin_deg(i));
+
+   // NB, this new D is **NOT** the D from above!
+   struct FD FD;
+
+printf("%f %f\n", lpp, λ_sun);
+   FD.D = lpp - λ_sun;
+   ZRANGE(FD.D, 360.0);
+
+   FD.F = 0.5 * (1 - cos_deg(FD.D));
+
+   return FD;
+}
+
 #ifdef TEST
 
 #include <stdio.h>
@@ -529,6 +594,15 @@ int old_main(int argc, char **argv) {
       struct αδ αδ = ə65(2452883.50000);
       assert(close(αδ.α, 14.2166667, 0.02));
       assert(close(αδ.δ, -11.52722222, 0.02));
+      printf("pass\n");
+   }
+
+   // struct FD ə67(double jd)
+   {
+      printf("test ə67\n");
+      struct FD FD = ə67(2452883.5);
+      assert(close(FD.D, 56.622971, 0.02));
+      assert(close(FD.F, 0.225, 0.02));
       printf("pass\n");
    }
 }

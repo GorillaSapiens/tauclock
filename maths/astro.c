@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "trig1.h"
 #include "astro.h"
@@ -321,16 +322,12 @@ struct αδ ə54(double jd, int planet) {
          (R * sin_deg(lp - L)) / 
          (rp - R * cos_deg(lp - L))) + lp;
    }
-printf("λ=%f\n", λ);
 
    double β = atan_deg(
                (rp * tan_deg(ψ) * sin_deg(λ - lp)) /
                (R * sin_deg(lp - L)));
 
-printf("β=%f\n", β);
-
    struct αδ αδ = ə27(jd, λ, β);
-printf("α=%f δ=%f\n", αδ.α, αδ.δ);
    return αδ;
 }
 
@@ -451,6 +448,11 @@ int old_main(int argc, char **argv) {
    // struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ)
    {
       printf("test ə25\n");
+      struct Aa Aa = ə25(2451621.5,
+                         (struct φλ){52.0, 0.0},
+                         (struct αδ){5.862222 , 23.219444});
+      assert(close(Aa.A, 283.271027, 0.01));
+      assert(close(Aa.a, 19.334345, 0.01));
       printf("pass\n");
    }
 

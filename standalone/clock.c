@@ -2047,50 +2047,60 @@ double do_sun_bands(Canvas *canvas,
 /// @param where_angle The clock angle at which to draw the moon
 /// @return void
 void
-do_moon_draw(Canvas * canvas, double up_angle, double jd, int is_up) {
+do_moon_draw(Canvas * canvas, double jd, int is_up) {
    struct FD FD = ə67(jd);
 
-   double where_angle = FD.D + up_angle;
-
-   // this is, quite tedious.  here we go...
+   // WHERE to draw it.
+   double where_angle = FD.D - 90.0;
    int cx, cy;
-
    cx = canvas->w / 2 +
       (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
    cy = canvas->h / 2 +
       (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
 
+   // a little circle (interior)
+   // with a chunk cut out of it.
+
+   // the chunk is a circle, centered to the right or to the left.
    unsigned int interior_color;
    unsigned int chunk_color;
-   int cxm;
-   if (FD.F < 90.0) {
+
+   // from wolfram alpha
+   // a circle passing through points (0,a), (0,-a), and (b,0)
+   double b;
+
+   if (FD.D < 90.0) {
+      interior_color = COLOR_SILVER;
+      chunk_color = COLOR_BLACK;
+      // b = +a at 0 degrees, and 0 at 90 degrees
+      b = (90.0 - FD.D) / 90.0;
+   }
+   else if (FD.D < 180.0) {
       interior_color = COLOR_BLACK;
       chunk_color = COLOR_SILVER;
-      if (FD.D < 180.0) {
-         cxm = 1;
-      }
-      else {
-         cxm = -1;
-      }
+      // b = 0 at 90 degrees and -a at 180 degrees
+      b = -(FD.D - 90.0) / 90.0;
+   }
+   else if (FD.D < 270.0) {
+      interior_color = COLOR_BLACK;
+      chunk_color = COLOR_SILVER;
+      // b = +a at 180 degrees and 0 at 270 degrees
+      b = (270.0 - FD.D) / 90.0;
    }
    else {
       interior_color = COLOR_SILVER;
       chunk_color = COLOR_BLACK;
-      if (FD.D < 180.0) {
-         cxm = -1;
-      }
-      else {
-         cxm = 1;
-      }
+      // b = 0 at 270 degrees and -a at 360 degrees
+      b = -(FD.D - 270.0) / 90.0;
    }
 
-   // from wolfram alpha
-   // a circle passing through points (0,a), (0,-a), and (b,0)
-   int b = abs((int)(FD.F - 90)) * SCALE(40) / 90;
-   if (b == 0) {
-      b++;
+   // avoid possible division by zero
+   if (b == 0.0) {
+      b = 1.0;
    }
-   int chunk_x = (b * b - SCALE(40) * SCALE(40)) / (2 * b);
+   b *= (double) SCALE(40);
+
+   int chunk_x = (b * b - (double)SCALE(40) * (double)SCALE(40)) / (2.0 * b);
    int chunk_r = abs(chunk_x - b);
 
    // this won't make sense, because it's derived from earlier code...
@@ -2098,10 +2108,8 @@ do_moon_draw(Canvas * canvas, double up_angle, double jd, int is_up) {
    for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
       for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
          double d_interior = sqrt(dx * dx + dy * dy);
-         double d_chunk = sqrt((dx - chunk_x * cxm) * (dx - chunk_x * cxm) +
-               dy * dy);
-
          if (d_interior <= SCALE(40.0)) {
+            double d_chunk = sqrt((dx - chunk_x) * (dx - chunk_x) + dy * dy);
             if (d_chunk < chunk_r) {
                poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
             }
@@ -2233,7 +2241,7 @@ void do_planet_bands(Canvas *canvas,
       max = -1;
 
       if (p == 0) {
-         do_moon_draw(canvas, up_angle, jd, a[12*60] > HORIZON);
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON);
       }
    }
 
@@ -2535,10 +2543,8 @@ Canvas *do_all(double lat, double lon,
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
       double up_angle = do_sun_bands(canvas, jd, φλ, lightdark);
-      do_planet_bands(canvas, up_angle, jd, φλ);
-
-      // our rotating "now" hand
       do_now_hand(canvas, up_angle, jd);
+      do_planet_bands(canvas, up_angle, jd, φλ);
    }
    else {
    }

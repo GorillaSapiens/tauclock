@@ -1108,14 +1108,11 @@ int do_when_is_it(double lat, double lon, int category, int type, int delayMinut
    // observer's location
    struct φλ φλ = { lat, lon };
 
+   type -= 2; // why?  i have no idea.  tech debt i guess...
+
    time_t now = time(NULL);
    now /= 60;
    now *= 60;
-
-   // no point in looking for things in the past...
-   if (delayMinutes < 0) {
-      now += delayMinutes * -60;
-   }
 
    // we must conform to...
    //
@@ -1171,7 +1168,7 @@ int do_when_is_it(double lat, double lon, int category, int type, int delayMinut
    }
 
    if (type == 1) {
-      return now + 60 * max;
+      return 60 * max + delayMinutes * 60;
    }
 
    switch (category) {
@@ -1194,12 +1191,12 @@ int do_when_is_it(double lat, double lon, int category, int type, int delayMinut
    for (int i = 1; i < 24 * 60; i++) {
       if (type == 0) {
          if (a[i - 1] < HORIZON && a[i] >= HORIZON) {
-            return now + 60 * i;
+            return 60 * i + delayMinutes * 60;
          }
       }
       else if (type == 2) {
          if (a[i - 1] >= HORIZON && a[i] < HORIZON) {
-            return now + 60 * i;
+            return 60 * i + delayMinutes * 60;
          }
       }
    }

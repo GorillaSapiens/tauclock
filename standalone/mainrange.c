@@ -22,6 +22,8 @@
 #include "draw.h"
 #include "clock.h"
 
+int unused; // garbage, quell warning
+
 /// @brief A useless function required by the C runtime library.
 int main(int argc, char *argv[]) {
    if (argc < 3) {
@@ -94,7 +96,7 @@ int main(int argc, char *argv[]) {
 
       char buf[1024];
       sprintf(buf, "convert -size 1024x1024 -depth 8 RGBA:out.bin out_%06d.png", i);
-      system(buf);
+      unused = system(buf);
    }
 
    printf("raw output written to out.bin\n");

@@ -1790,8 +1790,6 @@ void do_hour_ticks(Canvas * canvas, time_t now, int r, double now_angle) {
          360.0 *
          (double)(ticktime - (now - (12 * 60 * 60))) /
          (double)(24 * 60 * 60);
-printf("%d:%d:%d\n", local.tm_hour, local.tm_min, local.tm_sec);
-printf("%f\n", angle);
 
       double xa, ya;
       double xc, yc;
@@ -1812,6 +1810,46 @@ printf("%f\n", angle);
 
       ticktime += 60*60;
    }
+}
+
+void duration_text(Canvas *canvas,
+                   const char *text,
+                   double degrees,
+                   unsigned int color,
+                   int y) {
+   char buf[128];
+
+   degrees /= 15.0;
+
+   int h = degrees;
+   int m = (degrees - (double) (h)) * 60.0;
+
+   if (h < 1.0) {
+      sprintf(buf, "%s\n%dm", text, m);
+   }
+   else if (m == 0) {
+      sprintf(buf, "%s\n%dh", text, h);
+   }
+   else {
+      sprintf(buf, "%s\n%dh%dm", text, h, m);
+   }
+
+   text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, y,
+      color, COLOR_NONE, buf, 1, 3);
+}
+
+void duration_top_text(Canvas *canvas,
+                       const char *text,
+                       double degrees,
+                       unsigned int color) {
+   duration_text(canvas, text, degrees, color, SIZE / 4);
+}
+
+void duration_bottom_text(Canvas *canvas,
+                          const char *text,
+                          double degrees,
+                          unsigned int color) {
+   duration_text(canvas, text, degrees, color, SIZE * 3 / 4);
 }
 
 double do_sun_bands(Canvas *canvas,
@@ -1864,7 +1902,6 @@ double do_sun_bands(Canvas *canvas,
          max = i;
       }
    }
-   printf("!!! MAX %f %d %f\n", jd, max, jd - .5 + (double) max / (24.0*60.0));
 
    double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0));
    up_angle = 270.0 - up_angle;
@@ -1872,8 +1909,6 @@ double do_sun_bands(Canvas *canvas,
 
    double now_angle = up_angle - (12*60-max)/(24.0 * 60.0);
    ZRANGE(now_angle, 360.0);
-
-printf ("#### %f %f\n", up_angle, now_angle);
 
    unsigned int color;
    unsigned int oldcolor;
@@ -2031,6 +2066,57 @@ printf ("#### %f %f\n", up_angle, now_angle);
    }
 
    do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
+
+   if (lightdark == 0) {
+      bool skiplower = false;
+
+      // what to put at the top?
+      if (sunup > 0.0) {
+         duration_top_text(canvas, "sun up", sunup, COLOR_BLACK);
+      }
+      else if (civil > 0.0) {
+         duration_top_text(canvas, "civil", civil, COLOR_BLACK);
+      }
+      else if (nautical > 0.0) {
+         duration_top_text(canvas, "nautical", nautical, COLOR_WHITE);
+      }
+      else if (astronomical > 0.0) {
+         duration_top_text(canvas, "astronomical", astronomical, COLOR_WHITE);
+      }
+      else if (night > 0.0) {
+         duration_top_text(canvas, "night", night, COLOR_WHITE);
+         skiplower = true;
+      }
+
+      // what to put at the bottom
+      if (!skiplower) {
+         if (night > 0.0) {
+            duration_bottom_text(canvas, "night", night, COLOR_WHITE);
+         }
+         else if (astronomical > 0.0) {
+            duration_bottom_text(canvas, "astronomical", astronomical, COLOR_WHITE);
+         }
+         else if (nautical > 0.0) {
+            duration_bottom_text(canvas, "nautical", nautical, COLOR_WHITE);
+         }
+         else if (civil > 0.0) {
+            duration_bottom_text(canvas, "civil", civil, COLOR_BLACK);
+         }
+         else if (sunup > 0.0) {
+            // what madness is this ?!?!?
+            duration_bottom_text(canvas, "MADNESS", sunup, COLOR_BLACK);
+         }
+      }
+   }
+   else {
+      // what to put at the top?
+      if (light > 0.0) {
+         duration_top_text(canvas, "light", light, COLOR_BLACK);
+      }
+      if (dark > 0.0) {
+         duration_bottom_text(canvas, "dark", dark, COLOR_WHITE);
+      }
+   }
 
    return now_angle;
 }
@@ -2531,7 +2617,6 @@ Canvas *do_all(double lat, double lon,
    now *= 60;
 
    jd = time_t2julian(now);
-printf("== AT THE TONE === %ld %f\n", now, jd);
 
    //// drawing begins here
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);

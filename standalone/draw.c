@@ -125,7 +125,12 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
                canvas->data[y * canvas->w + x] = LOCK(current);
             }
             else {
-               canvas->data[y * canvas->w + x] = color;
+               if (color != COLOR_XOR) {
+                  canvas->data[y * canvas->w + x] = color;
+               }
+               else {
+                  canvas->data[y * canvas->w + x] = current ^ 0x00FFFFFF;
+               }
             }
          }
       }

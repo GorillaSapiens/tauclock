@@ -191,67 +191,6 @@ do_xy_time(Canvas * canvas, double now, double jd, int x, int y,
          fg, bg, time, 1, 3);
 }
 
-/// @brief Draw ticks every hour around the outside edge
-///
-/// Ticks are drawn using xor logic, so they should always be visible
-///
-/// @param canvas The Canvas to draw on
-/// @param JD the Julian Date
-/// @param x The X coordinate of the center of the clock
-/// @param y The Y coordinate of the center of the clock
-/// @param r The radius of the clock
-/// @param up The angle used as "up"
-/// @return void
-void do_hour_ticks(Canvas * canvas, double JD, int x, int y, int r, double up) {
-   double up_angle = frac(up) * 360.0;
-
-   Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
-
-#define HALFHOUR (1.0 / 24.0 / 2.0)
-
-   for (int i = 0; i < 24; i++) {
-      double when = JD - 0.5 + HALFHOUR + (double)i / 24.0;
-      struct ln_zonedate zonedate;
-      my_get_local_date(when, &zonedate);
-
-      // account for some rounding errors
-      if (zonedate.minutes % 10 == 9) {
-         zonedate.minutes++;
-         if (zonedate.minutes == 60) {
-            zonedate.minutes = 0;
-            zonedate.hours++;
-            if (zonedate.hours == 24) {
-               zonedate.hours = 0;
-            }
-         }
-      }
-
-      int hour = zonedate.hours;
-
-      double mark = when - (float)zonedate.minutes / (24.0 * 60.0);
-
-      double xa, ya;
-      double xc, yc;
-
-      double angle = frac(mark) * 360.0;
-
-      xa = x + (r - SCALE(8)) * cos_deg(angle - up_angle + 270.0);
-      ya = y + (r - SCALE(8)) * sin_deg(angle - up_angle + 270.0);
-      xc = x + r * cos_deg(angle - up_angle + 270.0);
-      yc = y + r * sin_deg(angle - up_angle + 270.0);
-      line_canvas(shadow, (int)xa, (int)ya, (int)xc, (int)yc, LOCK(COLOR_BLACK));
-
-      xa = x + (r - SCALE(30)) * cos_deg(angle - up_angle + 270.0);
-      ya = y + (r - SCALE(30)) * sin_deg(angle - up_angle + 270.0);
-      char buf[32];
-      sprintf(buf, "%02d", hour);
-      text_canvas(shadow, FONT_BOLD_SMALL, (int)xa, (int)ya,
-            LOCK(COLOR_BLACK), COLOR_NONE, buf, 1, 3);
-   }
-   xor_canvas(shadow, canvas);
-
-   delete_canvas(shadow);
-}
 
 /// @brief Draw the perimeter planet band
 ///
@@ -1825,7 +1764,58 @@ static void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
+/// @brief Draw ticks every hour around the outside edge
+///
+/// Ticks are drawn using xor logic, so they should always be visible
+///
+/// @param canvas The Canvas to draw on
+/// @param JD the Julian Date
+/// @param r The radius of the clock
+/// @param up_angle The angle used as "up"
+/// @return void
+void do_hour_ticks(Canvas * canvas, time_t now, int r, double up_angle) {
+   int x = SIZE / 2;
+   int y = SIZE / 2;
+
+   time_t ticktime = now - 12 * 60 * 60;
+   struct tm local = *localtime(&ticktime);
+   time_t surplus = local.tm_min * 60 +  local.tm_sec;
+   ticktime += ((60 * 60) - surplus);
+   ticktime++;
+
+   for (int i = 0; i < 24; i++) {
+      local = *localtime(&ticktime);
+
+      double angle = up_angle - 180.0 +
+         360.0 *
+         (double)(ticktime - (now - (12 * 60 * 60))) /
+         (double)(24 * 60 * 60);
+printf("%d:%d:%d\n", local.tm_hour, local.tm_min, local.tm_sec);
+printf("%f\n", angle);
+
+      double xa, ya;
+      double xc, yc;
+      xa = x + (r - SCALE(8)) * cos_deg(angle);
+      ya = y + (r - SCALE(8)) * sin_deg(angle);
+      xc = x + r * cos_deg(angle);
+      yc = y + r * sin_deg(angle);
+
+      line_canvas(canvas, (int)xa, (int)ya, (int)xc, (int)yc, COLOR_RED);
+
+      xa = x + (r - SCALE(30)) * cos_deg(angle);
+      ya = y + (r - SCALE(30)) * sin_deg(angle);
+      char buf[32];
+      sprintf(buf, "%02d", local.tm_hour);
+
+      text_canvas(canvas, FONT_BOLD_SMALL, (int)xa, (int)ya,
+            COLOR_XOR, COLOR_NONE, buf, 1, 3);
+
+      ticktime += 60*60;
+   }
+}
+
 double do_sun_bands(Canvas *canvas,
+                    time_t now,
                     double jd,
                     struct φλ φλ,
                     int lightdark) {
@@ -1874,10 +1864,16 @@ double do_sun_bands(Canvas *canvas,
          max = i;
       }
    }
+   printf("!!! MAX %f %d %f\n", jd, max, jd - .5 + (double) max / (24.0*60.0));
 
    double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0));
    up_angle = 270.0 - up_angle;
    ZRANGE(up_angle, 360.0);
+
+   double now_angle = up_angle - (12*60-max)/(24.0 * 60.0);
+   ZRANGE(now_angle, 360.0);
+
+printf ("#### %f %f\n", up_angle, now_angle);
 
    unsigned int color;
    unsigned int oldcolor;
@@ -2034,7 +2030,9 @@ double do_sun_bands(Canvas *canvas,
          break;
    }
 
-   return up_angle;
+   //do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), up_angle);
+
+   return now_angle;
 }
 
 /// @brief Draw the moon
@@ -2125,7 +2123,7 @@ do_moon_draw(Canvas * canvas, double jd, int is_up) {
 }
 
 void do_planet_bands(Canvas *canvas,
-                     double up_angle,
+                     double now_angle,
                      double jd,
                      struct φλ φλ) {
 
@@ -2176,7 +2174,7 @@ void do_planet_bands(Canvas *canvas,
       }
       unsigned int oldcolor = color;
 
-      double start_angle = up_angle - 180.0;
+      double start_angle = now_angle - 180.0;
 
       for (int i = 1; i < 24 * 60; i++) {
          if (a[i-1] < HORIZON && a[i] >= HORIZON) {
@@ -2188,7 +2186,7 @@ void do_planet_bands(Canvas *canvas,
 
          if (color != oldcolor) {
             double stop_angle =
-               up_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
+               now_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
 
             arc_canvas(canvas, SIZE / 2, SIZE / 2,
                radius, SCALE(5), oldcolor, start_angle, stop_angle);
@@ -2218,14 +2216,14 @@ void do_planet_bands(Canvas *canvas,
          }
       }
 
-      double stop_angle = up_angle + 180.0;
+      double stop_angle = now_angle + 180.0;
 
       arc_canvas(canvas, SIZE / 2, SIZE / 2,
          radius, SCALE(5), oldcolor, start_angle, stop_angle);
 
       if (a[max] > HORIZON) {
          double transit_angle =
-            up_angle - 180.0 + 360.0 * ((double) max / (24.0 * 60.0));
+            now_angle - 180.0 + 360.0 * ((double) max / (24.0 * 60.0));
 
          double x1, y1, x2, y2;
 
@@ -2466,27 +2464,23 @@ void do_provider_info(Canvas * canvas, const char *provider) {
 /// The now hand is drawn using xor logic
 ///
 /// @param canvas The Canvas to draw on
-/// @param up The Julian Date used as "up"
-/// @param now The current Julian Date
+/// @param now_angle The angle which is now
 /// @return void
-void do_now_hand(Canvas * canvas, double up_angle, double now) {
-
-   //Canvas *shadow = new_canvas(canvas->w, canvas->h, COLOR_NONE);
-
+void do_now_hand(Canvas * canvas, double now_angle) {
    double xc =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-            SCALE(128)) * cos_deg(up_angle);
+            SCALE(128)) * cos_deg(now_angle);
    double yc =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-            SCALE(128)) * sin_deg(up_angle);
+            SCALE(128)) * sin_deg(now_angle);
    double xc2 =
       canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-            SCALE(128)) * cos_deg(up_angle);
+            SCALE(128)) * cos_deg(now_angle);
    double yc2 =
       canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-            SCALE(128)) * sin_deg(up_angle);
+            SCALE(128)) * sin_deg(now_angle);
 
-   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_WHITE, 3);
+   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
 }
 
 
@@ -2537,74 +2531,18 @@ Canvas *do_all(double lat, double lon,
    now *= 60;
 
    jd = time_t2julian(now);
+printf("== AT THE TONE === %ld %f\n", now, jd);
 
    //// drawing begins here
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
-      double up_angle = do_sun_bands(canvas, jd, φλ, lightdark);
-      do_now_hand(canvas, up_angle, jd);
-      do_planet_bands(canvas, up_angle, jd, φλ);
+      double now_angle = do_sun_bands(canvas, now, jd, φλ, lightdark);
+      do_now_hand(canvas, now_angle);
+      do_planet_bands(canvas, now_angle, jd, φλ);
    }
    else {
    }
-
-
-#if 0
-
-   // get the transit time
-   up = to_the_minute(events_transit(context, JD)); // rounding added to reduce jitter
-
-   // lunar disk, phase and bright limb
-   float lunar_phase = ln_get_lunar_phase(JD);  // 0 to 180
-   float lunar_bright_limb = ln_get_lunar_bright_limb(JD);      // 0 to 360
-
-   double lunar_new = get_lunar_new(JD);
-
-
-
-   int goodloc = 1;
-   if (lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0) {
-      goodloc = 0;
-
-      time_t present;
-      ln_get_timet_from_julian(JD, &present);
-      struct tm *tm;
-      tm = localtime(&present);
-      int local_hour = tm->tm_hour;
-      tm = gmtime(&present);
-      int gmt_hour = tm->tm_hour;
-
-      up += ((24 + gmt_hour - local_hour) % 24) / 24.0;
-   }
-
-   // colored bands for planets
-   if (goodloc) {
-      do_planet_bands(context, canvas, JD, up);
-   }
-
-   // colored bands for the sun
-   if (goodloc) {
-      do_sun_bands(context, canvas, up, JD, lightdark);
-   }
-
-   // draw accumulated times
-   replay_accum_memory(context, canvas);
-
-   // redraw some text, to make things pretty
-   replayTimeDrawnMemory(context, canvas);
-
-
-   // draw the moon
-   double moon_angle;
-   if (goodloc) {
-      moon_angle = get_moon_angle(JD, lunar_new);
-      do_moon_draw(context, canvas, JD, lunar_phase, lunar_bright_limb, moon_angle);
-   }
-
-   // hour ticks
-   do_hour_ticks(canvas, JD, mid, mid, mid / 2 + SCALE(128), up);
-#endif
 
    // information in the center
    do_center(canvas, now, φλ);

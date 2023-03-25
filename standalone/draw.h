@@ -46,6 +46,7 @@
 #include "fonts/icons_128x128.h"
 
 #define COLOR_NONE       0x00000000
+#define COLOR_XOR        0x00000001
 
 #ifdef STANDALONE
 #define RGB(r,g,b) (0xFF000000 | ((b) << 16) | ((g) << 8) | (r))

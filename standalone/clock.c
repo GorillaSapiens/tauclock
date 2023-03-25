@@ -167,7 +167,7 @@ static void set_italic_med(int width) {
 /// Ticks are drawn using xor logic, so they should always be visible
 ///
 /// @param canvas The Canvas to draw on
-/// @param JD the Julian Date
+/// @param now The current time_t
 /// @param r The radius of the clock
 /// @param now_angle The angle used as "now"
 /// @return void
@@ -587,12 +587,9 @@ double do_sun_bands(Canvas *canvas,
 
 /// @brief Draw the moon
 ///
-/// @param context Pointer to computation context
 /// @param canvas The Canvas to draw on
-/// @param now The current Julian Date
-/// @param lunar_phase The current lunar_phase as returned by libnova
-/// @param lunar_bright_limb The current lunar_bright_limb as returned by libnova
-/// @param where_angle The clock angle at which to draw the moon
+/// @param jd The current Julian Date
+/// @param is_up Whether or not the moon is currently up
 /// @return void
 void
 do_moon_draw(Canvas * canvas, double jd, int is_up) {
@@ -806,7 +803,8 @@ void do_planet_bands(Canvas *canvas,
 /// @brief Draw the location in the center of the Canvas
 ///
 /// @param canvas The Canvas to draw on
-/// @param observer The lat/long of the observer position
+/// @param now The current time_t
+/// @param φλ The lat/long of the observer position
 /// @return void
 void do_center(Canvas * canvas, time_t now, struct φλ φλ) {
 
@@ -895,6 +893,7 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ) {
 /// Timezone in lower left, Julian Date in lower right
 ///
 /// @param canvas The Canvas to draw on
+/// @param now The current time_t
 /// @param JD The current Julian Date
 /// @param offset The offset passed into do_all
 /// @param tzProvider Name of the timezone provider

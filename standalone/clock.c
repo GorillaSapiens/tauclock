@@ -1852,6 +1852,42 @@ void duration_bottom_text(Canvas *canvas,
    duration_text(canvas, text, degrees, color, SIZE * 3 / 4);
 }
 
+void edgetime(Canvas *canvas,
+              time_t now,
+              int index,
+              double now_angle,
+              unsigned int color) {
+
+   time_t when = now - 12 * 60 * 60 + index * 60;
+   struct tm tm = *localtime(&when);
+
+   char buf[128];
+   sprintf(buf, "%02d:%02d", tm.tm_hour, tm.tm_min);
+
+   int cx = SIZE / 2;
+   int cy = SIZE / 2;
+
+   double theta = now_angle - 180.0 + (double) index * 360.0 / (24.0*60.0);
+   ZRANGE(theta, 360.0);
+
+   int r;
+
+   if (theta > 270.0 - 45.0 && theta < 270.0 + 45.0) {
+      r = (SIZE/2) * 5 / 8;
+   }
+   else {
+      r = (SIZE/2) * 9 / 16;
+   }
+
+   int x = cx + r * cos_deg(theta);
+   int y = cy + r * sin_deg(theta);
+
+   text_canvas(canvas,
+               index < (12 * 60) ? FONT_ITALIC_MED : FONT_BOLD_MED,
+               x, y,
+               color, COLOR_NONE, buf, 1, 3);
+}
+
 double do_sun_bands(Canvas *canvas,
                     time_t now,
                     double jd,
@@ -2117,6 +2153,35 @@ double do_sun_bands(Canvas *canvas,
          duration_bottom_text(canvas, "dark", dark, COLOR_WHITE);
       }
    }
+
+   for (int i = 1; i < 24*60; i++) {
+      if (a[i-1] < HORIZON_SUN && a[i] >= HORIZON_SUN) {
+         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+      }
+      if (a[i-1] >= HORIZON_SUN && a[i] < HORIZON_SUN) {
+         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+      }
+      if (a[i-1] < HORIZON_CIVIL && a[i] >= HORIZON_CIVIL) {
+         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+      }
+      if (a[i-1] >= HORIZON_CIVIL && a[i] < HORIZON_CIVIL) {
+         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+      }
+      if (a[i-1] < HORIZON_NAUTICAL && a[i] >= HORIZON_NAUTICAL) {
+         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+      }
+      if (a[i-1] >= HORIZON_NAUTICAL && a[i] < HORIZON_NAUTICAL) {
+         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+      }
+      if (a[i-1] < HORIZON_ASTRONOMICAL && a[i] >= HORIZON_ASTRONOMICAL) {
+         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+      }
+      if (a[i-1] >= HORIZON_ASTRONOMICAL && a[i] < HORIZON_ASTRONOMICAL) {
+         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+      }
+   }
+
+   edgetime(canvas, now, max, now_angle, COLOR_BLACK);
 
    return now_angle;
 }

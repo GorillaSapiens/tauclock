@@ -574,6 +574,11 @@ arc_canvas_helper(Canvas * canvas,
 
    // assumes we're already broken into pieces of 8
 
+   if (begin_deg == end_deg) {
+      // broken edge case, and really, who cares?
+      return;
+   }
+
    dprintf("!!! begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
       begin_deg, end_deg, strokecolor, radius, rotated);
 

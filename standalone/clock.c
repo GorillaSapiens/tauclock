@@ -330,7 +330,8 @@ double do_sun_bands(Canvas *canvas,
    double a[24*60];
    int max = -1;
    for (int i = 0; i < 24 * 60; i++) {
-      struct Aa Aa = ə25(jd - 0.5 + (double) i / (24.0* 60.0), φλ, ə46(jd));
+      double when = jd - 0.5 + (double) i / (24.0* 60.0);
+      struct Aa Aa = ə25(when, φλ, ə46(when));
       a[i] = Aa.a;
       if (max == -1 || Aa.a > a[max]) {
          max = i;
@@ -1104,42 +1105,108 @@ Canvas *do_all(double lat, double lon,
    return canvas;
 }
 
-#if 0
 int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes) {
-   static Context *context = NULL;
-   if (context == NULL) {
-      context = (Context *)calloc(1, sizeof(Context));
+   // observer's location
+   struct φλ φλ = { lat, lon };
+
+   time_t now = time(NULL);
+   now /= 60;
+   now *= 60;
+
+   // no point in looking for things in the past...
+   if (delayMinutes < 0) {
+      now += delayMinutes * -60;
    }
 
-   struct ln_lnlat_posn observer;
-   observer.lat = lat;
-   observer.lng = lon;
-   double JD = ln_get_julian_from_sys();
-   double oJD = JD;
+   // we must conform to...
+   //
+   // val categorynames = arrayOf(
+   //     "SOLAR", "CIVIL", "NAUTICAL", "ASTRONOMICAL",
+   //     "LUNAR",                   // moon and planets from here on
+   //     "MERCURY", "VENUS", "MARS", "JUPITER", "SATURN",
+   //     "ARIES")
+   // val typenames = arrayOf("RISE","TRANSIT","SET")
 
-   initialize_all(context);
+   struct Aa Aa;
+   double a[24*60];
 
-   for (int halfdays = 0; halfdays < 14; halfdays++) {
-      events_populate(context, JD, &observer);
-      events_sort(context);
-      events_uniq(context);
+   int max = -1;
+   double HORIZON = 0.0;
 
-      for (int i = 0; i < event_spot; i++) {
-         if (events[i].category == category && events[i].type == type) {
-            double event_jd = events[i].jd + ((double)delayMinutes * ONE_MINUTE_JD);
-            if (event_jd > oJD) {
-               // in the future
-               return (int) ((event_jd - oJD) * 24.0 * 60.0 * 60.0);
-            }
-         }
+   for (int i = 0; i < 24 * 60; i++) {
+      time_t when = now + i * 60;
+      double jd = time_t2julian(when);
+      switch (category) {
+         case 0:
+         case 1:
+         case 2:
+         case 3:
+            // solar
+            Aa = ə25(jd, φλ, ə46(jd));
+            break;
+         case 4:
+            // lunar
+            Aa = ə25(jd, φλ, ə65(jd));
+            break;
+         case 5:
+         case 6:
+            // mercury, venus (inner planets)
+            Aa = ə25(jd, φλ, ə54(jd, category - 5));
+            break;
+         case 7:
+         case 8:
+         case 9:
+            // mars, jupiter, saturn (outer planets)
+            Aa = ə25(jd, φλ, ə54(jd, category - 5));
+            break;
+         case 10:
+            // aries
+            Aa = ə25(jd, φλ, (struct αδ) { 0.0, 0.0 });
+            break;
       }
 
-      JD += 0.5;
+      a[i] = Aa.a;
+      if (max == -1 || a[i] > a[max]) {
+         max = i;
+      }
+   }
+
+   if (type == 1) {
+      return now + 60 * max;
+   }
+
+   switch (category) {
+      case 0:
+         HORIZON = -1.0;
+         break;
+      case 1:
+         HORIZON = -6.56;
+         break;
+      case 2:
+         HORIZON = -12.56;
+         break;
+      case 3:
+         HORIZON = -18.56;
+         break;
+      default:
+         HORIZON = 0.0;
+   }
+
+   for (int i = 1; i < 24 * 60; i++) {
+      if (type == 0) {
+         if (a[i - 1] < HORIZON && a[i] >= HORIZON) {
+            return now + 60 * i;
+         }
+      }
+      else if (type == 2) {
+         if (a[i - 1] >= HORIZON && a[i] < HORIZON) {
+            return now + 60 * i;
+         }
+      }
    }
 
    // hrm, not found...
    return -1;
 }
-#endif
 
 // vim: expandtab:noai:ts=3:sw=3

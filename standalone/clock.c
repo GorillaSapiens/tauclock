@@ -1771,9 +1771,9 @@ static void set_italic_med(int width) {
 /// @param canvas The Canvas to draw on
 /// @param JD the Julian Date
 /// @param r The radius of the clock
-/// @param up_angle The angle used as "up"
+/// @param now_angle The angle used as "now"
 /// @return void
-void do_hour_ticks(Canvas * canvas, time_t now, int r, double up_angle) {
+void do_hour_ticks(Canvas * canvas, time_t now, int r, double now_angle) {
    int x = SIZE / 2;
    int y = SIZE / 2;
 
@@ -1786,7 +1786,7 @@ void do_hour_ticks(Canvas * canvas, time_t now, int r, double up_angle) {
    for (int i = 0; i < 24; i++) {
       local = *localtime(&ticktime);
 
-      double angle = up_angle - 180.0 +
+      double angle = now_angle - 180.0 +
          360.0 *
          (double)(ticktime - (now - (12 * 60 * 60))) /
          (double)(24 * 60 * 60);
@@ -2030,7 +2030,7 @@ printf ("#### %f %f\n", up_angle, now_angle);
          break;
    }
 
-   //do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), up_angle);
+   do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
 
    return now_angle;
 }

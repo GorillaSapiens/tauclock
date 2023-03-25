@@ -32,7 +32,7 @@
 //#define dprintf(format, ...) printf("%s:%d " format, FILELINE, __VA_ARGS__)
 #define dprintf(format, ...)
 
-#define FNORD KNARF
+#define FNORD exit(0)
 #define sin(x) FNORD
 #define cos(x) FNORD
 #define tan(x) FNORD
@@ -125,7 +125,12 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int color) {
                canvas->data[y * canvas->w + x] = LOCK(current);
             }
             else {
-               canvas->data[y * canvas->w + x] = color;
+               if (color != COLOR_XOR) {
+                  canvas->data[y * canvas->w + x] = color;
+               }
+               else {
+                  canvas->data[y * canvas->w + x] = current ^ 0x00FFFFFF;
+               }
             }
          }
       }
@@ -568,6 +573,11 @@ arc_canvas_helper(Canvas * canvas,
       double begin_deg, double end_deg, bool rotated) {
 
    // assumes we're already broken into pieces of 8
+
+   if (begin_deg == end_deg) {
+      // broken edge case, and really, who cares?
+      return;
+   }
 
    dprintf("!!! begin_deg=%f end_deg=%f color=%08X radius=%d, spun=%d\n",
       begin_deg, end_deg, strokecolor, radius, rotated);

@@ -22,16 +22,18 @@ add_library( # Sets the name of the library.
              SHARED
 
              # Provides a relative path to your source file(s).
-        aberration.c          heliocentric_time.c  parabolic_motion.c  solar.c
-        airmass.c             hyperbolic_motion.c  parallax.c          transform.c
-        angular_separation.c  julian_day.c         pluto.c             uranus.c
-        apparent_position.c   jupiter.c            precession.c        utility.c
-        asteroid.c            lunar.c              proper_motion.c     venus.c
-        comet.c               mars.c               refraction.c        vsop87.c
-        dynamical_time.c      mercury.c            rise_set.c
-        earth.c               neptune.c            saturn.c
-        elliptic_motion.c     nutation.c           sidereal_time.c
 
+	     #aberration.c          heliocentric_time.c  parabolic_motion.c  solar.c
+	     #airmass.c             hyperbolic_motion.c  parallax.c          transform.c
+	     #angular_separation.c  julian_day.c         pluto.c             uranus.c
+	     #apparent_position.c   jupiter.c            precession.c        utility.c
+	     #asteroid.c            lunar.c              proper_motion.c     venus.c
+	     #comet.c               mars.c               refraction.c        vsop87.c
+	     #dynamical_time.c      mercury.c            rise_set.c
+	     #earth.c               neptune.c            saturn.c
+	     #elliptic_motion.c     nutation.c           sidereal_time.c
+
+	trig1.c astro.c
         clock.c draw.c globe.c trig1.c trampoline.cpp
         )
 

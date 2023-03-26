@@ -19,7 +19,7 @@ COLOR=-fdiagnostics-color=always
 
 all: fonts/.bdf calcdata calcrange html/index.html
 
-html/index.html: doxygen.conf clock.c draw.c trig1.c astro.c
+html/index.html: doxygen.conf clock.c draw.c ../maths/trig1.c ../maths/astro.c
 	doxygen doxygen.conf 1>/dev/null
 
 indent:
@@ -36,12 +36,12 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.c trig1.c draw.c clock.c trig1.c astro.c
-	gcc $(COLOR) -g -pg -Wall -DSTANDALONE $^ -lm -o calcdata
+calcdata: main.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
+	gcc $(COLOR) -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
 #gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcdata
 
-calcrange: mainrange.c trig1.c draw.c clock.c trig1.c astro.c
-	gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcrange
+calcrange: mainrange.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
+	gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE -I../maths $^ -lm -o calcrange
 
 tidy:
 	rm -f out* *~

@@ -16,26 +16,25 @@ project("sunclock1")
 # Gradle automatically packages shared libraries with your APK.
 
 add_library( # Sets the name of the library.
-             libnova
+             tauclock
 
              # Sets the library as a shared library.
              SHARED
 
              # Provides a relative path to your source file(s).
 
-	     #aberration.c          heliocentric_time.c  parabolic_motion.c  solar.c
-	     #airmass.c             hyperbolic_motion.c  parallax.c          transform.c
-	     #angular_separation.c  julian_day.c         pluto.c             uranus.c
-	     #apparent_position.c   jupiter.c            precession.c        utility.c
-	     #asteroid.c            lunar.c              proper_motion.c     venus.c
-	     #comet.c               mars.c               refraction.c        vsop87.c
-	     #dynamical_time.c      mercury.c            rise_set.c
-	     #earth.c               neptune.c            saturn.c
-	     #elliptic_motion.c     nutation.c           sidereal_time.c
-
-	trig1.c astro.c
-        clock.c draw.c globe.c trig1.c trampoline.cpp
+		../../../../../maths/trig1.c
+		../../../../../maths/astro.c
+        	../../../../../standalone/clock.c
+		../../../../../standalone/draw.c
+		globe.c
+		trampoline.cpp
         )
+
+target_include_directories(tauclock
+  PRIVATE
+  ../../../../../maths
+  ../../../../../standalone)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by
@@ -55,7 +54,7 @@ find_library( # Sets the name of the path variable.
 # build script, prebuilt third-party libraries, or system libraries.
 
 target_link_libraries( # Specifies the target library.
-                       libnova
+                       tauclock
 
                        # Links the target library to the log library
                        # included in the NDK.

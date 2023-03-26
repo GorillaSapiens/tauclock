@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         val weekdaynames = dfs.weekdays
 
         init {
-            System.loadLibrary("libnova")
+            System.loadLibrary("tauclock")
         }
     }
 

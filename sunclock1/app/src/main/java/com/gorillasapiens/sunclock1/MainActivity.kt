@@ -35,10 +35,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.iakovlev.timeshape.TimeZoneEngine
+import java.text.DateFormatSymbols
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalUnit
 import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -86,9 +86,13 @@ class MainActivity : AppCompatActivity() {
         var mEngineDone = false
         var ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469
 
+        val dfs = DateFormatSymbols.getInstance()
+        val monthnames = dfs.months
+        val weekdaynames = dfs.weekdays
+
         init {
-         System.loadLibrary("libnova")
-      }
+            System.loadLibrary("libnova")
+        }
     }
 
     private val mManualOffsetPattern: Pattern = Pattern.compile("^([0-9]+)[-/]([0-9]+)[-/]([0-9]+(\\.[0-9]*)?)$")
@@ -223,7 +227,7 @@ class MainActivity : AppCompatActivity() {
                     offset,
                     min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                     displayProvider, mTimeZoneProvider, tzname,
-                    ((mLight shl 8) or mDark)
+                    ((mLight shl 8) or mDark), monthnames, weekdaynames
                 )
                 mSunClockDrawable?.setThing(something)
                 mImageView?.invalidate()
@@ -925,8 +929,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private external fun doAll(
-        lat:Double, lon:Double, offset:Double,
-        width:Int, provider:String, tzprovider:String, tz:String,
-        lightdark:Int) : IntArray
+        lat: Double, lon: Double, offset: Double,
+        width: Int, provider: String, tzprovider: String, tz: String,
+        lightdark: Int,
+        monthnames: Array<String>,
+        weekdaynames: Array<String>
+    ) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
 }

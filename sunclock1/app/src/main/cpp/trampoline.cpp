@@ -29,16 +29,46 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
                      jstring provider,
                      jstring tzprovider,
                      jstring tz,
-                     jint lightdark) {
-    jboolean garbage = false;
-    const char *ccProvider = env->GetStringUTFChars(provider, &garbage);
-    garbage = false;
-    const char *ccTz = env->GetStringUTFChars(tz, &garbage);
-    garbage = false;
-    const char *ccTzProvider = env->GetStringUTFChars(tzprovider, &garbage);
+                     jint lightdark,
+                     jobjectArray monthnames,
+                     jobjectArray weekdaynames) {
+    const char *ccProvider = env->GetStringUTFChars(provider, nullptr);
+    const char *ccTz = env->GetStringUTFChars(tz, nullptr);
+    const char *ccTzProvider = env->GetStringUTFChars(tzprovider, nullptr);
+
+    const char *monam[12];
+    //jsize mlen[12];
+    jint nbrMElements = env->GetArrayLength(monthnames);
+    for (int i = 0; i < nbrMElements && i < 12; i++) {
+       jstring elem = (jstring) env->GetObjectArrayElement(monthnames, i);
+       //mlen[i] = env->GetStringLength(elem);
+       monam[i] = env->GetStringUTFChars(elem, nullptr);
+    }
+
+    const char *wenam[7];
+    //jsize wlen[7];
+    jint nbrWElements = env->GetArrayLength(weekdaynames);
+    for (int i = 0; (i+1) < nbrWElements && i < 7; i++) {
+       jstring elem = (jstring) env->GetObjectArrayElement(weekdaynames, i + 1);
+       //wlen[i] = env->GetStringLength(elem);
+       wenam[i] = env->GetStringUTFChars(elem, nullptr);
+    }
+
     Canvas *canvas = do_all(lat, lon, offset,
                             width, ccProvider, ccTzProvider, ccTz,
-                            lightdark);
+                            lightdark, monam, wenam);
+
+
+    for (int i = 0; i < nbrMElements && i < 12; i++) {
+       jstring elem = (jstring) env->GetObjectArrayElement(monthnames, i);
+       env->ReleaseStringUTFChars(elem, monam[i]);
+    }
+
+   for (int i = 0; (i + 1) < nbrWElements && i < 7; i++) {
+      jstring elem = (jstring) env->GetObjectArrayElement(weekdaynames, i + 1);
+      env->ReleaseStringUTFChars(elem, wenam[i]);
+   }
+
     env->ReleaseStringUTFChars(tzprovider, ccTzProvider);
     env->ReleaseStringUTFChars(tz, ccTz);
     env->ReleaseStringUTFChars(provider, ccProvider);

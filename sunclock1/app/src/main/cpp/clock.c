@@ -807,7 +807,8 @@ void do_planet_bands(Canvas *canvas,
 /// @param now The current time_t
 /// @param φλ The lat/long of the observer position
 /// @return void
-void do_center(Canvas * canvas, time_t now, struct φλ φλ) {
+void do_center(Canvas * canvas, time_t now, struct φλ φλ,
+      const char *monam[], const char *wenam[]) {
 
    {
       char location[128];
@@ -873,18 +874,28 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ) {
 
    {
       char text[64];
-      strftime(text, sizeof(text), "%A", &local);
+      if (!wenam) {
+         strftime(text, sizeof(text), "%A", &local);
+      }
+      else {
+         sprintf(text, "%s", wenam[local.tm_wday]);
+      }
       text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
             canvas->h / 2 - (int)SCALE(90), COLOR_WHITE, COLOR_BLACK, text,
             1, 2);
    }
 
    {
-      char time[64];
-      strftime(time, sizeof(time), "%B", &local);
-      sprintf(time + strlen(time), "-%d", local.tm_mday);
+      char text[64];
+      if (!monam) {
+         strftime(text, sizeof(text), "%B", &local);
+      }
+      else {
+         sprintf(text, "%s", monam[local.tm_mon]);
+      }
+      sprintf(text + strlen(text), "-%d", local.tm_mday);
       text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
-            canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, time,
+            canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, text,
             1, 2);
    }
 }
@@ -998,15 +1009,15 @@ void do_debug_info(Canvas * canvas,
 /// upper left
 ///
 /// @param canvas The Canvas to draw on
-/// @param provider The current location provider
+/// @param locprovider The current location provider
 /// @return void
-void do_provider_info(Canvas * canvas, const char *provider) {
+void do_provider_info(Canvas * canvas, const char *locprovider) {
    int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
    text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
-         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, provider, 1, 3);
+         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
 }
 
 /// @brief Draw the "now" hand
@@ -1038,20 +1049,23 @@ void do_now_hand(Canvas * canvas, double now_angle) {
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
 /// @param lon The observer's Longitude in degrees, West is negative
-/// @param offset_days An offset from the current Julian Date, in days
+/// @param offset An offset from the current Julian Date, in days
 /// @param width Width of canvas to draw
 /// @param locprovider Name of the location provider to be displayed
 /// @param tzprovider Name of the timezone provider to be displayed
 /// @param tz Name of timezone to be used
 /// @param lightdark controls which regions are considered light and dark
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat, double lon,
-      double offset_days,
-      int width,
-      const char *locprovider,
-      const char *tzprovider,
-      const char *tz,
-      int lightdark) {
+Canvas *do_all(double lat,
+               double lon,
+               double offset,
+               int width,
+               const char *locprovider,
+               const char *tzprovider,
+               const char *tz,
+               int lightdark,
+               const char *monam[],
+               const char *wenam[]) {
 
    // clear locale, to use the system provided locale
    setlocale(LC_ALL, "");
@@ -1076,7 +1090,7 @@ Canvas *do_all(double lat, double lon,
    // observer's location
    struct φλ φλ = { lat, lon };
 
-   time_t now = time(NULL) + offset_days * 24.0 * 60.0 * 60.0;
+   time_t now = time(NULL) + offset * 24.0 * 60.0 * 60.0;
    now /= 60;
    now *= 60;
 
@@ -1094,10 +1108,10 @@ Canvas *do_all(double lat, double lon,
    }
 
    // information in the center
-   do_center(canvas, now, φλ);
+   do_center(canvas, now, φλ, monam, wenam);
 
    // lower right corner
-   do_debug_info(canvas, now, jd, offset_days, tzprovider);
+   do_debug_info(canvas, now, jd, offset, tzprovider);
 
    // upper left corner
    do_provider_info(canvas, locprovider);

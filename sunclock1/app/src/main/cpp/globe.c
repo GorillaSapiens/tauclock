@@ -125,8 +125,23 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
    quat qy = { coshalfy, 0, sinhalfy, 0 };
    quat qz = { coshalfz, 0, 0, sinhalfz };
 
-   for (int x = 0; x < size; x++) {
-      for (int y = 0; y < size; y++) {
+   //quat qrot = mult(mult(qz, qy), qx);
+   //quat qrot = mult(mult(qx, qy), qz);
+   quat qrot = mult(mult(qy, qx), qz);
+
+   //quat qrot = mult(qz, mult(qy, qx));
+   //quat qrot = mult(qy, qx);
+
+   static const double BPI=3.5;
+
+#define RSTEP(r) (((r) < size/6) ? (1) : (((r) < size/3) ? (3) : (5)))
+#define TSTEP(r) (RSTEP(r) * (360.0 / (2.0 * 3.1415 * (double)(r))))
+
+   for (int r = 0; r < size/2; r += RSTEP(r)) {
+      for (double t = 0.0; t < 360.0; t += TSTEP(r)) {
+
+	      int x = ((double)size/2.0) + (double) r * cos_deg(t) + .5;
+	      int y = ((double)size/2.0) + (double) r * sin_deg(t) + .5;
 
          // compute z based on x and y
 
@@ -139,6 +154,7 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
 
             quat qp = { 0, xx, yy, zz };
 
+#if 0
             if (zspin != 0.0) {
                qp = rotate(qp, qz);
             }
@@ -148,6 +164,9 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
             if (yspin != 0.0) {
                qp = rotate(qp, qy);
             }
+#else
+            qp = rotate(qp, qrot);
+#endif
 
             xx = qp.i;
             yy = qp.j;
@@ -174,7 +193,13 @@ Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzn
 
             int c = palette[bitmap[by][bx]] | 0xff000000;
 
-	        poke_canvas(canvas, x, y, c);
+            int xl = RSTEP(r) / 2;
+            int yl = xl;
+            for (int dx = -xl; dx < xl+1; dx++) {
+               for (int dy = -yl; dy < yl+1; dy++) {
+                  poke_canvas(canvas, x+dx, y+dy, c);
+               }
+            }
          }
       }
    }

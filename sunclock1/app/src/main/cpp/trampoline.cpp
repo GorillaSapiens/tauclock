@@ -71,10 +71,11 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doGlobe(JNIEnv *env, jobject thiz
     jint h = canvas->h;
     env->SetIntArrayRegion(ret, 0, 1, &w);
     env->SetIntArrayRegion(ret, 1, 1, &h);
-    for (int i = 0; i < w * h; i++) {
-        jint tmp = canvas->data[i];
-        env->SetIntArrayRegion(ret, 2 + i, 1, &tmp);
-    }
+    //for (int i = 0; i < w * h; i++) {
+    //    jint tmp = canvas->data[i];
+    //    env->SetIntArrayRegion(ret, 2 + i, 1, &tmp);
+    //}
+    env->SetIntArrayRegion(ret, 2, w * h, reinterpret_cast<const jint *>(canvas->data));
     delete_canvas(canvas);
     return ret;
 }

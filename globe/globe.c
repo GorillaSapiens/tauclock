@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "world.h"
+#include "globei.h"
 
 typedef struct quat {
    double w;

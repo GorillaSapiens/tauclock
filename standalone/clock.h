@@ -19,9 +19,16 @@
 
 #include "draw.h"
 
-Canvas *do_all(double lat, double lon, double offset, int width,
-      const char *provider, const char *tzprovider, const char *tz,
-      int lightdark);
+Canvas *do_all(double lat,
+               double lon,
+               double offset,
+               int width,
+               const char *locprovider,
+               const char *tzprovider,
+               const char *tz,
+               int lightdark,
+               const char *monam[],
+               const char *wenam[]);
 
 int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes);
 

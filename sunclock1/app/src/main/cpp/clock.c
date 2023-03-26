@@ -806,6 +806,8 @@ void do_planet_bands(Canvas *canvas,
 /// @param canvas The Canvas to draw on
 /// @param now The current time_t
 /// @param φλ The lat/long of the observer position
+/// @param monam Array of month names for localization, Jan=0
+/// @param wenam Array of weekday names for localization, Sun=0
 /// @return void
 void do_center(Canvas * canvas, time_t now, struct φλ φλ,
       const char *monam[], const char *wenam[]) {
@@ -1055,6 +1057,8 @@ void do_now_hand(Canvas * canvas, double now_angle) {
 /// @param tzprovider Name of the timezone provider to be displayed
 /// @param tz Name of timezone to be used
 /// @param lightdark controls which regions are considered light and dark
+/// @param monam Array of month names for localization, Jan=0
+/// @param wenam Array of weekday names for localization, Sun=0
 /// @return A canvas that has been drawn upon
 Canvas *do_all(double lat,
                double lon,

@@ -25,15 +25,16 @@ add_library( # Sets the name of the library.
 
 		../../../../../maths/trig1.c
 		../../../../../maths/astro.c
+		../../../../../globe/globe.c
         	../../../../../standalone/clock.c
 		../../../../../standalone/draw.c
-		globe.c
 		trampoline.cpp
         )
 
 target_include_directories(tauclock
   PRIVATE
   ../../../../../maths
+  ../../../../../globe
   ../../../../../standalone)
 
 # Searches for a specified prebuilt library and stores the path as a

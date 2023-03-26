@@ -72,7 +72,7 @@ void delete_canvas(Canvas * canvas) {
 /// @param fname The filename to write to
 /// @return void
 void dump_canvas(Canvas * canvas, const char *fname) {
-   int fd = open(fname, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU);
+   int fd = !fname ? 1 : open(fname, O_CREAT | O_TRUNC | O_WRONLY, S_IRWXU);
 
    if (fd == -1) {
       fprintf(stderr, "%s COULD NOT OPEN %s\n", __FUNCTION__, fname);

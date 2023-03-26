@@ -1,3 +1,19 @@
+//  Sunclock, draw a clock with local solar and lunar information
+//  Copyright (C) 2022,2023 Adam Wozniak / GorillaSapiens
+//
+//  This program is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +64,7 @@ void run() {
    printf("error^2=%f\n", total_error);
 }
 
+/// @brief compare real floating point atan2 with our atan2 function.
 void do_atan2(void) {
    for (double y = -1.0; y <= 1.0; y += .05) {
       for (double x = -1.0; x <= 1.0; x += .05) {
@@ -59,6 +76,7 @@ void do_atan2(void) {
    }
 }
 
+/// @brief compare real floating point asin with our asin function.
 void do_asin(void) {
    for (double x = -1.0; x <= 1.0; x += .05) {
       double math = asin(x) * 180.0 / M_PI;
@@ -68,6 +86,7 @@ void do_asin(void) {
    }
 }
 
+/// @brief compare real floating point acos with our acos function.
 void do_acos(void) {
    for (double x = -1.0; x <= 1.0; x += .05) {
       double math = acos(x) * 180.0 / M_PI;
@@ -77,6 +96,7 @@ void do_acos(void) {
    }
 }
 
+/// @brief compare real floating point atan with our atan function.
 void do_atan(void) {
    for (double x = -100.0; x <= 100.0; x += .5) {
       double math = atan(x) * 180.0 / M_PI;

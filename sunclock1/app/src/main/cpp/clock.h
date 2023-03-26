@@ -1,5 +1,5 @@
 //  Sunclock, draw a clock with local solar and lunar information
-//  Copyright (C) 2022 Adam Wozniak / GorillaSapiens
+//  Copyright (C) 2022,2023 Adam Wozniak / GorillaSapiens
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by

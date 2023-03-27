@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         var mEngineDone = false
         var ACTION_MANAGE_OVERLAY_PERMISSION_REQUEST_CODE = 5469
 
-        val dfs = DateFormatSymbols.getInstance()
+        private val dfs = DateFormatSymbols.getInstance()
         val monthnames = dfs.months
         val weekdaynames = dfs.weekdays
 
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
                 val year: Int = m.group(1).toInt()
                 val month: Int = m.group(2).toInt()
                 val day: Int = m.group(3).toDouble().toInt()
-                val residual: Double = m.group(3).toDouble() - day.toDouble();
+                val residual: Double = m.group(3).toDouble() - day.toDouble()
 
                 val now = LocalDateTime.now()
                 val then = LocalDateTime.of(year,month,day,0,0)
@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         else {
             ret =mManualOffset.toDouble()
         }
-        return ret;
+        return ret
     }
 
     private fun manualOffsetAdjust(days: Long) {
@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                 val year: Int = m.group(1).toInt()
                 val month: Int = m.group(2).toInt()
                 val day: Int = m.group(3).toDouble().toInt()
-                val residual: Double = m.group(3).toDouble() - day.toDouble();
+                val residual: Double = m.group(3).toDouble() - day.toDouble()
 
                 val then = LocalDateTime.of(year,month,day,0,0).plusDays(days)
 
@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         else {
-            mManualOffset = (mManualOffset.toDouble() + days.toDouble()).toString();
+            mManualOffset = (mManualOffset.toDouble() + days.toDouble()).toString()
         }
     }
 
@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    fun checkSystemAlertPermission() {
+    private fun checkSystemAlertPermission() {
         val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
         if (activityManager.isLowRamDevice()) {
             val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
@@ -380,7 +380,7 @@ class MainActivity : AppCompatActivity() {
 
             val tmp =
             if (parts.size >= 2) {
-                parts[parts.size - 2] + "," + parts[parts.size - 1];
+                parts[parts.size - 2] + "," + parts[parts.size - 1]
             }
             else {
                 ""
@@ -510,7 +510,7 @@ class MainActivity : AppCompatActivity() {
                     "DEALINGS IN THE SOFTWARE.")
         alertDialogBuilder.setPositiveButton("Ok",
             DialogInterface.OnClickListener { arg0, arg1 ->
-                if (!checkBox.isChecked()) {
+                if (!checkBox.isChecked) {
                     doEULA()
                 }
                 else {

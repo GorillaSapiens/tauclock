@@ -37,11 +37,11 @@ icons:
 	rm -rf weather-underground-icons
 
 calcdata: main.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
-	gcc $(COLOR) -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
+	gcc $(COLOR) -flarge-source-files -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
 #gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcdata
 
 calcrange: mainrange.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
-	gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE -I../maths $^ -lm -o calcrange
+	gcc $(COLOR) -flarge-source-files -g -pg -Ofast -Wall -DSTANDALONE -I../maths $^ -lm -o calcrange
 
 tidy:
 	rm -f out* *~

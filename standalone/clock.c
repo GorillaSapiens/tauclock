@@ -122,45 +122,59 @@ static void set_bold_med(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
+      djsmb_12_bdf,
+      djsmb_14_bdf,
       djsmb_16_bdf,
+      djsmb_18_bdf,
       djsmb_20_bdf,
+      djsmb_22_bdf,
+      djsmb_24_bdf,
       djsmb_32_bdf,
       djsmb_40_bdf,
       djsmb_50_bdf,
       djsmb_60_bdf,
       NULL
    };
-   set_font(&FONT_BOLD_MED, choices, djsmb_20_bdf[1], width);
+   set_font(&FONT_BOLD_MED, choices, djsmb_22_bdf[1], width);
 }
 
 static void set_bold_small(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
+      djsmb_12_bdf,
+      djsmb_14_bdf,
       djsmb_16_bdf,
+      djsmb_18_bdf,
       djsmb_20_bdf,
+      djsmb_22_bdf,
+      djsmb_24_bdf,
       djsmb_32_bdf,
       djsmb_40_bdf,
       djsmb_50_bdf,
       djsmb_60_bdf,
       NULL
    };
-   set_font(&FONT_BOLD_SMALL, choices, djsmb_16_bdf[1], width);
+   set_font(&FONT_BOLD_SMALL, choices, djsmb_18_bdf[1], width);
 }
 
 static void set_italic_med(int width) {
    uint8_t *choices[] = {
       djsmo_8_bdf,
       djsmo_10_bdf,
+      djsmo_12_bdf,
+      djsmo_14_bdf,
       djsmo_16_bdf,
       djsmo_20_bdf,
+      djsmo_22_bdf,
+      djsmo_24_bdf,
       djsmo_32_bdf,
       djsmo_40_bdf,
       djsmo_50_bdf,
       djsmo_60_bdf,
       NULL
    };
-   set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
+   set_font(&FONT_ITALIC_MED, choices, djsmo_22_bdf[1], width);
 }
 
 /// @brief Draw the "now" hand
@@ -900,7 +914,7 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ,
 
       }
       else {
-         sprintf(location, "%0.4f%s%c,%0.4f%s%c", lat, degree, NS, lon, degree,
+         sprintf(location, "%0.2f%s%c,%0.2f%s%c", lat, degree, NS, lon, degree,
                EW);
       }
       text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,

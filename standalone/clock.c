@@ -163,6 +163,30 @@ static void set_italic_med(int width) {
    set_font(&FONT_ITALIC_MED, choices, djsmo_20_bdf[1], width);
 }
 
+/// @brief Draw the "now" hand
+///
+/// The now hand is drawn using xor logic
+///
+/// @param canvas The Canvas to draw on
+/// @param now_angle The angle which is now
+/// @return void
+void do_now_hand(Canvas * canvas, double now_angle) {
+   double xc =
+      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
+            SCALE(128)) * cos_deg(now_angle);
+   double yc =
+      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
+            SCALE(128)) * sin_deg(now_angle);
+   double xc2 =
+      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
+            SCALE(128)) * cos_deg(now_angle);
+   double yc2 =
+      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
+            SCALE(128)) * sin_deg(now_angle);
+
+   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
+}
+
 /// @brief Draw ticks every hour around the outside edge
 ///
 /// Ticks are drawn using xor logic, so they should always be visible
@@ -501,6 +525,8 @@ double do_sun_bands(Canvas *canvas,
          break;
    }
 
+   do_now_hand(canvas, now_angle);
+
    do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
 
    if (lightdark == 0) {
@@ -509,15 +535,27 @@ double do_sun_bands(Canvas *canvas,
       // what to put at the top?
       if (sunup > 0.0) {
          duration_top_text(canvas, "sun up", sunup, COLOR_BLACK);
+         if (civil == 0.0) {
+            skiplower = true;
+         }
       }
       else if (civil > 0.0) {
          duration_top_text(canvas, "civil", civil, COLOR_BLACK);
+         if (nautical == 0.0) {
+            skiplower = true;
+         }
       }
       else if (nautical > 0.0) {
          duration_top_text(canvas, "nautical", nautical, COLOR_WHITE);
+         if (astronomical == 0.0) {
+            skiplower = true;
+         }
       }
       else if (astronomical > 0.0) {
          duration_top_text(canvas, "astronomical", astronomical, COLOR_WHITE);
+         if (night == 0.0) {
+            skiplower = true;
+         }
       }
       else if (night > 0.0) {
          duration_top_text(canvas, "night", night, COLOR_WHITE);
@@ -546,11 +584,20 @@ double do_sun_bands(Canvas *canvas,
    }
    else {
       // what to put at the top?
+      double twilight = 360.0 - light - dark;
+
       if (light > 0.0) {
          duration_top_text(canvas, "light", light, COLOR_BLACK);
       }
+      else if (twilight > 0.0) {
+         duration_top_text(canvas, "twilight", twilight, COLOR_BLACK);
+      }
+
       if (dark > 0.0) {
          duration_bottom_text(canvas, "dark", dark, COLOR_WHITE);
+      }
+      else if (twilight > 0.0 && light > 0.0) {
+         duration_bottom_text(canvas, "twilight", twilight, COLOR_WHITE);
       }
    }
 
@@ -698,6 +745,7 @@ void do_planet_bands(Canvas *canvas,
    int symxy_spot = 0;
 
    for (int p = 0; p < 7; p++) {
+      int ticked = 0;
       double a[24*60];
       int max = -1;
       for (int i = 0; i < 24 * 60; i++) {
@@ -748,6 +796,7 @@ void do_planet_bands(Canvas *canvas,
                symxy[symxy_spot].y =
                   (SIZE / 2) + radius * sin_deg(stop_angle + offset);
                symxy_spot++;
+               ticked++;
             }
 
             oldcolor = color;
@@ -781,6 +830,15 @@ void do_planet_bands(Canvas *canvas,
          y2 = canvas->h / 2 + (radius + 16) * sin_deg(transit_angle);
 
          line_canvas(canvas, x1, y1, x2, y2, colors[p]);
+
+         if (!ticked) {
+            symxy[symxy_spot].p = p;
+            symxy[symxy_spot].x =
+               (SIZE / 2) + (radius + SCALE(20)) * cos_deg(transit_angle + 3.0);
+            symxy[symxy_spot].y =
+               (SIZE / 2) + (radius + SCALE(20)) * sin_deg(transit_angle + 3.0);
+            symxy_spot++;
+         }
       }
 
       radius += SCALE(15);
@@ -794,8 +852,8 @@ void do_planet_bands(Canvas *canvas,
    for (int i = 0; i < symxy_spot; i++) {
       char sym[2] = { syms[symxy[i].p], 0 };
       text_canvas(canvas, ASTRO_FONT,
-         symxy[i].x, 
-         symxy[i].y, 
+         symxy[i].x,
+         symxy[i].y,
          colors[symxy[i].p],
             COLOR_BLACK, sym, 1, 1);
    }
@@ -1022,29 +1080,6 @@ void do_provider_info(Canvas * canvas, const char *locprovider) {
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
 }
 
-/// @brief Draw the "now" hand
-///
-/// The now hand is drawn using xor logic
-///
-/// @param canvas The Canvas to draw on
-/// @param now_angle The angle which is now
-/// @return void
-void do_now_hand(Canvas * canvas, double now_angle) {
-   double xc =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-            SCALE(128)) * cos_deg(now_angle);
-   double yc =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-            SCALE(128)) * sin_deg(now_angle);
-   double xc2 =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-            SCALE(128)) * cos_deg(now_angle);
-   double yc2 =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-            SCALE(128)) * sin_deg(now_angle);
-
-   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
-}
 
 
 /// @brief Do all of the things
@@ -1105,7 +1140,6 @@ Canvas *do_all(double lat,
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
       double now_angle = do_sun_bands(canvas, now, jd, φλ, lightdark);
-      do_now_hand(canvas, now_angle);
       do_planet_bands(canvas, now_angle, jd, φλ);
    }
    else {

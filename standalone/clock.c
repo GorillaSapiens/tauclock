@@ -1094,8 +1094,6 @@ void do_provider_info(Canvas * canvas, const char *locprovider) {
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
 }
 
-
-
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -1153,7 +1151,8 @@ Canvas *do_all(double lat,
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
-      double now_angle = do_sun_bands(canvas, now, jd, φλ, lightdark);
+      double now_angle =
+         do_sun_bands(canvas, now, jd, φλ, lightdark);
       do_planet_bands(canvas, now_angle, jd, φλ);
    }
    else {

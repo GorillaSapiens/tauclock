@@ -318,9 +318,9 @@ struct αδ ə54(double jd, int planet) {
    double lp = atan2_deg (
                   sin_deg(l - elem->Ω) * cos_deg(elem->i),
                   cos_deg(l - elem->Ω)) + elem->Ω;
+   ZRANGE(lp, 360.0);
 
    double rp = r*cos_deg(ψ);
-
    double λ;
 
    if (planet < 2) { // inner planet
@@ -329,9 +329,10 @@ struct αδ ə54(double jd, int planet) {
          R - rp * cos_deg(L - lp)) + 180.0 + L;
    }
    else { // outer planet
-      λ = atan_deg(
-         (R * sin_deg(lp - L)) / 
+      λ = atan2_deg(
+         (R * sin_deg(lp - L)),
          (rp - R * cos_deg(lp - L))) + lp;
+      ZRANGE(λ, 360.0);
    }
 
    double β = atan_deg(

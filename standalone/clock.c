@@ -14,7 +14,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#pragma GCC optimize("Ofast")
+//#pragma GCC optimize("Ofast")
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -329,7 +329,8 @@ double do_sun_bands(Canvas *canvas,
                     time_t now,
                     double jd,
                     struct φλ φλ,
-                    int lightdark) {
+                    int lightdark,
+                    struct αδ *αδ_sun) {
 
    static const double HORIZON_SUN = -1.0;
    static const double HORIZON_CIVIL = -6.56;
@@ -370,7 +371,7 @@ double do_sun_bands(Canvas *canvas,
    int max = -1;
    for (int i = 0; i < 24 * 60; i++) {
       double when = jd - 0.5 + (double) i / (24.0* 60.0);
-      struct Aa Aa = ə25(when, φλ, ə46(when));
+      struct Aa Aa = ə25(when, φλ, αδ_sun[i] = /* assign */ ə46(when));
       a[i] = Aa.a;
       if (max == -1 || Aa.a > a[max]) {
          max = i;
@@ -734,7 +735,8 @@ do_moon_draw(Canvas * canvas, double jd, int is_up) {
 void do_planet_bands(Canvas *canvas,
                      double now_angle,
                      double jd,
-                     struct φλ φλ) {
+                     struct φλ φλ,
+                     struct αδ *αδ_moon) {
 
    static const int HORIZON = 0.0;
    static const unsigned int colors[] = {
@@ -759,6 +761,7 @@ void do_planet_bands(Canvas *canvas,
    int symxy_spot = 0;
 
    for (int p = 0; p < 7; p++) {
+printf("### p = %d\n", p);
       int ticked = 0;
       double a[24*60];
       int max = -1;
@@ -766,9 +769,9 @@ void do_planet_bands(Canvas *canvas,
          double when = jd - 0.5 + (double) i / (24.0* 60.0);
          struct Aa Aa;
 
-         if (p == 0) Aa = ə25(when, φλ, ə65(when));
+         if (p == 0) Aa = ə25(when, φλ, αδ_moon[i] = /* assign */ ə65(when));
          else if (p < 3) Aa = ə25(when, φλ, ə54(when, p - 1));
-         else if (p < 6) Aa = ə25(when, φλ, ə54(when, p - 2));
+         else if (p < 6) Aa = ə25(when, φλ, ə54(when, p));
          else Aa = ə25(when, φλ, (struct αδ) { 0.0, 0.0 });
 
          a[i] = Aa.a;
@@ -804,12 +807,16 @@ void do_planet_bands(Canvas *canvas,
             {
                double offset =
                   (oldcolor == COLOR_NONE) ? -3.0 : 3.0;
-               symxy[symxy_spot].p = p;
-               symxy[symxy_spot].x =
-                  (SIZE / 2) + radius * cos_deg(stop_angle + offset);
-               symxy[symxy_spot].y =
-                  (SIZE / 2) + radius * sin_deg(stop_angle + offset);
-               symxy_spot++;
+
+               if (symxy_spot < (sizeof(symxy)/sizeof(symxy[0]))) {
+                  symxy[symxy_spot].p = p;
+                  symxy[symxy_spot].x =
+                     (SIZE / 2) + radius * cos_deg(stop_angle + offset);
+                  symxy[symxy_spot].y =
+                     (SIZE / 2) + radius * sin_deg(stop_angle + offset);
+                  symxy_spot++;
+               }
+
                ticked++;
             }
 
@@ -1094,6 +1101,92 @@ void do_provider_info(Canvas * canvas, const char *locprovider) {
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
 }
 
+void do_eclipses(double jd,
+                 double now_angle,
+                 struct αδ *αδ_sun,
+                 struct αδ *αδ_moon) {
+
+   double a = jd - 0.5;
+   struct FD FDa = ə67(a);
+
+   double b = jd + 0.5;
+   struct FD FDb = ə67(b);
+
+   double c;
+   struct FD FDc;
+
+   bool full = false;
+
+   if (FDa.D < 180.0 && FDb.D > 180.0) {
+      full = true;
+      printf("full moon\n");
+   }
+   else if (FDb.D < FDa.D) {
+      full = false;
+      printf("new moon\n");
+   }
+   else {
+      printf("no eclipse\n");
+      return;
+   }
+
+   // zero in on exactly when...
+   do {
+      c = (a + b) / 2.0;
+      FDc = ə67(c);
+      if (full) {
+         if (FDc.D < 180.0) {
+            a = c;
+         }
+         else if (FDc.D > 180.0) {
+            b = c;
+         }
+      }
+      else {
+         if (FDc.D > 180.0) {
+            a = c;
+         }
+         else if (FDc.D < 180.0) {
+            b = c;
+         }
+      }
+   } while ((b - a) > 1.0/(2.0 * 24.0 * 60.0));
+
+   printf("%s moon %f %f\n", full ? "full" : "new", c, FDc.D);
+
+   int index = 0.5 + ((c - (jd - 0.5)) / (24.0 * 60.0));
+   printf("index %d\n", index);
+
+   struct XYZ {
+      double x, y, z;
+   };
+
+   double α_sun = αδ_sun[index].α * 15.0;
+   double δ_sun = αδ_sun[index].δ;
+   double α_moon = αδ_moon[index].α * 15.0;
+   double δ_moon = αδ_moon[index].δ;
+
+   struct XYZ xyz_sun = (struct XYZ) {
+      cos_deg(α_sun) * cos_deg(δ_sun),
+      sin_deg(α_sun) * cos_deg(δ_sun),
+      sin_deg(δ_sun)
+   };
+
+   struct XYZ xyz_moon = (struct XYZ) {
+      cos_deg(α_moon) * cos_deg(δ_moon),
+      sin_deg(α_moon) * cos_deg(δ_moon),
+      sin_deg(δ_moon)
+   };
+
+   // dot product, and cosines...
+
+   double dot = xyz_sun.x * xyz_moon.x +
+                xyz_sun.y * xyz_moon.y +
+                xyz_sun.z * xyz_moon.z;
+   double theta = acos_deg(dot);
+   printf("theta = %f\n", theta);
+}
+
 /// @brief Do all of the things
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
@@ -1151,9 +1244,14 @@ Canvas *do_all(double lat,
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
+      struct αδ αδ_sun[24*60];
+      struct αδ αδ_moon[24*60];
+
       double now_angle =
-         do_sun_bands(canvas, now, jd, φλ, lightdark);
-      do_planet_bands(canvas, now_angle, jd, φλ);
+         do_sun_bands(canvas, now, jd, φλ, lightdark, αδ_sun);
+      do_planet_bands(canvas, now_angle, jd, φλ, αδ_moon);
+
+      do_eclipses(jd, now_angle, αδ_sun, αδ_moon);
    }
    else {
    }

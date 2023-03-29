@@ -1100,7 +1100,7 @@ void do_provider_info(Canvas * canvas, const char *locprovider) {
 
 void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
    double a = jd - 0.5;
-   double b = jd - 0.5;
+   double b = jd + 0.5;
    double c;
    struct FD FD;
 
@@ -1108,18 +1108,52 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       c = (a + b) / 2.0;
       FD = ə67(c);
 
-         if (FD.D > 180.0) {
-            a = c;
-         }
-         else if (FD.D < 180.0) {
-            b = c;
-         }
+      if (FD.D < 180.0) {
+         a = c;
+      }
+      else if (FD.D > 180.0) {
+         b = c;
+      }
+      printf("=== %f %f\n", FD.D, c);
    } while ((b - a) > 1.0/(2.0 * 24.0 * 60.0));
+
+   double theta = ə73(c);
+   if (theta < 180.0) {
+      theta = 180.0 - theta;
+   }
+   else {
+      theta = theta - 180.0;
+   }
+
+   if (theta > 12.25) {
+      // lunar eclipse not possible!
+      return;
+   }
+
+   bool must = false;
+
+   if (theta < 9.5) {
+      must = true;
+   }
+
+   printf("lunar eclipse %s %f [%f %f %f]\n",
+      must ? "must" : "might",
+      theta,
+      jd - 0.5,
+      c,
+      jd + 0.5);
+
+   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
+   double angle =
+      now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
+
+   arc_canvas(canvas, SIZE / 2, SIZE / 2,
+      radius, SCALE(5), COLOR_BLOOD, angle - 12.5, angle + 12.5);
 }
 
 void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
    double a = jd - 0.5;
-   double b = jd - 0.5;
+   double b = jd + 0.5;
    double c;
    struct FD FD;
 

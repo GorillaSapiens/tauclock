@@ -101,6 +101,9 @@ struct λβ ə65(double jd);
 // The phases of the Moon
 struct FD ə67(double jd);
 
+// Calculating a lunar eclipse
+double ə73(double jd);
+
 #define ZRANGE(x, high)                                        \
    do {                                                        \
       if ((x) < 0.0) {                                         \

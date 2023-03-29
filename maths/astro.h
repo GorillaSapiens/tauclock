@@ -33,6 +33,11 @@ struct FD {
    double D; // age of the moon
 };
 
+struct λβ {
+   double λ; // ecliptic longitude
+   double β; // ecliptic latitude
+};
+
 struct αδ {
    double α; // right ascension, hrs
    double δ; // declination, degrees
@@ -72,7 +77,7 @@ double ə24(double jd, struct φλ φλ, struct αδ αδ);
 struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ);
 
 // Ecliptic to equatorial coordinate conversion
-struct αδ ə27(double jd, double λ, double β);
+struct αδ ə27(double jd, struct λβ λβ);
 
 #if 0
 // Rising and setting
@@ -80,7 +85,7 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v);
 #endif
 
 // Calculating the position of the Sun
-struct αδ ə46(double jd);
+struct λβ ə46(double jd);
 
 #if 0
 // Twilight
@@ -91,7 +96,7 @@ struct UTrs ə50(double jd, struct φλ φλ, struct αδ αδ, double horizon);
 struct αδ ə54(double jd, int planet);
 
 // Calculating the Moon's position
-struct αδ ə65(double jd);
+struct λβ ə65(double jd);
 
 // The phases of the Moon
 struct FD ə67(double jd);

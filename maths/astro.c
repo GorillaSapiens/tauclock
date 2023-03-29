@@ -137,12 +137,13 @@ struct Aa ə25(double jd, struct φλ φλ, struct αδ αδ) {
 }
 
 // Ecliptic to equatorial coordinate conversion
-struct αδ ə27(double jd, double λ, double β) {
+struct αδ ə27(double jd, struct λβ λβ) {
    double T = (jd - 2451545.0) / 36525.0;
    double DE = (46.815 * T + 0.0006 * T * T - 0.00181*T*T*T) / 3600.0;
    double ε = 23.439292 - DE;
 
-   double sinδ = sin_deg(β)*cos_deg(ε) + cos_deg(β)*sin_deg(ε)*sin_deg(λ);
+   double sinδ =
+      sin_deg(λβ.β) * cos_deg(ε) + cos_deg(λβ.β) * sin_deg(ε) * sin_deg(λβ.λ);
 
    struct αδ αδ;
 
@@ -150,8 +151,8 @@ struct αδ ə27(double jd, double λ, double β) {
 
    αδ.α =
       atan2_deg(
-         (sin_deg(λ) * cos_deg(ε) - tan_deg(β) * sin_deg(ε)),
-         cos_deg(λ));
+         (sin_deg(λβ.λ) * cos_deg(ε) - tan_deg(λβ.β) * sin_deg(ε)),
+         cos_deg(λβ.λ));
 
    αδ.α /= 15.0; // convert to hours
    ZRANGE(αδ.α, 24.0);
@@ -201,7 +202,7 @@ struct UTrs ə33(double jd, struct φλ φλ, struct αδ αδ, double v) {
 #endif
 
 // Calculating the position of the Sun
-struct αδ ə46(double jd) {
+struct λβ ə46(double jd) {
    // 2010 January 0.0 (JD = 2 455 196.5)
    static const double epoch = 2455196.5;
 
@@ -235,7 +236,7 @@ struct αδ ə46(double jd) {
    double λ = N + Ec + εg;
    ZRANGE(λ, 360.0);
 
-   return ə27(jd, λ, 0.0);
+   return (struct λβ) { λ, 0.0 };
 }
 
 #if 0
@@ -339,12 +340,12 @@ struct αδ ə54(double jd, int planet) {
                (rp * tan_deg(ψ) * sin_deg(λ - lp)) /
                (R * sin_deg(lp - L)));
 
-   struct αδ αδ = ə27(jd, λ, β);
+   struct αδ αδ = ə27(jd, (struct λβ) { λ, β });
    return αδ;
 }
 
 // Calculating the Moon's position
-struct αδ ə65(double jd) {
+struct λβ ə65(double jd) {
    // much of this copied from ə46
 
    static const double epoch = 2455196.5;
@@ -396,7 +397,7 @@ struct αδ ə65(double jd) {
                      ) + Np;
    double β_moon = asin_deg(sin_deg(lpp-Np)*sin_deg(i));
 
-   return ə27(jd, λ_moon, β_moon);
+   return (struct λβ) { λ_moon, β_moon };
 }
 
 // The phases of the Moon
@@ -532,10 +533,10 @@ int old_main(int argc, char **argv) {
       printf("pass\n");
    }
 
-   // struct αδ ə27(double jd, double λ, double β)
+   // struct αδ ə27(double jd, struct λβ λβ)
    {
       printf("test ə27\n");
-      struct αδ αδ = ə27(2455018.5, 139.686111, 4.875278);
+      struct αδ αδ = ə27(2455018.5, (struct λβ) { 139.686111, 4.875278 });
       assert(close(αδ.α, 9.581478, 0.001));
       assert(close(αδ.δ, 19.535003, 0.02));
       printf("pass\n");
@@ -558,7 +559,7 @@ int old_main(int argc, char **argv) {
    // struct αδ ə46(double jd)
    {
       printf("test ə46\n");
-      struct αδ αδ = ə46(2455196.5 - 2349);
+      struct αδ αδ = ə27(2455196.5, ə46(2455196.5 - 2349));
       assert(close(αδ.α, 8.39277777, 0.001));
       assert(close(αδ.δ, 19.35277777, 0.01));
       printf("pass\n");
@@ -601,7 +602,7 @@ int old_main(int argc, char **argv) {
    // struct αδ ə65(double jd)
    {
       printf("test ə65\n");
-      struct αδ αδ = ə65(2452883.50000);
+      struct αδ αδ = ə27(2452883.5, ə65(2452883.50000));
       assert(close(αδ.α, 14.2166667, 0.02));
       assert(close(αδ.δ, -11.52722222, 0.02));
       printf("pass\n");
@@ -656,8 +657,8 @@ int main(int argc, char **argv) {
       time_t when = now - (12*60*60) + i*60;
       double jd = time_t2julian(when);
 
-      Aa[0][i] = ə25(jd, φλ, ə46(jd)); // sun
-      Aa[1][i] = ə25(jd, φλ, ə65(jd)); // moon
+      Aa[0][i] = ə25(jd, φλ, ə27(jd, ə46(jd))); // sun
+      Aa[1][i] = ə25(jd, φλ, ə27(jd, ə65(jd))); // moon
       Aa[2][i] = ə25(jd, φλ, ə54(jd, 0)); // mercury
       Aa[3][i] = ə25(jd, φλ, ə54(jd, 1)); // venus
       Aa[4][i] = ə25(jd, φλ, ə54(jd, 3)); // mars

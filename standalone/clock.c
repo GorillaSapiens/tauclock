@@ -1130,6 +1130,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       return;
    }
 
+#if 0
    bool must = false;
 
    if (theta < 9.5) {
@@ -1138,10 +1139,8 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
 
    printf("lunar eclipse %s %f [%f %f %f]\n",
       must ? "must" : "might",
-      theta,
-      jd - 0.5,
-      c,
-      jd + 0.5);
+      theta, jd - 0.5, c, jd + 0.5);
+#endif
 
    double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
    double angle =

@@ -1148,6 +1148,8 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
 
    arc_canvas(canvas, SIZE / 2, SIZE / 2,
       radius, SCALE(5), COLOR_BLOOD, angle - 12.5, angle + 12.5);
+   arc_canvas(canvas, SIZE / 2, SIZE / 2,
+      radius, SCALE(3), COLOR_BLOOD, angle - 27.5, angle + 27.5);
 }
 
 void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {

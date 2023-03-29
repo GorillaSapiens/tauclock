@@ -1149,6 +1149,36 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       radius, SCALE(5), COLOR_BLOOD, angle - 12.5, angle + 12.5);
    arc_canvas(canvas, SIZE / 2, SIZE / 2,
       radius, SCALE(3), COLOR_BLOOD, angle - 27.5, angle + 27.5);
+
+   double delta = now_angle - angle;
+   ZRANGE(delta, 360.0);
+   if (delta > 180.0) {
+      delta = 360.0 - delta;
+   }
+
+   if (delta < 25.7) {
+      FD = ə67(jd);
+
+      double where_angle = FD.D - 90.0;
+      int cx, cy;
+      cx = canvas->w / 2 +
+         (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
+      cy = canvas->h / 2 +
+         (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
+
+      for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
+         for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+            double d_interior = sqrt(dx * dx + dy * dy);
+            if (d_interior <= SCALE(40.0)) {
+               int nx = cx + dx;
+               int ny = cy + dy;
+               if (delta < 12.5 || (nx + ny) % 2 == 1) {
+                  poke_canvas(canvas, nx, ny, COLOR_BLOOD);
+               }
+            }
+         }
+      }
+   }
 }
 
 void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {

@@ -1215,7 +1215,7 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
 
    // border
    arc_canvas(canvas,
-         SIZE / 2, SIZE / 2, SIZE / 2 / 2, SCALE(216),
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2, SCALE(180),
          COLOR_XOR, angle - 1.875, angle + 1.875);
 }
 

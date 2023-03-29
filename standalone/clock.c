@@ -1114,7 +1114,6 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       else if (FD.D > 180.0) {
          b = c;
       }
-      printf("=== %f %f\n", FD.D, c);
    } while ((b - a) > 1.0/(2.0 * 24.0 * 60.0));
 
    double theta = ə73(c);

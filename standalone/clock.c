@@ -1192,12 +1192,31 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
       FD = ə67(c);
 
       if (FD.D < 180.0) {
-         a = c;
-      }
-      else if (FD.D > 180.0) {
          b = c;
       }
+      else if (FD.D > 180.0) {
+         a = c;
+      }
    } while ((b - a) > 1.0/(2.0 * 24.0 * 60.0));
+
+   double theta = ə73(c);
+   ZRANGE(theta, 360.0);
+   if (theta > 180.0) {
+      theta = 360.0 - theta;
+   }
+
+   if (theta > 18.5) {
+      // solar eclipse not possible!
+      return;
+   }
+
+   double angle =
+      now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
+
+   // border
+   arc_canvas(canvas,
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2, SCALE(216),
+         COLOR_XOR, angle - 1.875, angle + 1.875);
 }
 
 void do_eclipses(Canvas *canvas, double jd, double now_angle) {

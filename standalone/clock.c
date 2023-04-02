@@ -1267,8 +1267,6 @@ Canvas *do_all(double lat,
       tzset();
    }
 
-   double jd; // when is NOW?
-
    // assign global SIZE used for scaling
    SIZE = width;
 
@@ -1282,10 +1280,24 @@ Canvas *do_all(double lat,
    struct φλ φλ = { lat, lon };
 
    time_t now = time(NULL) + offset * 24.0 * 60.0 * 60.0;
-   now /= 60;
+
+   if (offset > 19000000.0) {
+      struct tm tm = { 0 };
+      tm.tm_year = (int)(offset / 10000.0) - 1900;
+      tm.tm_mon = ((int)(offset / 100.0) % 100) - 1;
+      tm.tm_mday = ((int)(offset) % 100);
+      now = mktime(&tm);
+
+      printf("%f %d %d %d %d %ld\n", offset, (int)offset, tm.tm_year, tm.tm_mon, tm.tm_mday, now);
+
+      now += (offset - (double)((int)offset)) * 24.0 * 60.0 * 60.0;
+   }
+
+   // round to nearest minute
+   now = (now + 30) / 60;
    now *= 60;
 
-   jd = time_t2julian(now);
+   double jd = time_t2julian(now);
 
    //// drawing begins here
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);

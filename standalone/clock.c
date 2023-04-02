@@ -366,14 +366,26 @@ double do_sun_bands(Canvas *canvas,
       }
    }
 
-   double a[24*60];
-   int max = -1;
-   for (int i = 0; i < 24 * 60; i++) {
+   double a[24*60 + 15];
+   for (int i = 0; i < 24 * 60 + 15; i++) {
       double when = jd - 0.5 + (double) i / (24.0* 60.0);
       struct Aa Aa = ə25(when, φλ, ə27(when, ə46(when)));
       a[i] = Aa.a;
-      if (max == -1 || Aa.a > a[max]) {
+   }
+
+   int max = -1;
+   for (int i = 1; i < 24 * 60 + 15 - 1; i++) {
+      if (a[i] >= a[i-1] && a[i] >= a[i + 1]) {
          max = i;
+      }
+   }
+
+   if (max == -1) {
+      if (a[0] > a[24 * 60 - 1]) {
+         max = 0;
+      }
+      else {
+         max = 24 * 60 - 1;
       }
    }
 
@@ -381,7 +393,10 @@ double do_sun_bands(Canvas *canvas,
    up_angle = 270.0 - up_angle;
    ZRANGE(up_angle, 360.0);
 
-   double now_angle = up_angle - (12*60-max)/(24.0 * 60.0);
+   // TODO FIX: what was actually intended here?
+   // double now_angle = up_angle - (12*60-max)/(24.0 * 60.0);
+   // TODO FIX: and why does this even work at all?!?!?
+   double now_angle = up_angle;
    ZRANGE(now_angle, 360.0);
 
    unsigned int color;
@@ -760,9 +775,8 @@ void do_planet_bands(Canvas *canvas,
 
    for (int p = 0; p < 7; p++) {
       int ticked = 0;
-      double a[24*60];
-      int max = -1;
-      for (int i = 0; i < 24 * 60; i++) {
+      double a[24*60 + 60];
+      for (int i = 0; i < 24 * 60 + 60; i++) {
          double when = jd - 0.5 + (double) i / (24.0* 60.0);
          struct Aa Aa;
 
@@ -772,8 +786,21 @@ void do_planet_bands(Canvas *canvas,
          else Aa = ə25(when, φλ, (struct αδ) { 0.0, 0.0 });
 
          a[i] = Aa.a;
-         if (max == -1 || Aa.a > a[max]) {
+      }
+
+      int max = -1;
+      for (int i = 1; i < 24 * 60 + 60 - 1; i++) {
+         if (a[i] >= a[i - 1] && a[i] >= a[i + 1]) {
             max = i;
+         }
+      }
+
+      if (max == -1) {
+         if (a[0] > a[24 * 60 - 1]) {
+            max = 0;
+         }
+         else {
+            max = 24 * 60 - 1;
          }
       }
 

@@ -1172,10 +1172,40 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
    double angle =
       now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
 
-   arc_canvas(canvas, SIZE / 2, SIZE / 2,
-      radius, SCALE(5), COLOR_BLOOD, angle - 12.5, angle + 12.5);
-   arc_canvas(canvas, SIZE / 2, SIZE / 2,
-      radius, SCALE(3), COLOR_BLOOD, angle - 27.5, angle + 27.5);
+   double narrow_begin = angle - 27.5;
+   double narrow_end = angle + 27.5;
+
+   if (narrow_end > now_angle - 180.0 &&
+       narrow_begin < now_angle + 180.0) {
+
+      if (narrow_begin < now_angle - 180.0) {
+         narrow_begin = now_angle - 180.0;
+      }
+      if (narrow_end > now_angle + 180.0) {
+         narrow_end = now_angle + 180.0;
+      }
+
+      arc_canvas(canvas, SIZE / 2, SIZE / 2,
+         radius, SCALE(3), COLOR_BLOOD, narrow_begin, narrow_end);
+
+      double wide_begin = angle - 12.5;
+      double wide_end = angle + 12.5;
+
+      if (wide_end > now_angle - 180.0 &&
+          wide_begin < now_angle + 180.0) {
+
+         if (wide_begin < now_angle - 180.0) {
+            wide_begin = now_angle - 180.0;
+         }
+
+         if (wide_end > now_angle + 180.0) {
+            wide_end = now_angle + 180.0;
+         }
+
+         arc_canvas(canvas, SIZE / 2, SIZE / 2,
+            radius, SCALE(5), COLOR_BLOOD, wide_begin, wide_end);
+      }
+   }
 
    double delta = now_angle - angle;
    ZRANGE(delta, 360.0);

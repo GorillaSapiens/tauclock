@@ -1172,3 +1172,4 @@ double atan_deg(double tangent) {
 
    return mid;
 }
+// vim: expandtab:noai:ts=3:sw=3

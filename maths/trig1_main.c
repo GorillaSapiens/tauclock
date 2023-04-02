@@ -143,3 +143,4 @@ int main(int argc, char **argv) {
    }
    return 0;
 }
+// vim: expandtab:noai:ts=3:sw=3

@@ -33,3 +33,4 @@ Canvas *do_all(double lat,
 int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes);
 
 #endif
+// vim: expandtab:noai:ts=3:sw=3

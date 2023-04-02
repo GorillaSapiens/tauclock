@@ -28,3 +28,5 @@ fasttests: astro.c trig1.c
 
 oneday: astro.c trig1.c
 	gcc -DONEDAY -Wall -g -Ofast $^ -o oneday
+
+# vim: expandtab:noai:ts=3:sw=3

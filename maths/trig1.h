@@ -83,3 +83,4 @@ double atan2_deg(double y, double x);
 }
 #endif
 #endif
+// vim: expandtab:noai:ts=3:sw=3

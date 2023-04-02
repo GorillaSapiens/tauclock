@@ -28,3 +28,4 @@ double atan2_deg(double y, double x) {
    return atan2(y, x) * 180.0 / M_PI;
 }
 
+// vim: expandtab:noai:ts=3:sw=3

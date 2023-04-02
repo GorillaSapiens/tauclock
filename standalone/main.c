@@ -79,3 +79,4 @@ int main(int argc, char *argv[]) {
    printf("raw output written to out.bin\n");
    printf("`convert -size 1024x1024 -depth 8 RGBA:out.bin out.png` to view\n");
 }
+// vim: expandtab:noai:ts=3:sw=3

@@ -56,3 +56,5 @@ clean: tidy
 
 squeaky:
 	echo done
+
+# vim: expandtab:noai:ts=3:sw=3

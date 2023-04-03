@@ -389,14 +389,9 @@ double do_sun_bands(Canvas *canvas,
       }
    }
 
-   double up_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0));
-   up_angle = 270.0 - up_angle;
-   ZRANGE(up_angle, 360.0);
-
-   // TODO FIX: what was actually intended here?
-   // double now_angle = up_angle - (12*60-max)/(24.0 * 60.0);
-   // TODO FIX: and why does this even work at all?!?!?
-   double now_angle = up_angle;
+   //double now_angle = -180.0 + (360.0 * (double) max / (24.0 * 60.0));
+   double now_angle = -180.0 + ((double) max / 4.0);
+   now_angle = 270.0 - now_angle;
    ZRANGE(now_angle, 360.0);
 
    unsigned int color;
@@ -428,7 +423,7 @@ double do_sun_bands(Canvas *canvas,
    oldcolor = color;
    oldbandcolor = bandcolor;
 
-   double start_angle = up_angle - 180.0;
+   double start_angle = now_angle - 180.0;
 
    for (int i = 1; i < 24*60; i++) {
       if (a[i-1] < HORIZON_SUN && a[i] >= HORIZON_SUN) {
@@ -465,7 +460,7 @@ double do_sun_bands(Canvas *canvas,
       }
       if (color != oldcolor) {
          double stop_angle =
-            up_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
+            now_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
 
          arc_canvas(canvas,
             SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
@@ -513,7 +508,7 @@ double do_sun_bands(Canvas *canvas,
    }
 
    double stop_angle =
-      up_angle + 180.0;
+      now_angle + 180.0;
 
    arc_canvas(canvas,
       SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,

@@ -17,7 +17,7 @@
 COLOR=-fdiagnostics-color=always
 #COLOR=
 
-all: fonts/.bdf calcdata calcdataprecise calcrange html/index.html
+all: fonts/.bdf calcdata calcrange html/index.html
 
 html/index.html: doxygen.conf clock.c draw.c ../maths/trig1.c ../maths/astro.c
 	doxygen doxygen.conf 1>/dev/null
@@ -36,12 +36,12 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
-	gcc $(COLOR) -flarge-source-files -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
-#gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcdata
+### calcdata: main.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
+### ### 	gcc $(COLOR) -flarge-source-files -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
+### #gcc $(COLOR) -g -pg -Ofast -Wall -DSTANDALONE $^ -lm -o calcdata
 
-calcdataprecise: main.c draw.c clock.c precise.c ../maths/astro.c
-	gcc $(COLOR) -flarge-source-files -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdataprecise
+calcdata: main.c draw.c clock.c precise.c ../maths/astro.c
+	gcc $(COLOR) -flarge-source-files -Ofast -g -pg -Wall -DSTANDALONE -I../maths $^ -lm -o calcdata
 
 calcrange: mainrange.c draw.c clock.c ../maths/trig1.c ../maths/astro.c
 	gcc $(COLOR) -flarge-source-files -g -pg -Ofast -Wall -DSTANDALONE -I../maths $^ -lm -o calcrange

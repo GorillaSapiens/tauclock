@@ -3,5 +3,4 @@ latex
 calcdata
 calcrange
 gmon.out
-out.bin
-out.png
+out*

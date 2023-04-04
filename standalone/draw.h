@@ -80,7 +80,7 @@
 #define COLOR_YELLOW     RGB(255, 255,   0)
 
 #define COLOR_SILVER     RGB(190, 194, 203)
-#define COLOR_BLOOD      RGB(216, 144, 144)
+#define COLOR_BLOOD      RGB(255,  64,  64)
 
 #define COLOR_LOCK       0x80000000
 #define LOCK(x)          ((x) & 0xFEFFFFFF)

@@ -41,16 +41,14 @@ icons:
 calcdata: main.o draw.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
-		-flarge-source-files \
-		-g -pg -Ofast -Wall -DSTANDALONE \
-		-I../maths $^ -lm -o calcdata
+		-g -pg -Ofast -Wall \
+		$^ -lm -o calcdata
 
 calcrange: mainrange.o draw.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
-		-flarge-source-files \
-		-g -pg -Ofast -Wall -DSTANDALONE \
-		-I../maths $^ -lm -o calcdata
+		-g -pg -Ofast -Wall \
+		$^ -lm -o calcrange
 
 %.o: %.c
 	gcc -c \

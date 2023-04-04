@@ -32,14 +32,9 @@
 
 #include <assert.h>
 
-#include "trig1.h"
+#include "precise.h"
 #include "astro.h"
 #include "draw.h"
-
-#define FNORD KNARF
-#define sin(x) FNORD
-#define cos(x) FNORD
-#define tan(x) FNORD
 
 #define ORIG
 
@@ -1198,7 +1193,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
          }
 
          arc_canvas(canvas, SIZE / 2, SIZE / 2,
-            radius, SCALE(5), COLOR_BLOOD, wide_begin, wide_end);
+            radius, SCALE(9), COLOR_BLOOD, wide_begin, wide_end);
       }
    }
 

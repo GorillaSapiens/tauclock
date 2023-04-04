@@ -20,13 +20,13 @@ all: trigmain tests fasttests oneday
 trigmain: trig1.c trig1_main.c
 	gcc -Wall -g -Ofast $^ -lm -o trigmain
 
-tests: astro.c trig1.c
-	gcc -DVERBOSE -DTEST -Wall -g -Ofast $^ -o tests
+tests: astro.c precise.c
+	gcc -DVERBOSE -DTEST -Wall -g -Ofast $^ -lm -o tests
 
-fasttests: astro.c trig1.c
-	gcc -DTEST -Wall -g -Ofast $^ -o fasttests
+fasttests: astro.c precise.c
+	gcc -DTEST -Wall -g -Ofast $^ -lm -o fasttests
 
-oneday: astro.c trig1.c
-	gcc -DONEDAY -Wall -g -Ofast $^ -o oneday
+oneday: astro.c precise.c
+	gcc -DONEDAY -Wall -g -Ofast $^ -lm -o oneday
 
 # vim: expandtab:noai:ts=3:sw=3

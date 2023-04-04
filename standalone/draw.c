@@ -28,16 +28,11 @@
 
 #define INCLUDE_FONT_DATA
 #include "draw.h"
-#include "trig1.h"
+#include "precise.h"
 
 #define FILELINE __FILE__, __LINE__
 //#define dprintf(format, ...) printf("%s:%d " format, FILELINE, __VA_ARGS__)
 #define dprintf(format, ...)
-
-#define FNORD exit(0)
-#define sin(x) FNORD
-#define cos(x) FNORD
-#define tan(x) FNORD
 
 /// @brief Create a new canvas suitable for drawing on
 ///

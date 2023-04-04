@@ -18,7 +18,7 @@
 
 #include <time.h>
 
-#include "trig1.h"
+#include "precise.h"
 #include "astro.h"
 
 #ifndef INFINITY

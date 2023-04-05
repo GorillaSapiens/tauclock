@@ -1284,7 +1284,9 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
       (int)((10.0 + canvas->h / 6.0) * sin_deg(angle));
 
    // dot
-   arc_canvas(canvas, cx, cy, SCALE(40)/2, SCALE(40), COLOR_WHITE, 0, 360);
+   // arc_canvas(canvas, cx, cy, SCALE(40)/2, SCALE(40), COLOR_WHITE, 0, 360);
+
+   // sun icon
    text_canvas(canvas, ICON_FONT, cx, cy,
       COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
 }

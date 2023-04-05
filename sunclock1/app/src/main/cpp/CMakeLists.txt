@@ -23,7 +23,7 @@ add_library( # Sets the name of the library.
 
              # Provides a relative path to your source file(s).
 
-		../../../../../standalone/precise.c
+		../../../../../maths/precise.c
 		../../../../../maths/astro.c
 		../../../../../globe/globe.c
         	../../../../../standalone/clock.c

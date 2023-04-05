@@ -51,7 +51,11 @@
 #include "fonts/astro_20_bdf.h"
 #include "fonts/astro_16_bdf.h"
 
+#include "fonts/icons_16x16.h"
+#include "fonts/icons_32x32.h"
+#include "fonts/icons_64x64.h"
 #include "fonts/icons_128x128.h"
+#include "fonts/icons_256x256.h"
 
 #define COLOR_NONE       0x00000000
 #define COLOR_XOR        0x00000001

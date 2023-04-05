@@ -34,6 +34,8 @@ print OUT "extern uint8_t $varname" . "[];\n";
 print OUT "#else\n";
 print OUT "uint8_t $varname"."[] = {\n";
 
+$iscolon = 0;
+
 $mode = 0;
 while (<FONT>) {
    s/[\x0a\x0d]//g;
@@ -72,9 +74,18 @@ while (<FONT>) {
          $lo = $enc % 256;
          print OUT "   $hi, $lo, // $enc :: $comment\n";
       }
+      if ($enc == ord(':')) {
+         $iscolon = 1;
+      }
+      else {
+         $iscolon = 0;
+      }
    }
    if (/^BITMAP/) {
       $mode = 1;
+      if ($iscolon) {
+         $bbx_deltay = int(($height/2 - $bbx_height) / 2);
+      }
       print OUT "   $bbx_width, $bbx_height, $bbx_deltax, $bbx_deltay, // bbx w,h,dx,dy\n";
       print OUT "  ";
    }

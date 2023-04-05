@@ -82,7 +82,7 @@ uint8_t astro_20_bdf[] = {
    0, 0, 0, 0, // bbx w,h,dx,dy
   
    0x00, ':', // 003A
-   0, 0, 0, 0, // bbx w,h,dx,dy
+   0, 0, 0, 5, // bbx w,h,dx,dy
   
    0x00, ';', // 003B
    0, 0, 0, 0, // bbx w,h,dx,dy

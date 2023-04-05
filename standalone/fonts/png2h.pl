@@ -27,6 +27,10 @@ $varname = "icons_$varname";
 $dimension = $varname;
 $dimension =~ s/.*x//g;
 
+if ($dimension > 255) {
+   $dimension = 255;
+}
+
 open OUT, ">$varname.h";
 
 print OUT "// file converted from $dirname\n";
@@ -37,7 +41,7 @@ print OUT "#else\n";
 print OUT "uint8_t $varname"."[] = {\n";
 print OUT "   $dimension, $dimension, 0, 0, // width, height, dx, dy\n";
 
-$encoding = 65;
+$encoding = 65; # start with 'A'
 
 foreach $file (`ls $dirname`) {
    $file =~ s/[\x0a\x0d]//g;
@@ -54,8 +58,11 @@ foreach $file (`ls $dirname`) {
          }
       }
 
+      @smalldim = `file $dirname/$file`;
+      $smalldim[0] =~ s/([0-9]+) x ([0-9]+)/$sw=$1,$sh=$2/ge;
+
       print OUT "   $hi, $lo, // $file\n";
-      print OUT "   $dimension, $dimension, 0, 0, // width, height, dx, dy\n";
+      print OUT "   $sw, $sh, 0, 0, // width, height, dx, dy\n";
       $encoding++;
 
       @cont = `convert $dirname/$file xpm:-`;
@@ -99,6 +106,17 @@ foreach $file (`ls $dirname`) {
                      $hex = 0;
                   }
                }
+               while ($count != 0) {
+                  $hex <<= 1;
+                  $count++;
+                  if ($count == 8) {
+                     $count = 0;
+                     $stuff = sprintf(" 0x%02x,", $hex);
+                     print OUT $stuff;
+                     $hex = 0;
+                  }
+               }
+               print OUT "\n";
             }
          }
       }

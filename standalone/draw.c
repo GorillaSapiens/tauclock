@@ -334,6 +334,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
    int first = 1;
    int fake_x = 0;
    int fake_y = 0;
+   int g_h, g_w;
 
    const unsigned char *context;
 
@@ -345,6 +346,8 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
       if (encoded == ' ') {
          glyph = font_find_glyph(font, '_');
       }
+      g_h = glyph.height;
+      g_w = glyph.width;
       for (int h = 0; h < glyph.height; h++) {
          for (int w = 0; w < glyph.width; w++) {
             int offset = w / 8;
@@ -379,8 +382,12 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
 
    int ret = ((max_x - min_x) << 16) | (max_y - min_y);
 
-   x -= (max_x / 2) + min_x;
-   y -= (max_y / 2) + min_y;
+if (strlen(p) == 1) { //g_w > 100) {
+   printf("==== %d x %d max_x=%d min_x=%d max_y=%d min_y=%d\n",
+      g_w, g_h, max_x, min_x, max_y, min_y);
+}
+   x -= ((max_x - min_x) / 2) + min_x;
+   y -= ((max_y - min_y) / 2) + min_y;
 
    int ox = x;
 

@@ -59,15 +59,24 @@ dejavu-fonts-ttf-2.37.tar.bz2:
 	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_60.bdf
 	touch .part_a
 
-.part_b: png2h.pl
+icons:
 	rm -rf weather-underground-icons
 	git clone https://github.com/manifestinteractive/weather-underground-icons.git
 	rm -rf icons
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
+	(cd icons/solid-white/png/16x16 ; mogrify -bordercolor transparent -trim -format png *.png)
+	(cd icons/solid-white/png/32x32 ; mogrify -bordercolor transparent -trim -format png *.png)
+	(cd icons/solid-white/png/64x64 ; mogrify -bordercolor transparent -trim -format png *.png)
+	(cd icons/solid-white/png/128x128 ; mogrify -bordercolor transparent -trim -format png *.png)
+	(cd icons/solid-white/png/256x256 ; mogrify -bordercolor transparent -trim -format png *.png)
+
+.part_b: png2h.pl icons
+	./png2h.pl icons/solid-white/png/16x16/
 	./png2h.pl icons/solid-white/png/32x32/
 	./png2h.pl icons/solid-white/png/64x64/
 	./png2h.pl icons/solid-white/png/128x128/
+	./png2h.pl icons/solid-white/png/256x256/
 	touch .part_b
 
 .part_c:

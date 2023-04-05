@@ -41,6 +41,7 @@
 #ifdef ORIG
 //#define SIZE 1024
 int SIZE = 1024;
+uint8_t *ICON_FONT;
 uint8_t *ASTRO_FONT;
 uint8_t *FONT_BOLD_BIG;
 uint8_t *FONT_BOLD_MED;
@@ -84,6 +85,18 @@ static void set_font(uint8_t ** target,
       }
    }
    *target = choices[close];
+}
+
+static void set_icon_font(int width) {
+   uint8_t *choices[] = {
+      icons_16x16,
+      icons_32x32,
+      icons_64x64,
+      icons_128x128,
+      icons_256x256,
+      NULL
+   };
+   set_font(&ICON_FONT, choices, icons_128x128[1], width);
 }
 
 static void set_astro_font(int width) {
@@ -976,7 +989,7 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ,
          sprintf(text, "%s", wenam[local.tm_wday]);
       }
       text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
-            canvas->h / 2 - (int)SCALE(90), COLOR_WHITE, COLOR_BLACK, text,
+            canvas->h / 2 - (int)SCALE(80), COLOR_WHITE, COLOR_BLACK, text,
             1, 2);
    }
 
@@ -990,7 +1003,7 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ,
       }
       sprintf(text + strlen(text), "-%d", local.tm_mday);
       text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
-            canvas->h / 2 - (int)SCALE(60), COLOR_WHITE, COLOR_BLACK, text,
+            canvas->h / 2 - (int)SCALE(50), COLOR_WHITE, COLOR_BLACK, text,
             1, 2);
    }
 }
@@ -1257,8 +1270,12 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
       return;
    }
 
+   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
    double angle =
       now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
+
+   arc_canvas(canvas, SIZE / 2, SIZE / 2,
+      radius, SCALE(9), COLOR_WHITE, angle - 1.875, angle + 1.875);
 
    int cx, cy;
    cx = canvas->w / 2 +
@@ -1267,8 +1284,9 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
       (int)((10.0 + canvas->h / 6.0) * sin_deg(angle));
 
    // dot
-   arc_canvas(canvas, cx, cy, SCALE(40)/2, SCALE(40), COLOR_MAGENTA, 0, 360);
-         //COLOR_XOR, angle - 1.875, angle + 1.875);
+   arc_canvas(canvas, cx, cy, SCALE(40)/2, SCALE(40), COLOR_WHITE, 0, 360);
+   text_canvas(canvas, ICON_FONT, cx, cy,
+      COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
 }
 
 void do_eclipses(Canvas *canvas, double jd, double now_angle) {
@@ -1281,7 +1299,7 @@ void do_eclipses(Canvas *canvas, double jd, double now_angle) {
    if (FDa.D < 180.0 && FDb.D > 180.0) {
       do_lunar_eclipse(canvas, jd, now_angle);
    }
-   else if (FDb.D < FDa.D) {
+   else if (FDb.D < FDa.D) { // misordering indicates wraparound
       do_solar_eclipse(canvas, jd, now_angle);
    }
 }
@@ -1322,6 +1340,7 @@ Canvas *do_all(double lat,
    // assign global SIZE used for scaling
    SIZE = width;
 
+   set_icon_font(width);
    set_astro_font(width);
    set_bold_big(width);
    set_bold_med(width);
@@ -1340,7 +1359,8 @@ Canvas *do_all(double lat,
       tm.tm_mday = ((int)(offset) % 100);
       now = mktime(&tm);
 
-      printf("%f %d %d %d %d %ld\n", offset, (int)offset, tm.tm_year, tm.tm_mon, tm.tm_mday, now);
+      //printf("%f %d %d %d %d %ld\n", offset,
+      //   (int)offset, tm.tm_year, tm.tm_mon, tm.tm_mday, now);
 
       now += (offset - (double)((int)offset)) * 24.0 * 60.0 * 60.0;
    }

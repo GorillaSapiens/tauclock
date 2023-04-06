@@ -1277,18 +1277,10 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
    arc_canvas(canvas, SIZE / 2, SIZE / 2,
       radius, SCALE(9), COLOR_WHITE, angle - 1.875, angle + 1.875);
 
-   int cx, cy;
-   cx = canvas->w / 2 +
-      (int)((10.0 + canvas->w / 6.0) * cos_deg(angle));
-   cy = canvas->h / 2 +
-      (int)((10.0 + canvas->h / 6.0) * sin_deg(angle));
-
-   // dot
-   // arc_canvas(canvas, cx, cy, SCALE(40)/2, SCALE(40), COLOR_WHITE, 0, 360);
-
-   // sun icon
-   text_canvas(canvas, ICON_FONT, cx, cy,
-      COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
+   if (now_angle > angle - 1.875 && now_angle < angle + 1.875) {
+      text_canvas(canvas, ICON_FONT, canvas->w / 2, canvas->h / 2 - 10 - canvas->w / 6,
+         COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
+   }
 }
 
 void do_eclipses(Canvas *canvas, double jd, double now_angle) {

@@ -15,10 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 .PHONY: all
-all: trigmain tests fasttests oneday
-
-trigmain: trig1.c trig1_main.c
-	gcc -Wall -g -Ofast $^ -lm -o trigmain
+all: tests fasttests oneday
 
 tests: astro.c precise.c
 	gcc -DVERBOSE -DTEST -Wall -g -Ofast $^ -lm -o tests

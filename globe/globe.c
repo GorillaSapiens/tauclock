@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "trig1.h"
+#include "precise.h"
 #include "draw.h"
 #include "globei.h"
 

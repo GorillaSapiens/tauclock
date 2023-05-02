@@ -670,9 +670,10 @@ double do_sun_bands(Canvas *canvas,
 /// @param canvas The Canvas to draw on
 /// @param jd The current Julian Date
 /// @param is_up Whether or not the moon is currently up
+/// @param angle The angle position of the moon's bright limb
 /// @return void
 void
-do_moon_draw(Canvas * canvas, double jd, int is_up) {
+do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    struct FD FD = ə67(jd);
 
    // WHERE to draw it.
@@ -893,7 +894,9 @@ void do_planet_bands(Canvas *canvas,
       max = -1;
 
       if (p == 0) {
-         do_moon_draw(canvas, jd, a[12*60] > HORIZON);
+         double angle =
+            ə68(ə27(jd, ə46(jd)), ə27(jd, ə65(jd)));
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON, angle);
       }
    }
 

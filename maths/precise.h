@@ -12,7 +12,7 @@ double atan_deg(double tangent);
 double atan2_deg(double y, double x);
 
 // disallow usage of stack radiant based functions
-#define FNORD KNARF
+#define FNORD USE_DEG_VERSIONS_OF_TRIG_FUNCTIONS
 #define sin(x) FNORD
 #define cos(x) FNORD
 #define tan(x) FNORD

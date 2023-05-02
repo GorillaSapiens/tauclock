@@ -464,6 +464,23 @@ struct FD ə67(double jd) {
    return FD;
 }
 
+// The position-angle of the Moon’s bright limb
+double ə68(struct αδ sun, struct αδ moon) {
+
+   sun.α *= 15.0;
+   moon.α *= 15.0;
+
+   double y =
+      cos_deg(sun.δ) * sin_deg(sun.α - moon.α);
+
+   double x =
+      cos_deg(moon.δ) * sin_deg(sun.δ) -
+      sin_deg(moon.δ) * cos_deg(sun.δ) * cos_deg(sun.α - moon.α );
+
+   double χ = atan2_deg(y, x);
+   return χ;
+}
+
 // Calculating a lunar eclipse
 double ə73(double jd) {
    // much of this copied from ə65

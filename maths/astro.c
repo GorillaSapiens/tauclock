@@ -684,6 +684,14 @@ int old_main(int argc, char **argv) {
       printf("pass\n");
    }
 
+   // double ə68(struct αδ sun, struct αδ moon) {
+   {
+      printf("test ə68\n");
+      double angle = ə68((struct αδ) { 10.654722, 8.505833 }, (struct αδ) { 14.202778, -11.582778 });
+      assert(close(angle, -71.58, .05));
+      printf("pass");
+   }
+
    return 0;
 }
 

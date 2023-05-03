@@ -695,6 +695,8 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    // a circle passing through points (0,a), (0,-a), and (b,0)
    double b;
 
+   angle -= 90.0;
+
    if (FD.D < 90.0) {
       interior_color = COLOR_SILVER;
       chunk_color = COLOR_BLACK;
@@ -712,12 +714,14 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
       chunk_color = COLOR_SILVER;
       // b = +a at 180 degrees and 0 at 270 degrees
       b = (270.0 - FD.D) / 90.0;
+      angle += 180.0;
    }
    else {
       interior_color = COLOR_SILVER;
       chunk_color = COLOR_BLACK;
       // b = 0 at 270 degrees and -a at 360 degrees
       b = -(FD.D - 270.0) / 90.0;
+      angle += 180.0;
    }
 
    // avoid possible division by zero
@@ -731,16 +735,20 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
 
    // this won't make sense, because it's derived from earlier code...
    // but it really does draw the moon...
-   for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
-      for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+   for (double dx = -SCALE(40); dx <= SCALE(40); dx += .5) {
+      for (double dy = -SCALE(40); dy <= SCALE(40); dy += .5) {
          double d_interior = sqrt(dx * dx + dy * dy);
          if (d_interior <= SCALE(40.0)) {
+            int xp = dx*cos_deg(angle) - dy*sin_deg(angle);
+            int yp = dx*sin_deg(angle) + dy*cos_deg(angle);
             double d_chunk = sqrt((dx - chunk_x) * (dx - chunk_x) + dy * dy);
             if (d_chunk < chunk_r) {
-               poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
+               //poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
+               poke_canvas(canvas, cx + xp, cy + yp, chunk_color);
             }
             else {
-               poke_canvas(canvas, cx + dx, cy + dy, interior_color);
+               //poke_canvas(canvas, cx + dx, cy + dy, interior_color);
+               poke_canvas(canvas, cx + xp, cy + yp, interior_color);
             }
          }
       }

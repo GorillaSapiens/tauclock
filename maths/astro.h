@@ -101,6 +101,9 @@ struct λβ ə65(double jd);
 // The phases of the Moon
 struct FD ə67(double jd);
 
+// The position-angle of the Moon’s bright limb
+double ə68(struct αδ sun, struct αδ moon);
+
 // Calculating a lunar eclipse
 double ə73(double jd);
 

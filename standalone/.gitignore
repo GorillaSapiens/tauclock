@@ -1,6 +1,9 @@
+*.o
 html
 latex
 calcdata
+calcdatarange
 calcrange
+Makefile.bak
 gmon.out
 out*

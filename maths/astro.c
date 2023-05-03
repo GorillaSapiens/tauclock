@@ -464,6 +464,23 @@ struct FD ə67(double jd) {
    return FD;
 }
 
+// The position-angle of the Moon’s bright limb
+double ə68(struct αδ sun, struct αδ moon) {
+
+   sun.α *= 15.0;
+   moon.α *= 15.0;
+
+   double y =
+      cos_deg(sun.δ) * sin_deg(sun.α - moon.α);
+
+   double x =
+      cos_deg(moon.δ) * sin_deg(sun.δ) -
+      sin_deg(moon.δ) * cos_deg(sun.δ) * cos_deg(sun.α - moon.α );
+
+   double χ = atan2_deg(y, x);
+   return χ;
+}
+
 // Calculating a lunar eclipse
 double ə73(double jd) {
    // much of this copied from ə65
@@ -665,6 +682,14 @@ int old_main(int argc, char **argv) {
       assert(close(FD.D, 56.622971, 0.02));
       assert(close(FD.F, 0.225, 0.02));
       printf("pass\n");
+   }
+
+   // double ə68(struct αδ sun, struct αδ moon) {
+   {
+      printf("test ə68\n");
+      double angle = ə68((struct αδ) { 10.654722, 8.505833 }, (struct αδ) { 14.202778, -11.582778 });
+      assert(close(angle, -71.58, .05));
+      printf("pass");
    }
 
    return 0;

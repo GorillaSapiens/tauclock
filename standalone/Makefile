@@ -19,6 +19,9 @@
 COLOR=-fdiagnostics-color=always
 #COLOR=
 
+#OPTIM=-g -pg -Ofast
+OPTIM=-g -Og -ggdb
+
 all: fonts/.bdf calcdata calcrange html/index.html
 
 html/index.html: doxygen.conf clock.c draw.c ../maths/astro.c
@@ -41,20 +44,20 @@ icons:
 calcdata: main.o draw.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
-		-g -pg -Ofast -Wall \
+		$(OPTIM) -Wall \
 		$^ -lm -o calcdata
 
 calcrange: mainrange.o draw.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
-		-g -pg -Ofast -Wall \
+		$(OPTIM) -Wall \
 		$^ -lm -o calcrange
 
 %.o: %.c
 	gcc -c \
 		$(COLOR) \
 		-flarge-source-files \
-		-g -pg -Ofast -Wall -DSTANDALONE \
+		$(OPTIM) -Wall -DSTANDALONE \
 		-I../maths $*.c -o $*.o
 
 depend:

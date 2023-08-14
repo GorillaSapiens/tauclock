@@ -44,6 +44,8 @@ int SIZE = 1024;
 uint8_t *ICON_FONT;
 uint8_t *ASTRO_FONT;
 uint8_t *FONT_BOLD_BIG;
+uint8_t *FONT_BOLD_LARGER;
+uint8_t *FONT_BOLD_LARGE;
 uint8_t *FONT_BOLD_MED;
 uint8_t *FONT_BOLD_SMALL;
 uint8_t *FONT_ITALIC_MED;
@@ -67,6 +69,114 @@ uint8_t *FONT_ITALIC_MED;
 #define COLOR_JUPITER         COLOR_ORANGE
 #define COLOR_SATURN          COLOR_LIGHTBLUE
 #define COLOR_ARIES           COLOR_GREEN
+
+struct delayed_text {
+   int x, y;
+   int w, h;
+   unsigned int fg, bg;
+   const char *p;
+   int mult, gap;
+   uint8_t *font;
+};
+
+struct delayed_text_queue {
+   int size;
+   int max;
+   struct delayed_text *queue;
+};
+
+static int delayed_text_canvas(struct delayed_text_queue *dtq, Canvas * canvas, uint8_t * font, int x, int y,
+      unsigned int fg, unsigned int bg, const char *p, int mult,
+      int gap) {
+   int ret = text_canvas(canvas, font, -10000, -10000, fg, bg, p, mult, gap);
+
+   if (x < 0 || y < 0) {
+      return ret;
+   }
+
+   struct delayed_text *dt = dtq->queue + dtq->size;
+
+   dt->x = x;
+   dt->y = y;
+   dt->w = ret >> 16;
+   dt->h = ret & 0xFFFF;
+   dt->fg = fg;
+   dt->bg = bg;
+   dt->p = strdup(p);
+   dt->mult = mult;
+   dt->gap = gap;
+   dt->font = font;
+
+   dtq->size++;
+
+   return ret;
+}
+
+static struct delayed_text_queue *alloc_dtq(int n) {
+   struct delayed_text_queue *ret =
+      (struct delayed_text_queue *) malloc (sizeof(struct delayed_text_queue));
+   ret->size = 0;
+   ret->queue = (struct delayed_text *) malloc (n * sizeof(struct delayed_text));
+   return ret;
+}
+
+static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas) {
+   int problems;
+
+   do {
+      problems = 0;
+
+      for (int i = 0; i < dtq->size - 1; i++) {
+         struct delayed_text *dti = dtq->queue + i;
+         int i_lef = dti->x - (dti->w+3)/2;
+         int i_rig = dti->x + (dti->w+3)/2;
+         int i_top = dti->y - (dti->h+3)/2;
+         int i_bot = dti->y + (dti->h+3)/2;
+
+         for (int j = i + 1; j < dtq->size; j++) {
+            struct delayed_text *dtj = dtq->queue + j;
+            int j_lef = dtj->x - (dtj->w+3)/2;
+            int j_rig = dtj->x + (dtj->w+3)/2;
+            int j_top = dtj->y - (dtj->h+3)/2;
+            int j_bot = dtj->y + (dtj->h+3)/2;
+
+            // check for overlaps
+            if (!(i_bot < j_top || i_top > j_bot || i_rig < j_lef || i_lef > j_rig)) {
+               problems++;
+               if (dti->x < dtj->x) {
+                  dti->x--;
+                  dtj->x++;
+               }
+               else if (dti->x > dtj->x) {
+                  dti->x++;
+                  dtj->x--;
+               }
+               if (dti->y < dtj->y) {
+                  dti->y--;
+                  dtj->y++;
+               }
+               else if (dti->y > dtj->y) {
+                  dti->y++;
+                  dtj->y--;
+               }
+            }
+
+         }
+      }
+
+   } while (problems);
+
+   for (int i = 0; i < dtq->size; i++) {
+      struct delayed_text *dt = dtq->queue + i;
+      text_canvas(canvas, dt->font, dt->x, dt->y,
+         dt->fg, dt->bg, dt->p, dt->mult, dt->gap);
+      free((void *)dt->p);
+   }
+   free(dtq->queue);
+   free(dtq);
+}
+
+#define text_canvas(a,b,c,d,e,f,g,h,i) delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i)
 
 static void set_font(uint8_t ** target,
                      uint8_t ** choices,
@@ -111,42 +221,7 @@ static void set_astro_font(int width) {
    set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
 }
 
-static void set_bold_big(int width) {
-   uint8_t *choices[] = {
-      djsmb_8_bdf,
-      djsmb_10_bdf,
-      djsmb_16_bdf,
-      djsmb_20_bdf,
-      djsmb_32_bdf,
-      djsmb_40_bdf,
-      djsmb_50_bdf,
-      djsmb_60_bdf,
-      NULL
-   };
-   set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
-}
-
-static void set_bold_med(int width) {
-   uint8_t *choices[] = {
-      djsmb_8_bdf,
-      djsmb_10_bdf,
-      djsmb_12_bdf,
-      djsmb_14_bdf,
-      djsmb_16_bdf,
-      djsmb_18_bdf,
-      djsmb_20_bdf,
-      djsmb_22_bdf,
-      djsmb_24_bdf,
-      djsmb_32_bdf,
-      djsmb_40_bdf,
-      djsmb_50_bdf,
-      djsmb_60_bdf,
-      NULL
-   };
-   set_font(&FONT_BOLD_MED, choices, djsmb_22_bdf[1], width);
-}
-
-static void set_bold_small(int width) {
+static void set_bold(int width) {
    uint8_t *choices[] = {
       djsmb_8_bdf,
       djsmb_10_bdf,
@@ -164,6 +239,10 @@ static void set_bold_small(int width) {
       NULL
    };
    set_font(&FONT_BOLD_SMALL, choices, djsmb_18_bdf[1], width);
+   set_font(&FONT_BOLD_MED, choices, djsmb_22_bdf[1], width);
+   set_font(&FONT_BOLD_LARGE, choices, djsmb_24_bdf[1], width);
+   set_font(&FONT_BOLD_LARGER, choices, djsmb_32_bdf[1], width);
+   set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
 }
 
 static void set_italic_med(int width) {
@@ -213,12 +292,13 @@ void do_now_hand(Canvas * canvas, double now_angle) {
 ///
 /// Ticks are drawn using xor logic, so they should always be visible
 ///
+/// @param dtq The delayed text queue
 /// @param canvas The Canvas to draw on
 /// @param now The current time_t
 /// @param r The radius of the clock
 /// @param now_angle The angle used as "now"
 /// @return void
-void do_hour_ticks(Canvas * canvas, time_t now, int r, double now_angle) {
+void do_hour_ticks(struct delayed_text_queue *dtq, Canvas * canvas, time_t now, int r, double now_angle) {
    int x = SIZE / 2;
    int y = SIZE / 2;
 
@@ -257,7 +337,7 @@ void do_hour_ticks(Canvas * canvas, time_t now, int r, double now_angle) {
    }
 }
 
-void duration_text(Canvas *canvas,
+void duration_text(struct delayed_text_queue *dtq, Canvas *canvas,
                    const char *text,
                    double degrees,
                    unsigned int color,
@@ -283,21 +363,24 @@ void duration_text(Canvas *canvas,
       color, COLOR_NONE, buf, 1, 3);
 }
 
-void duration_top_text(Canvas *canvas,
+void duration_top_text(struct delayed_text_queue *dtq,
+                       Canvas *canvas,
                        const char *text,
                        double degrees,
                        unsigned int color) {
-   duration_text(canvas, text, degrees, color, SIZE / 4);
+   duration_text(dtq, canvas, text, degrees, color, SIZE / 4);
 }
 
-void duration_bottom_text(Canvas *canvas,
+void duration_bottom_text(struct delayed_text_queue *dtq,
+                          Canvas *canvas,
                           const char *text,
                           double degrees,
                           unsigned int color) {
-   duration_text(canvas, text, degrees, color, SIZE * 3 / 4);
+   duration_text(dtq, canvas, text, degrees, color, SIZE * 3 / 4);
 }
 
-void edgetime(Canvas *canvas,
+void edgetime(struct delayed_text_queue *dtq,
+              Canvas *canvas,
               time_t now,
               int index,
               double now_angle,
@@ -333,7 +416,8 @@ void edgetime(Canvas *canvas,
                color, COLOR_NONE, buf, 1, 3);
 }
 
-double do_sun_bands(Canvas *canvas,
+double do_sun_bands(struct delayed_text_queue *dtq,
+                    Canvas *canvas,
                     time_t now,
                     double jd,
                     struct φλ φλ,
@@ -494,10 +578,10 @@ double do_sun_bands(Canvas *canvas,
 
          // borders
          arc_canvas(canvas,
-               SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
+               SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 14,
                oldbandcolor, start_angle, stop_angle);
          arc_canvas(canvas,
-               SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
+               SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 14,
                oldbandcolor, start_angle, stop_angle);
 
          switch (oldbandcolor) {
@@ -542,10 +626,10 @@ double do_sun_bands(Canvas *canvas,
 
    // borders
    arc_canvas(canvas,
-         SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 7,
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 14,
          oldbandcolor, start_angle, stop_angle);
    arc_canvas(canvas,
-         SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 7,
+         SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 14,
          oldbandcolor, start_angle, stop_angle);
 
    switch (oldbandcolor) {
@@ -559,58 +643,58 @@ double do_sun_bands(Canvas *canvas,
 
    do_now_hand(canvas, now_angle);
 
-   do_hour_ticks(canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
+   do_hour_ticks(dtq, canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
 
    if (lightdark == 0) {
       bool skiplower = false;
 
       // what to put at the top?
       if (sunup > 0.0) {
-         duration_top_text(canvas, "sun up", sunup, COLOR_BLACK);
+         duration_top_text(dtq, canvas, "sun up", sunup, COLOR_BLACK);
          if (civil == 0.0) {
             skiplower = true;
          }
       }
       else if (civil > 0.0) {
-         duration_top_text(canvas, "civil", civil, COLOR_BLACK);
+         duration_top_text(dtq, canvas, "civil", civil, COLOR_BLACK);
          if (nautical == 0.0) {
             skiplower = true;
          }
       }
       else if (nautical > 0.0) {
-         duration_top_text(canvas, "nautical", nautical, COLOR_WHITE);
+         duration_top_text(dtq, canvas, "nautical", nautical, COLOR_WHITE);
          if (astronomical == 0.0) {
             skiplower = true;
          }
       }
       else if (astronomical > 0.0) {
-         duration_top_text(canvas, "astronomical", astronomical, COLOR_WHITE);
+         duration_top_text(dtq, canvas, "astronomical", astronomical, COLOR_WHITE);
          if (night == 0.0) {
             skiplower = true;
          }
       }
       else if (night > 0.0) {
-         duration_top_text(canvas, "night", night, COLOR_WHITE);
+         duration_top_text(dtq, canvas, "night", night, COLOR_WHITE);
          skiplower = true;
       }
 
       // what to put at the bottom
       if (!skiplower) {
          if (night > 0.0) {
-            duration_bottom_text(canvas, "night", night, COLOR_WHITE);
+            duration_bottom_text(dtq, canvas, "night", night, COLOR_WHITE);
          }
          else if (astronomical > 0.0) {
-            duration_bottom_text(canvas, "astronomical", astronomical, COLOR_WHITE);
+            duration_bottom_text(dtq, canvas, "astronomical", astronomical, COLOR_WHITE);
          }
          else if (nautical > 0.0) {
-            duration_bottom_text(canvas, "nautical", nautical, COLOR_WHITE);
+            duration_bottom_text(dtq, canvas, "nautical", nautical, COLOR_WHITE);
          }
          else if (civil > 0.0) {
-            duration_bottom_text(canvas, "civil", civil, COLOR_BLACK);
+            duration_bottom_text(dtq, canvas, "civil", civil, COLOR_BLACK);
          }
          else if (sunup > 0.0) {
             // what madness is this ?!?!?
-            duration_bottom_text(canvas, "MADNESS", sunup, COLOR_BLACK);
+            duration_bottom_text(dtq, canvas, "MADNESS", sunup, COLOR_BLACK);
          }
       }
    }
@@ -619,48 +703,48 @@ double do_sun_bands(Canvas *canvas,
       double twilight = 360.0 - light - dark;
 
       if (light > 0.0) {
-         duration_top_text(canvas, "light", light, COLOR_BLACK);
+         duration_top_text(dtq, canvas, "light", light, COLOR_BLACK);
       }
       else if (twilight > 0.0) {
-         duration_top_text(canvas, "twilight", twilight, COLOR_BLACK);
+         duration_top_text(dtq, canvas, "twilight", twilight, COLOR_BLACK);
       }
 
       if (dark > 0.0) {
-         duration_bottom_text(canvas, "dark", dark, COLOR_WHITE);
+         duration_bottom_text(dtq, canvas, "dark", dark, COLOR_WHITE);
       }
       else if (twilight > 0.0 && light > 0.0) {
-         duration_bottom_text(canvas, "twilight", twilight, COLOR_WHITE);
+         duration_bottom_text(dtq, canvas, "twilight", twilight, COLOR_WHITE);
       }
    }
 
    for (int i = 1; i < 24*60; i++) {
       if (a[i-1] < HORIZON_SUN && a[i] >= HORIZON_SUN) {
-         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_BLACK);
       }
       if (a[i-1] >= HORIZON_SUN && a[i] < HORIZON_SUN) {
-         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_BLACK);
       }
       if (a[i-1] < HORIZON_CIVIL && a[i] >= HORIZON_CIVIL) {
-         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_BLACK);
       }
       if (a[i-1] >= HORIZON_CIVIL && a[i] < HORIZON_CIVIL) {
-         edgetime(canvas, now, i, now_angle, COLOR_BLACK);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_BLACK);
       }
       if (a[i-1] < HORIZON_NAUTICAL && a[i] >= HORIZON_NAUTICAL) {
-         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_WHITE);
       }
       if (a[i-1] >= HORIZON_NAUTICAL && a[i] < HORIZON_NAUTICAL) {
-         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_WHITE);
       }
       if (a[i-1] < HORIZON_ASTRONOMICAL && a[i] >= HORIZON_ASTRONOMICAL) {
-         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_WHITE);
       }
       if (a[i-1] >= HORIZON_ASTRONOMICAL && a[i] < HORIZON_ASTRONOMICAL) {
-         edgetime(canvas, now, i, now_angle, COLOR_WHITE);
+         edgetime(dtq, canvas, now, i, now_angle, COLOR_WHITE);
       }
    }
 
-   edgetime(canvas, now, max, now_angle, COLOR_BLACK);
+   edgetime(dtq, canvas, now, max, now_angle, COLOR_BLACK);
 
    return now_angle;
 }
@@ -758,7 +842,8 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
       is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
 }
 
-void do_planet_bands(Canvas *canvas,
+void do_planet_bands(struct delayed_text_queue *dtq,
+                     Canvas *canvas,
                      double now_angle,
                      double jd,
                      struct φλ φλ) {
@@ -902,9 +987,12 @@ void do_planet_bands(Canvas *canvas,
       max = -1;
 
       if (p == 0) {
+         struct αδ moon = ə27(jd, ə65(jd));
          double angle =
-            ə68(ə27(jd, ə46(jd)), ə27(jd, ə65(jd)));
-         do_moon_draw(canvas, jd, a[12*60] > HORIZON, angle);
+            ə68(ə27(jd, ə46(jd)), moon);
+         struct Aa Aa = ə25(jd, φλ, moon);
+fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON, angle + Aa.A);
       }
    }
 
@@ -920,13 +1008,15 @@ void do_planet_bands(Canvas *canvas,
 
 /// @brief Draw the location in the center of the Canvas
 ///
+/// @param dtq The delayed text queue
 /// @param canvas The Canvas to draw on
 /// @param now The current time_t
 /// @param φλ The lat/long of the observer position
 /// @param monam Array of month names for localization, Jan=0
 /// @param wenam Array of weekday names for localization, Sun=0
 /// @return void
-void do_center(Canvas * canvas, time_t now, struct φλ φλ,
+void do_center(struct delayed_text_queue *dtq,
+      Canvas * canvas, time_t now, struct φλ φλ,
       const char *monam[], const char *wenam[]) {
 
    {
@@ -953,9 +1043,9 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ,
          // border bands
          int mid = canvas->w / 2;
          arc_canvas(canvas,
-               mid, mid, mid / 2 - SCALE(126), 7, COLOR_WHITE, 0, 360.0);
+               mid, mid, mid / 2 - SCALE(126), 14, COLOR_WHITE, 0, 360.0);
          arc_canvas(canvas,
-               mid, mid, mid / 2 + SCALE(126), 7, COLOR_WHITE, 0, 360.0);
+               mid, mid, mid / 2 + SCALE(126), 14, COLOR_WHITE, 0, 360.0);
 
       }
       else {
@@ -1023,13 +1113,15 @@ void do_center(Canvas * canvas, time_t now, struct φλ φλ,
 ///
 /// Timezone in lower left, Julian Date in lower right
 ///
+/// @param dtq The delayed text queue
 /// @param canvas The Canvas to draw on
 /// @param now The current time_t
 /// @param JD The current Julian Date
 /// @param offset The offset passed into do_all
 /// @param tzProvider Name of the timezone provider
 /// @return void
-void do_debug_info(Canvas * canvas,
+void do_debug_info(struct delayed_text_queue *dtq,
+                   Canvas * canvas,
                    time_t now,
                    double JD,
                    double offset,
@@ -1075,28 +1167,28 @@ void do_debug_info(Canvas * canvas,
 
    // probe our font
 #define TEST_STRING "A_gy"      // includes upercase and descenders
-   int whn = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int whn = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, TEST_STRING, 1, 3);
    int hn = whn & 0xFFFF;
 
    // get sizes of various pieces
-   int wh0 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int wh0 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
    int w0 = wh0 >> 16;
 
-   int wh1 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int wh1 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
    int w1 = wh1 >> 16;
 
-   int wh2 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int wh2 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
    int w2 = wh2 >> 16;
 
-   int wh3 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int wh3 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
    int w3 = wh3 >> 16;
 
-   int wh4 = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+   int wh4 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
    int w4 = wh4 >> 16;
 
@@ -1106,19 +1198,19 @@ void do_debug_info(Canvas * canvas,
    // now output the things...
 
    // date side
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w0 / 2,
+   text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w0 / 2,
          canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
-   text_canvas(canvas, FONT_BOLD_MED, canvas->w - 5 - w1 / 2,
+   text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w1 / 2,
          canvas->h - 5 - (h + 5) - h / 2, COLOR_YELLOW, COLOR_BLACK,
          offset_buf, 1, 3);
 
    // timezone side
-   text_canvas(canvas, FONT_BOLD_MED, 5 + w2 / 2, canvas->h - 5 - h / 2,
+   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2, canvas->h - 5 - h / 2,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
-   text_canvas(canvas, FONT_BOLD_MED, 5 + w3 / 2,
+   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w3 / 2,
          canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
          3);
-   text_canvas(canvas, FONT_BOLD_MED, 5 + w4 / 2,
+   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,
          canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
          tzProvider, 1, 3);
 }
@@ -1127,15 +1219,19 @@ void do_debug_info(Canvas * canvas,
 ///
 /// upper left
 ///
+/// @param dtq The delayed text queue
 /// @param canvas The Canvas to draw on
 /// @param locprovider The current location provider
 /// @return void
-void do_provider_info(Canvas * canvas, const char *locprovider) {
-   int wh = text_canvas(canvas, FONT_BOLD_MED, -1000, -1000,
+void do_provider_info(
+      struct delayed_text_queue *dtq,
+      Canvas * canvas,
+      const char *locprovider) {
+   int wh = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_MED, w / 2 + 20,
+   text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
 }
 
@@ -1252,7 +1348,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
    }
 }
 
-void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
+void do_solar_eclipse(struct delayed_text_queue *dtq, Canvas *canvas, double jd, double now_angle) {
    double a = jd - 0.5;
    double b = jd + 0.5;
    double c;
@@ -1294,7 +1390,7 @@ void do_solar_eclipse(Canvas *canvas, double jd, double now_angle) {
    }
 }
 
-void do_eclipses(Canvas *canvas, double jd, double now_angle) {
+void do_eclipses(struct delayed_text_queue *dtq, Canvas *canvas, double jd, double now_angle) {
    double a = jd - 0.5;
    struct FD FDa = ə67(a);
 
@@ -1305,7 +1401,7 @@ void do_eclipses(Canvas *canvas, double jd, double now_angle) {
       do_lunar_eclipse(canvas, jd, now_angle);
    }
    else if (FDb.D < FDa.D) { // misordering indicates wraparound
-      do_solar_eclipse(canvas, jd, now_angle);
+      do_solar_eclipse(dtq, canvas, jd, now_angle);
    }
 }
 
@@ -1347,10 +1443,10 @@ Canvas *do_all(double lat,
 
    set_icon_font(width);
    set_astro_font(width);
-   set_bold_big(width);
-   set_bold_med(width);
-   set_bold_small(width);
+   set_bold(width);
    set_italic_med(width);
+
+   struct delayed_text_queue *dtq = alloc_dtq(128);
 
    // observer's location
    struct φλ φλ = { lat, lon };
@@ -1381,20 +1477,23 @@ Canvas *do_all(double lat,
 
    if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
       double now_angle =
-         do_sun_bands(canvas, now, jd, φλ, lightdark);
-      do_planet_bands(canvas, now_angle, jd, φλ);
+         do_sun_bands(dtq, canvas, now, jd, φλ, lightdark);
+      do_planet_bands(dtq, canvas, now_angle, jd, φλ);
 
-      do_eclipses(canvas, jd, now_angle);
+      do_eclipses(dtq, canvas, jd, now_angle);
    }
 
    // information in the center
-   do_center(canvas, now, φλ, monam, wenam);
+   do_center(dtq, canvas, now, φλ, monam, wenam);
 
    // lower right corner
-   do_debug_info(canvas, now, jd, offset, tzprovider);
+   do_debug_info(dtq, canvas, now, jd, offset, tzprovider);
 
    // upper left corner
-   do_provider_info(canvas, locprovider);
+   do_provider_info(dtq, canvas, locprovider);
+
+   // actually draw the text for realsies
+   resolve_delayed_text(dtq, canvas);
 
    return canvas;
 }

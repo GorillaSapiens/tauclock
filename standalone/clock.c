@@ -775,9 +775,9 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    double where_angle = FD.D - 90.0;
    int cx, cy;
    cx = canvas->w / 2 +
-      (int)((canvas->w / 3.0) * cos_deg(where_angle));
+      (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
    cy = canvas->h / 2 +
-      (int)((canvas->h / 3.0) * sin_deg(where_angle));
+      (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
 
    // a little circle (interior)
    // with a chunk cut out of it.
@@ -849,7 +849,7 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
       }
    }
 
-   arc_canvas(canvas, cx, cy, SCALE(43), 7,
+   arc_canvas(canvas, cx, cy, SCALE(MOON_R + 3), 7,
       is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
 }
 

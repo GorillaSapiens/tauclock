@@ -273,17 +273,13 @@ static void set_italic_med(int width) {
 /// @return void
 void do_now_hand(Canvas * canvas, double now_angle) {
    double xc =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 +
-            SCALE(128)) * cos_deg(now_angle);
+      canvas->w / 2.0 + (canvas->w / 8.0) * cos_deg(now_angle);
    double yc =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 +
-            SCALE(128)) * sin_deg(now_angle);
+      canvas->h / 2.0 + (canvas->h / 8.0) * sin_deg(now_angle);
    double xc2 =
-      canvas->w / 2.0 + (canvas->w / 2.0 / 2.0 -
-            SCALE(128)) * cos_deg(now_angle);
+      canvas->w / 2.0 + (canvas->w / 2.0) * cos_deg(now_angle);
    double yc2 =
-      canvas->h / 2.0 + (canvas->h / 2.0 / 2.0 -
-            SCALE(128)) * sin_deg(now_angle);
+      canvas->h / 2.0 + (canvas->h / 2.0) * sin_deg(now_angle);
 
    thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
 }
@@ -318,10 +314,10 @@ void do_hour_ticks(struct delayed_text_queue *dtq, Canvas * canvas, time_t now, 
 
       double xa, ya;
       double xc, yc;
-      xa = x + (r - SCALE(8)) * cos_deg(angle);
-      ya = y + (r - SCALE(8)) * sin_deg(angle);
-      xc = x + r * cos_deg(angle);
-      yc = y + r * sin_deg(angle);
+      xa = x + (r - (14/2)) * cos_deg(angle);
+      ya = y + (r - (14/2)) * sin_deg(angle);
+      xc = x + (r + (14/2)) * cos_deg(angle);
+      yc = y + (r + (14/2)) * sin_deg(angle);
 
       line_canvas(canvas, (int)xa, (int)ya, (int)xc, (int)yc, COLOR_RED);
 
@@ -368,7 +364,7 @@ void duration_top_text(struct delayed_text_queue *dtq,
                        const char *text,
                        double degrees,
                        unsigned int color) {
-   duration_text(dtq, canvas, text, degrees, color, SIZE / 4);
+   duration_text(dtq, canvas, text, degrees, color, SIZE * 5 / 32);
 }
 
 void duration_bottom_text(struct delayed_text_queue *dtq,
@@ -376,7 +372,7 @@ void duration_bottom_text(struct delayed_text_queue *dtq,
                           const char *text,
                           double degrees,
                           unsigned int color) {
-   duration_text(dtq, canvas, text, degrees, color, SIZE * 3 / 4);
+   duration_text(dtq, canvas, text, degrees, color, SIZE * 27 / 32);
 }
 
 void edgetime(struct delayed_text_queue *dtq,
@@ -401,10 +397,10 @@ void edgetime(struct delayed_text_queue *dtq,
    int r;
 
    if (theta > 270.0 - 45.0 && theta < 270.0 + 45.0) {
-      r = (SIZE/2) * 5 / 8;
+      r = (SIZE/2) * 13 / 16;
    }
    else {
-      r = (SIZE/2) * 9 / 16;
+      r = (SIZE/2) * 13 / 16;
    }
 
    int x = cx + r * cos_deg(theta);
@@ -554,8 +550,13 @@ double do_sun_bands(struct delayed_text_queue *dtq,
          double stop_angle =
             now_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
 
+#define RADIUS(inner,outer) (((outer) + (inner)) / 2)
+#define STROKE(inner,outer) (((outer) - (inner)))
+
          arc_canvas(canvas,
-            SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
+            SIZE / 2, SIZE / 2,
+            RADIUS(SIZE/8, SIZE/2),
+            STROKE(SIZE/8, SIZE/2),
             oldcolor, start_angle, stop_angle);
 
          switch(oldcolor) {
@@ -578,10 +579,10 @@ double do_sun_bands(struct delayed_text_queue *dtq,
 
          // borders
          arc_canvas(canvas,
-               SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 14,
+               SIZE / 2, SIZE / 2, SIZE / 8 + (14/2), 14,
                oldbandcolor, start_angle, stop_angle);
          arc_canvas(canvas,
-               SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 14,
+               SIZE / 2, SIZE / 2, SIZE / 2 - (14/2), 14,
                oldbandcolor, start_angle, stop_angle);
 
          switch (oldbandcolor) {
@@ -603,7 +604,9 @@ double do_sun_bands(struct delayed_text_queue *dtq,
       now_angle + 180.0;
 
    arc_canvas(canvas,
-      SIZE / 2, SIZE / 2, SIZE / 2 / 2, SIZE / 2 / 2,
+      SIZE / 2, SIZE / 2,
+      RADIUS(SIZE/8, SIZE/2),
+      STROKE(SIZE/8, SIZE/2),
       color, start_angle, stop_angle);
 
    switch(oldcolor) {
@@ -626,10 +629,10 @@ double do_sun_bands(struct delayed_text_queue *dtq,
 
    // borders
    arc_canvas(canvas,
-         SIZE / 2, SIZE / 2, SIZE / 2 / 2 + SCALE(126), 14,
+         SIZE / 2, SIZE / 2, SIZE / 8 + (14/2), 14,
          oldbandcolor, start_angle, stop_angle);
    arc_canvas(canvas,
-         SIZE / 2, SIZE / 2, SIZE / 2 / 2 - SCALE(128), 14,
+         SIZE / 2, SIZE / 2, SIZE / 2 - (14/2), 14,
          oldbandcolor, start_angle, stop_angle);
 
    switch (oldbandcolor) {
@@ -643,7 +646,7 @@ double do_sun_bands(struct delayed_text_queue *dtq,
 
    do_now_hand(canvas, now_angle);
 
-   do_hour_ticks(dtq, canvas, now, SIZE / 2 / 2 + SCALE(128), now_angle);
+   do_hour_ticks(dtq, canvas, now, SIZE / 2 - (14/2), now_angle);
 
    if (lightdark == 0) {
       bool skiplower = false;
@@ -860,7 +863,8 @@ void do_planet_bands(struct delayed_text_queue *dtq,
    };
    static const char *syms = "BCDEFGa";
 
-   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
+   // initial
+   double radius = SIZE / 8 + 32;
 
    struct symxy {
       int x;
@@ -922,8 +926,12 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             double stop_angle =
                now_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
 
+            if (oldcolor != COLOR_NONE) {
+               arc_canvas(canvas, SIZE / 2, SIZE / 2,
+                  radius, SCALE(16), COLOR_BLACK, start_angle, stop_angle);
+            }
             arc_canvas(canvas, SIZE / 2, SIZE / 2,
-               radius, SCALE(5), oldcolor, start_angle, stop_angle);
+               radius, SCALE(12), oldcolor, start_angle, stop_angle);
 
             {
                double offset =
@@ -951,14 +959,19 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             x2 = canvas->w / 2 + (radius + 16) * cos_deg(stop_angle);
             y2 = canvas->h / 2 + (radius + 16) * sin_deg(stop_angle);
 
+            thick_line_canvas(canvas, x1, y1, x2, y2, COLOR_BLACK, 3);
             line_canvas(canvas, x1, y1, x2, y2, colors[p]);
          }
       }
 
       double stop_angle = now_angle + 180.0;
 
+      if (oldcolor != COLOR_NONE) {
+         arc_canvas(canvas, SIZE / 2, SIZE / 2,
+            radius, SCALE(16), COLOR_BLACK, start_angle, stop_angle);
+      }
       arc_canvas(canvas, SIZE / 2, SIZE / 2,
-         radius, SCALE(5), oldcolor, start_angle, stop_angle);
+         radius, SCALE(12), oldcolor, start_angle, stop_angle);
 
       if (a[max] > HORIZON) {
          double transit_angle =
@@ -971,6 +984,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
          x2 = canvas->w / 2 + (radius + 16) * cos_deg(transit_angle);
          y2 = canvas->h / 2 + (radius + 16) * sin_deg(transit_angle);
 
+         thick_line_canvas(canvas, x1, y1, x2, y2, COLOR_BLACK, 3);
          line_canvas(canvas, x1, y1, x2, y2, colors[p]);
 
          if (!ticked) {
@@ -983,7 +997,8 @@ void do_planet_bands(struct delayed_text_queue *dtq,
          }
       }
 
-      radius += SCALE(15);
+      // update
+      radius += 16;
       max = -1;
 
       if (p == 0) {
@@ -996,6 +1011,7 @@ fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
       }
    }
 
+#if 0
    for (int i = 0; i < symxy_spot; i++) {
       char sym[2] = { syms[symxy[i].p], 0 };
       text_canvas(canvas, ASTRO_FONT,
@@ -1004,6 +1020,7 @@ fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
          colors[symxy[i].p],
             COLOR_BLACK, sym, 1, 1);
    }
+#endif
 }
 
 /// @brief Draw the location in the center of the Canvas
@@ -1453,7 +1470,7 @@ Canvas *do_all(double lat,
 
    time_t now = time(NULL) + offset * 24.0 * 60.0 * 60.0;
 
-   if (offset > 19000000.0) {
+   if (offset > 19000000.0) { // it's a date!
       struct tm tm = { 0 };
       tm.tm_year = (int)(offset / 10000.0) - 1900;
       tm.tm_mon = ((int)(offset / 100.0) % 100) - 1;

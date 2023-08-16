@@ -874,19 +874,11 @@ void do_planet_bands(struct delayed_text_queue *dtq,
    // initial
    double radius = SIZE / 8 + SCALE(32);
 
-   struct symxy {
-      int x;
-      int y;
-      int p;
-   } symxy[32];
-
-   int symxy_spot = 0;
-
    for (int p = 0; p < 7; p++) {
       int ticked = 0;
-      double a[24*60 + 60];
-      for (int i = 0; i < 24 * 60 + 60; i++) {
-         double when = jd - 0.5 + (double) i / (24.0* 60.0);
+      double a[24*60 + 2];
+      for (int i = 0; i < 24 * 60 + 2; i++) {
+         double when = jd - 0.5 + (double) (i - 1) / (24.0* 60.0);
          struct Aa Aa;
 
          if (p == 0) Aa = ə25(when, φλ, ə27(when, ə65(when)));
@@ -898,18 +890,18 @@ void do_planet_bands(struct delayed_text_queue *dtq,
       }
 
       int max = -1;
-      for (int i = 1; i < 24 * 60 + 60 - 1; i++) {
+      for (int i = 1; i < 24 * 60 + 1; i++) {
          if (a[i] >= a[i - 1] && a[i] >= a[i + 1]) {
             max = i;
          }
       }
 
       if (max == -1) {
-         if (a[0] > a[24 * 60 - 1]) {
+         if (a[0] > a[24 * 60 + 1]) {
             max = 0;
          }
          else {
-            max = 24 * 60 - 1;
+            max = 24 * 60 + 1;
          }
       }
 
@@ -922,7 +914,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
 
       double start_angle = now_angle - 180.0;
 
-      for (int i = 1; i < 24 * 60; i++) {
+      for (int i = 1; i < 24 * 60 + 2; i++) {
          if (a[i-1] < HORIZON && a[i] >= HORIZON) {
             color = colors[p];
          }
@@ -930,35 +922,29 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             color = COLOR_NONE;
          }
 
-         if (color != oldcolor) {
+         if (color != oldcolor || i == 24 * 60 + 1) {
             double stop_angle =
-               now_angle - 180.0 + 360.0 * ((double) i / (24.0 * 60.0));
+               now_angle - 180.0 + 360.0 * ((double) (i - 1) / (24.0 * 60.0));
 
             if (oldcolor != COLOR_NONE) {
                arc_canvas(canvas, SIZE / 2, SIZE / 2,
-                  radius, SCALE(16), COLOR_BLACK, start_angle, stop_angle);
+                     radius, SCALE(16), COLOR_BLACK, start_angle, stop_angle);
             }
             arc_canvas(canvas, SIZE / 2, SIZE / 2,
-               radius, SCALE(12), oldcolor, start_angle, stop_angle);
-
-            {
-               double offset =
-                  (oldcolor == COLOR_NONE) ? -7.0 : 7.0;
-
-               if (symxy_spot < (sizeof(symxy)/sizeof(symxy[0]))) {
-                  symxy[symxy_spot].p = p;
-                  symxy[symxy_spot].x =
-                     (SIZE / 2) + radius * cos_deg(stop_angle + offset);
-                  symxy[symxy_spot].y =
-                     (SIZE / 2) + radius * sin_deg(stop_angle + offset);
-                  symxy_spot++;
-               }
-
-               ticked++;
-            }
-
+                  radius, SCALE(12), oldcolor, start_angle, stop_angle);
             oldcolor = color;
             start_angle = stop_angle;
+         }
+      }
+      for (int i = 1; i < 24 * 60 + 2; i++) {
+         bool rising = (a[i-1] < HORIZON && a[i] >= HORIZON);
+         bool setting = (a[i-1] >= HORIZON && a[i] < HORIZON);
+
+         if (rising || setting) {
+            ticked++;
+
+            double stop_angle =
+               now_angle - 180.0 + 360.0 * ((double) (i - 1) / (24.0 * 60.0));
 
             double x1, y1, x2, y2;
 
@@ -969,39 +955,34 @@ void do_planet_bands(struct delayed_text_queue *dtq,
 
             thick_line_canvas(canvas, x1, y1, x2, y2, COLOR_BLACK, 3);
             line_canvas(canvas, x1, y1, x2, y2, colors[p]);
+
+            char sym[2] = { syms[p], 0 };
+            double offset = (rising ? -7.0 : 7.0);
+            int x = (SIZE / 2) + radius * cos_deg(stop_angle + offset);
+            int y = (SIZE / 2) + radius * sin_deg(stop_angle + offset);
+            text_canvas(canvas, ASTRO_FONT, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
          }
       }
-
-      double stop_angle = now_angle + 180.0;
-
-      if (oldcolor != COLOR_NONE) {
-         arc_canvas(canvas, SIZE / 2, SIZE / 2,
-            radius, SCALE(16), COLOR_BLACK, start_angle, stop_angle);
-      }
-      arc_canvas(canvas, SIZE / 2, SIZE / 2,
-         radius, SCALE(12), oldcolor, start_angle, stop_angle);
-
       if (a[max] > HORIZON) {
-         double transit_angle =
-            now_angle - 180.0 + 360.0 * ((double) max / (24.0 * 60.0));
+         double stop_angle =
+            now_angle - 180.0 + 360.0 * ((double) (max - 1) / (24.0 * 60.0));
 
          double x1, y1, x2, y2;
 
-         x1 = canvas->w / 2 + (radius - 16) * cos_deg(transit_angle);
-         y1 = canvas->h / 2 + (radius - 16) * sin_deg(transit_angle);
-         x2 = canvas->w / 2 + (radius + 16) * cos_deg(transit_angle);
-         y2 = canvas->h / 2 + (radius + 16) * sin_deg(transit_angle);
+         x1 = canvas->w / 2 + (radius - 16) * cos_deg(stop_angle);
+         y1 = canvas->h / 2 + (radius - 16) * sin_deg(stop_angle);
+         x2 = canvas->w / 2 + (radius + 16) * cos_deg(stop_angle);
+         y2 = canvas->h / 2 + (radius + 16) * sin_deg(stop_angle);
 
          thick_line_canvas(canvas, x1, y1, x2, y2, COLOR_BLACK, 3);
          line_canvas(canvas, x1, y1, x2, y2, colors[p]);
 
          if (!ticked) {
-            symxy[symxy_spot].p = p;
-            symxy[symxy_spot].x =
-               (SIZE / 2) + (radius + SCALE(20)) * cos_deg(transit_angle + 3.0);
-            symxy[symxy_spot].y =
-               (SIZE / 2) + (radius + SCALE(20)) * sin_deg(transit_angle + 3.0);
-            symxy_spot++;
+            char sym[2] = { syms[p], 0 };
+            double offset = -7.0;
+            int x = (SIZE / 2) + radius * cos_deg(stop_angle + offset);
+            int y = (SIZE / 2) + radius * sin_deg(stop_angle + offset);
+            text_canvas(canvas, ASTRO_FONT, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
          }
       }
 
@@ -1017,15 +998,6 @@ void do_planet_bands(struct delayed_text_queue *dtq,
 fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
          do_moon_draw(canvas, jd, a[12*60] > HORIZON, angle + Aa.A);
       }
-   }
-
-   for (int i = 0; i < symxy_spot; i++) {
-      char sym[2] = { syms[symxy[i].p], 0 };
-      text_canvas(canvas, ASTRO_FONT,
-         symxy[i].x,
-         symxy[i].y,
-         colors[symxy[i].p],
-            COLOR_BLACK, sym, 1, 1);
    }
 }
 

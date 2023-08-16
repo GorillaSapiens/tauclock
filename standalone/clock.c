@@ -96,6 +96,21 @@ static int delayed_text_canvas(struct delayed_text_queue *dtq, Canvas * canvas, 
       return ret;
    }
 
+   for (int i = 0; i < dtq->size; i++) {
+      struct delayed_text *q = dtq->queue + i;
+      if (x == q->x && y == q->y) {
+         if (fg == q->fg && bg == q->bg) {
+            if (mult == q->mult && gap == q->gap) {
+               if (font == q->font) {
+                  if (!strcmp(q->p, p)) {
+                     return ret;
+                  }
+               }
+            }
+         }
+      }
+   }
+
    struct delayed_text *dt = dtq->queue + dtq->size;
 
    dt->x = x;
@@ -124,49 +139,52 @@ static struct delayed_text_queue *alloc_dtq(int n) {
 
 static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas) {
    int problems;
+   int iterations = 0;
 
    do {
       problems = 0;
 
       for (int i = 0; i < dtq->size - 1; i++) {
          struct delayed_text *dti = dtq->queue + i;
-         int i_lef = dti->x - (dti->w+3)/2;
-         int i_rig = dti->x + (dti->w+3)/2;
-         int i_top = dti->y - (dti->h+3)/2;
-         int i_bot = dti->y + (dti->h+3)/2;
+         int i_lef = dti->x - (dti->w+7)/2;
+         int i_rig = dti->x + (dti->w+7)/2;
+         int i_top = dti->y - (dti->h+7)/2;
+         int i_bot = dti->y + (dti->h+7)/2;
 
          for (int j = i + 1; j < dtq->size; j++) {
             struct delayed_text *dtj = dtq->queue + j;
-            int j_lef = dtj->x - (dtj->w+3)/2;
-            int j_rig = dtj->x + (dtj->w+3)/2;
-            int j_top = dtj->y - (dtj->h+3)/2;
-            int j_bot = dtj->y + (dtj->h+3)/2;
+            int j_lef = dtj->x - (dtj->w+7)/2;
+            int j_rig = dtj->x + (dtj->w+7)/2;
+            int j_top = dtj->y - (dtj->h+7)/2;
+            int j_bot = dtj->y + (dtj->h+7)/2;
 
             // check for overlaps
             if (!(i_bot < j_top || i_top > j_bot || i_rig < j_lef || i_lef > j_rig)) {
                problems++;
                if (dti->x < dtj->x) {
-                  dti->x--;
-                  dtj->x++;
+                  if (i_lef > 0) dti->x--;
+                  if (j_rig < (canvas->w - 1)) dtj->x++;
                }
-               else if (dti->x > dtj->x) {
-                  dti->x++;
-                  dtj->x--;
+               else { // if (dti->x > dtj->x) {
+                  if (i_rig < (canvas->w - 1)) dti->x++;
+                  if (j_lef > 0) dtj->x--;
                }
+
                if (dti->y < dtj->y) {
-                  dti->y--;
-                  dtj->y++;
+                  if (i_top > 0) dti->y--;
+                  if (j_bot < (canvas->h - 1)) dtj->y++;
                }
-               else if (dti->y > dtj->y) {
-                  dti->y++;
-                  dtj->y--;
+               else { // if (dti->y > dtj->y) {
+                  if (i_bot < (canvas->h - 1)) dti->y++;
+                  if (j_top > 0) dtj->y--;
                }
             }
 
          }
       }
+      iterations++;
 
-   } while (problems);
+   } while (problems && iterations < 9999);
 
    for (int i = 0; i < dtq->size; i++) {
       struct delayed_text *dt = dtq->queue + i;

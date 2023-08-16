@@ -773,7 +773,11 @@ double do_sun_bands(struct delayed_text_queue *dtq,
       }
    }
 
-   edgetime(dtq, canvas, now, max, now_angle, COLOR_BLACK);
+   unsigned int maxcolor = COLOR_BLACK;
+   if (sunup == 0.0 && civil == 0.0) {
+      maxcolor = COLOR_WHITE;
+   }
+   edgetime(dtq, canvas, now, max, now_angle, maxcolor);
 
    return now_angle;
 }

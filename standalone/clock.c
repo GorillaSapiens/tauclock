@@ -70,6 +70,8 @@ uint8_t *FONT_ITALIC_MED;
 #define COLOR_SATURN          COLOR_LIGHTBLUE
 #define COLOR_ARIES           COLOR_GREEN
 
+#define MOON_R 80
+
 struct delayed_text {
    int x, y;
    int w, h;
@@ -355,8 +357,11 @@ void duration_text(struct delayed_text_queue *dtq, Canvas *canvas,
       sprintf(buf, "%s\n%dh%dm", text, h, m);
    }
 
+   unsigned int bg = COLOR_WHITE;
+   if (color == COLOR_WHITE) { bg = COLOR_BLACK; }
+
    text_canvas(canvas, FONT_BOLD_MED, SIZE / 2, y,
-      color, COLOR_NONE, buf, 1, 3);
+      color, bg, buf, 1, 3);
 }
 
 void duration_top_text(struct delayed_text_queue *dtq,
@@ -406,10 +411,13 @@ void edgetime(struct delayed_text_queue *dtq,
    int x = cx + r * cos_deg(theta);
    int y = cy + r * sin_deg(theta);
 
+   unsigned int bg = COLOR_WHITE;
+   if (color == COLOR_WHITE) { bg = COLOR_BLACK; }
+
    text_canvas(canvas,
                index < (12 * 60) ? FONT_ITALIC_MED : FONT_BOLD_MED,
                x, y,
-               color, COLOR_NONE, buf, 1, 3);
+               color, bg, buf, 1, 3);
 }
 
 double do_sun_bands(struct delayed_text_queue *dtq,
@@ -767,9 +775,9 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    double where_angle = FD.D - 90.0;
    int cx, cy;
    cx = canvas->w / 2 +
-      (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
+      (int)((canvas->w / 3.0) * cos_deg(where_angle));
    cy = canvas->h / 2 +
-      (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
+      (int)((canvas->h / 3.0) * sin_deg(where_angle));
 
    // a little circle (interior)
    // with a chunk cut out of it.
@@ -815,17 +823,17 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    if (b == 0.0) {
       b = 1.0;
    }
-   b *= (double) SCALE(40);
+   b *= (double) SCALE(MOON_R);
 
-   int chunk_x = (b * b - (double)SCALE(40) * (double)SCALE(40)) / (2.0 * b);
+   int chunk_x = (b * b - (double)SCALE(MOON_R) * (double)SCALE(MOON_R)) / (2.0 * b);
    int chunk_r = abs(chunk_x - b);
 
    // this won't make sense, because it's derived from earlier code...
    // but it really does draw the moon...
-   for (double dx = -SCALE(40); dx <= SCALE(40); dx += .5) {
-      for (double dy = -SCALE(40); dy <= SCALE(40); dy += .5) {
+   for (double dx = -SCALE(MOON_R); dx <= SCALE(MOON_R); dx += .5) {
+      for (double dy = -SCALE(MOON_R); dy <= SCALE(MOON_R); dy += .5) {
          double d_interior = sqrt(dx * dx + dy * dy);
-         if (d_interior <= SCALE(40.0)) {
+         if (d_interior <= SCALE(MOON_R)) {
             int xp = dx*cos_deg(angle) - dy*sin_deg(angle);
             int yp = dx*sin_deg(angle) + dy*cos_deg(angle);
             double d_chunk = sqrt((dx - chunk_x) * (dx - chunk_x) + dy * dy);
@@ -864,7 +872,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
    static const char *syms = "BCDEFGa";
 
    // initial
-   double radius = SIZE / 8 + 32;
+   double radius = SIZE / 8 + SCALE(32);
 
    struct symxy {
       int x;
@@ -935,7 +943,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
 
             {
                double offset =
-                  (oldcolor == COLOR_NONE) ? -3.0 : 3.0;
+                  (oldcolor == COLOR_NONE) ? -7.0 : 7.0;
 
                if (symxy_spot < (sizeof(symxy)/sizeof(symxy[0]))) {
                   symxy[symxy_spot].p = p;
@@ -998,7 +1006,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
       }
 
       // update
-      radius += 16;
+      radius += SCALE(20);
       max = -1;
 
       if (p == 0) {
@@ -1011,7 +1019,6 @@ fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
       }
    }
 
-#if 0
    for (int i = 0; i < symxy_spot; i++) {
       char sym[2] = { syms[symxy[i].p], 0 };
       text_canvas(canvas, ASTRO_FONT,
@@ -1020,7 +1027,6 @@ fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
          colors[symxy[i].p],
             COLOR_BLACK, sym, 1, 1);
    }
-#endif
 }
 
 /// @brief Draw the location in the center of the Canvas
@@ -1350,10 +1356,10 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       cy = canvas->h / 2 +
          (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
 
-      for (int dx = -SCALE(40); dx <= SCALE(40); dx++) {
-         for (int dy = -SCALE(40); dy <= SCALE(40); dy++) {
+      for (int dx = -SCALE(MOON_R); dx <= SCALE(MOON_R); dx++) {
+         for (int dy = -SCALE(MOON_R); dy <= SCALE(MOON_R); dy++) {
             double d_interior = sqrt(dx * dx + dy * dy);
-            if (d_interior <= SCALE(40.0)) {
+            if (d_interior <= SCALE(MOON_R)) {
                int nx = cx + dx;
                int ny = cy + dy;
                if (delta < 12.5 || (nx + ny) % 2 == 1) {

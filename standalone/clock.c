@@ -35,6 +35,7 @@
 #include "precise.h"
 #include "astro.h"
 #include "draw.h"
+#include "moon_xpm.h"
 
 #define ORIG
 
@@ -787,10 +788,16 @@ double do_sun_bands(struct delayed_text_queue *dtq,
 /// @param canvas The Canvas to draw on
 /// @param jd The current Julian Date
 /// @param is_up Whether or not the moon is currently up
-/// @param angle The angle position of the moon's bright limb
+/// @param bla The angle position of the moon's bright limb
+/// @param rot The visual rotation angle
 /// @return void
 void
-do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
+do_moon_draw(Canvas * canvas,
+             double jd,
+             int is_up,
+             double bla,
+             double rot) {
+
    struct FD FD = ə67(jd);
 
    // WHERE to draw it.
@@ -801,6 +808,58 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
    cy = canvas->h / 2 +
       (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
 
+   rot = 0; // TODO FIX for now, for testing...
+
+   // do the drawing
+   int x, y;
+   int smr = SCALE(MOON_R);
+
+   for (y = -smr; y < smr; y++) {
+      for (x = -smr; x < smr; x++) {
+         if (x*x+y*y < smr*smr) {
+            // within the circle.
+
+//FNORD
+            // from https://en.wikipedia.org/wiki/Rotation_matrix
+            // ez is the rotated form of y
+            // ey is the rotated form of x
+            double ey = ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) smr;
+            double ez = ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) smr;
+
+            // find ex on the unit sphere
+            double ex = sqrt(1.0 - ey * ey - ez * ez);
+
+            // find lat lon
+            int my = 180 - (int) acos_deg(ez / 1.0);
+            int mx = 180 + (ey > 0.0 ? 1 : -1) * (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
+
+fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n", x, y, ex, ey, ez, mx, my);
+
+            if (my < 0) my = 0;
+            if (my > 179) my = 179;
+            if (mx < 0) mx = 0;
+            if (mx > 359) mx = 359;
+
+            int c = moon_xpm[1 + MOON_XPM_C + my][mx];
+            const char *h = NULL;
+            for (int q = 0; q < MOON_XPM_C; q++) {
+               if (moon_xpm[1 + q][0] == c) {
+                  h = moon_xpm[1 + q] + 5;
+                  break;
+               }
+            }
+            unsigned int color = 0xFF000000 | strtoul(h, NULL, 16);
+#ifdef STANDALONE
+            color = (color & 0xFF00FF00) | ((color & 0xFF) << 16) | ((color & 0xFF0000) >> 16);
+            //color ^= 0xFFFFFF;
+#endif
+
+            poke_canvas(canvas, cx + x, cy + y, color);
+         }
+      }
+   }
+
+#if 0
    // a little circle (interior)
    // with a chunk cut out of it.
 
@@ -870,6 +929,7 @@ do_moon_draw(Canvas * canvas, double jd, int is_up, double angle) {
          }
       }
    }
+#endif
 
    arc_canvas(canvas, cx, cy, SCALE(MOON_R + 3), 7,
       is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
@@ -1014,11 +1074,10 @@ void do_planet_bands(struct delayed_text_queue *dtq,
 
       if (p == 0) {
          struct αδ moon = ə27(jd, ə65(jd));
-         double angle =
+         double brightlimbangle =
             ə68(ə27(jd, ə46(jd)), moon);
          struct Aa Aa = ə25(jd, φλ, moon);
-fprintf(stderr, "=1= angle=%lf, azimuth=%lf\n", angle, Aa.A);
-         do_moon_draw(canvas, jd, a[12*60] > HORIZON, angle + Aa.A);
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON, brightlimbangle, Aa.A);
       }
    }
 }

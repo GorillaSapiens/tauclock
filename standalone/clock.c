@@ -808,7 +808,10 @@ do_moon_draw(Canvas * canvas,
    cy = canvas->h / 2 +
       (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
 
-   rot = 0; // TODO FIX for now, for testing...
+   // for u,v calc, below...
+   double blarot = -(90.0 - bla);
+   double blarot_cos = cos_deg(blarot);
+   double blarot_sin = sin_deg(blarot);
 
    // do the drawing
    int x, y;
@@ -821,26 +824,38 @@ do_moon_draw(Canvas * canvas,
 
 //FNORD
             // from https://en.wikipedia.org/wiki/Rotation_matrix
-            // ez is the rotated form of y
             // ey is the rotated form of x
+            // ez is the rotated form of y
             double ey = ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) smr;
             double ez = ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) smr;
 
             // find ex on the unit sphere
             double ex = sqrt(1.0 - ey * ey - ez * ez);
 
-            // find lat lon
-            int my = 180 - (int) acos_deg(ez / 1.0);
-            int mx = 180 + (ey > 0.0 ? 1 : -1) * (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
+            // also calculate the u,v (rotated bright limb to 90 degrees)
+            double u = ((double)ey * blarot_cos - (double)ez * blarot_sin);
+            double v = ((double)ey * blarot_sin + (double)ez * blarot_cos);
+            double uvt = asin_deg(v);
+            double ru = cos_deg(uvt);
+            double lu = -ru;
+            bool dark = ((u - lu) / (ru - lu)) > FD.F;
 
-fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n", x, y, ex, ey, ez, mx, my);
+            unsigned int c = COLOR_BLACK;
 
-            if (my < 0) my = 0;
-            if (my > 179) my = 179;
-            if (mx < 0) mx = 0;
-            if (mx > 359) mx = 359;
+            if (!dark) {
+               // find lat lon
+               int my = 180 - (int) acos_deg(ez / 1.0);
+               int mx = 180 + (ey > 0.0 ? 1 : -1) * (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
 
-            unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
+               fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n", x, y, ex, ey, ez, mx, my);
+
+               if (my < 0) my = 0;
+               if (my > 179) my = 179;
+               if (mx < 0) mx = 0;
+               if (mx > 359) mx = 359;
+
+               c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
+            }
 
             poke_canvas(canvas, cx + x, cy + y, c);
          }

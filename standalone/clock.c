@@ -840,21 +840,9 @@ fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n", x, y, ex, ey, ez, mx, my);
             if (mx < 0) mx = 0;
             if (mx > 359) mx = 359;
 
-            int c = moon_xpm[1 + MOON_XPM_C + my][mx];
-            const char *h = NULL;
-            for (int q = 0; q < MOON_XPM_C; q++) {
-               if (moon_xpm[1 + q][0] == c) {
-                  h = moon_xpm[1 + q] + 5;
-                  break;
-               }
-            }
-            unsigned int color = 0xFF000000 | strtoul(h, NULL, 16);
-#ifdef STANDALONE
-            color = (color & 0xFF00FF00) | ((color & 0xFF) << 16) | ((color & 0xFF0000) >> 16);
-            //color ^= 0xFFFFFF;
-#endif
+            unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 
-            poke_canvas(canvas, cx + x, cy + y, color);
+            poke_canvas(canvas, cx + x, cy + y, c);
          }
       }
    }

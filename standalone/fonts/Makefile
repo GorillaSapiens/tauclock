@@ -40,6 +40,9 @@ dejavu-fonts-ttf-2.37.tar.bz2:
 	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_20.bdf
 	-otf2bdf -p 22 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_22.bdf
 	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_24.bdf
+	-otf2bdf -p 26 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_26.bdf
+	-otf2bdf -p 28 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_28.bdf
+	-otf2bdf -p 30 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_30.bdf
 	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
 	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
 	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_50.bdf
@@ -53,6 +56,9 @@ dejavu-fonts-ttf-2.37.tar.bz2:
 	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_20.bdf
 	-otf2bdf -p 22 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_22.bdf
 	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_24.bdf
+	-otf2bdf -p 26 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_26.bdf
+	-otf2bdf -p 28 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_28.bdf
+	-otf2bdf -p 30 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_30.bdf
 	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_32.bdf
 	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
 	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_50.bdf

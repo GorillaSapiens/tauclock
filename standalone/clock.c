@@ -74,6 +74,7 @@ uint8_t *FONT_ITALIC_MED;
 #define MOON_R 80
 
 struct delayed_text {
+   int movable;
    int x, y;
    int w, h;
    unsigned int fg, bg;
@@ -88,9 +89,13 @@ struct delayed_text_queue {
    struct delayed_text *queue;
 };
 
-static int delayed_text_canvas(struct delayed_text_queue *dtq, Canvas * canvas, uint8_t * font, int x, int y,
-      unsigned int fg, unsigned int bg, const char *p, int mult,
-      int gap) {
+static int delayed_text_canvas(
+                                 struct delayed_text_queue *dtq,
+                                 Canvas * canvas, uint8_t * font,
+                                 int x, int y,
+                                 unsigned int fg, unsigned int bg,
+                                 const char *p, int mult, int gap,
+                                 int movable) {
    int ret = text_canvas(canvas, font, -10000, -10000, fg, bg, p, mult, gap);
 
    if (x < 0 || y < 0) {
@@ -114,6 +119,7 @@ static int delayed_text_canvas(struct delayed_text_queue *dtq, Canvas * canvas, 
 
    struct delayed_text *dt = dtq->queue + dtq->size;
 
+   dt->movable = movable;
    dt->x = x;
    dt->y = y;
    dt->w = ret >> 16;
@@ -163,21 +169,21 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
             if (!(i_bot < j_top || i_top > j_bot || i_rig < j_lef || i_lef > j_rig)) {
                problems++;
                if (dti->x < dtj->x) {
-                  if (i_lef > 0) dti->x--;
-                  if (j_rig < (canvas->w - 1)) dtj->x++;
+                  if (dti->movable && i_lef > 0) dti->x--;
+                  if (dtj->movable && j_rig < (canvas->w - 1)) dtj->x++;
                }
                else { // if (dti->x > dtj->x) {
-                  if (i_rig < (canvas->w - 1)) dti->x++;
-                  if (j_lef > 0) dtj->x--;
+                  if (dti->movable && i_rig < (canvas->w - 1)) dti->x++;
+                  if (dtj->movable && j_lef > 0) dtj->x--;
                }
 
                if (dti->y < dtj->y) {
-                  if (i_top > 0) dti->y--;
-                  if (j_bot < (canvas->h - 1)) dtj->y++;
+                  if (dti->movable && i_top > 0) dti->y--;
+                  if (dtj->movable && j_bot < (canvas->h - 1)) dtj->y++;
                }
                else { // if (dti->y > dtj->y) {
-                  if (i_bot < (canvas->h - 1)) dti->y++;
-                  if (j_top > 0) dtj->y--;
+                  if (dti->movable && i_bot < (canvas->h - 1)) dti->y++;
+                  if (dtj->movable && j_top > 0) dtj->y--;
                }
             }
 
@@ -197,7 +203,10 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
    free(dtq);
 }
 
-#define text_canvas(a,b,c,d,e,f,g,h,i) delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i)
+#define text_canvas(a,b,c,d,e,f,g,h,i) \
+   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,1)
+#define im_text_canvas(a,b,c,d,e,f,g,h,i) \
+   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,0)
 
 static void set_font(uint8_t ** target,
                      uint8_t ** choices,
@@ -1387,15 +1396,22 @@ void do_solar_eclipse(struct delayed_text_queue *dtq, Canvas *canvas, double jd,
       return;
    }
 
-   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
+   double radius = SIZE / 8 + SCALE(32);
    double angle =
       now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
 
    arc_canvas(canvas, SIZE / 2, SIZE / 2,
       radius, SCALE(9), COLOR_WHITE, angle - 1.875, angle + 1.875);
 
+   double where_angle = FD.D - 90.0;
+   int cx, cy;
+   cx = canvas->w / 2 +
+      (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
+   cy = canvas->h / 2 +
+      (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
+
    if (now_angle > angle - 1.875 && now_angle < angle + 1.875) {
-      text_canvas(canvas, ICON_FONT, canvas->w / 2, canvas->h / 2 - 10 - canvas->w / 6,
+      im_text_canvas(canvas, ICON_FONT, cx, cy,
          COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
    }
 }

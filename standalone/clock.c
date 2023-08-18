@@ -845,9 +845,11 @@ do_moon_draw(Canvas * canvas,
             if (!dark) {
                // find lat lon
                int my = 180 - (int) acos_deg(ez / 1.0);
-               int mx = 180 + (ey > 0.0 ? 1 : -1) * (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
+               int mx = 180 + (ey > 0.0 ? 1 : -1) *
+                  (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
 
-               fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n", x, y, ex, ey, ez, mx, my);
+               //fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n",
+               //   x, y, ex, ey, ez, mx, my);
 
                if (my < 0) my = 0;
                if (my > 179) my = 179;
@@ -861,78 +863,6 @@ do_moon_draw(Canvas * canvas,
          }
       }
    }
-
-#if 0
-   // a little circle (interior)
-   // with a chunk cut out of it.
-
-   // the chunk is a circle, centered to the right or to the left.
-   unsigned int interior_color;
-   unsigned int chunk_color;
-
-   // from wolfram alpha
-   // a circle passing through points (0,a), (0,-a), and (b,0)
-   double b;
-
-   angle -= 90.0;
-
-   if (FD.D < 90.0) {
-      interior_color = COLOR_SILVER;
-      chunk_color = COLOR_BLACK;
-      // b = +a at 0 degrees, and 0 at 90 degrees
-      b = (90.0 - FD.D) / 90.0;
-   }
-   else if (FD.D < 180.0) {
-      interior_color = COLOR_BLACK;
-      chunk_color = COLOR_SILVER;
-      // b = 0 at 90 degrees and -a at 180 degrees
-      b = -(FD.D - 90.0) / 90.0;
-   }
-   else if (FD.D < 270.0) {
-      interior_color = COLOR_BLACK;
-      chunk_color = COLOR_SILVER;
-      // b = +a at 180 degrees and 0 at 270 degrees
-      b = (270.0 - FD.D) / 90.0;
-      angle += 180.0;
-   }
-   else {
-      interior_color = COLOR_SILVER;
-      chunk_color = COLOR_BLACK;
-      // b = 0 at 270 degrees and -a at 360 degrees
-      b = -(FD.D - 270.0) / 90.0;
-      angle += 180.0;
-   }
-
-   // avoid possible division by zero
-   if (b == 0.0) {
-      b = 1.0;
-   }
-   b *= (double) SCALE(MOON_R);
-
-   int chunk_x = (b * b - (double)SCALE(MOON_R) * (double)SCALE(MOON_R)) / (2.0 * b);
-   int chunk_r = abs(chunk_x - b);
-
-   // this won't make sense, because it's derived from earlier code...
-   // but it really does draw the moon...
-   for (double dx = -SCALE(MOON_R); dx <= SCALE(MOON_R); dx += .5) {
-      for (double dy = -SCALE(MOON_R); dy <= SCALE(MOON_R); dy += .5) {
-         double d_interior = sqrt(dx * dx + dy * dy);
-         if (d_interior <= SCALE(MOON_R)) {
-            int xp = dx*cos_deg(angle) - dy*sin_deg(angle);
-            int yp = dx*sin_deg(angle) + dy*cos_deg(angle);
-            double d_chunk = sqrt((dx - chunk_x) * (dx - chunk_x) + dy * dy);
-            if (d_chunk < chunk_r) {
-               //poke_canvas(canvas, cx + dx, cy + dy, chunk_color);
-               poke_canvas(canvas, cx + xp, cy + yp, chunk_color);
-            }
-            else {
-               //poke_canvas(canvas, cx + dx, cy + dy, interior_color);
-               poke_canvas(canvas, cx + xp, cy + yp, interior_color);
-            }
-         }
-      }
-   }
-#endif
 
    arc_canvas(canvas, cx, cy, SCALE(MOON_R + 3), 7,
       is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
@@ -1120,11 +1050,12 @@ void do_center(struct delayed_text_queue *dtq,
          sprintf(location, "INVALID LOCATION");
 
          // border bands
-         int mid = canvas->w / 2;
          arc_canvas(canvas,
-               mid, mid, mid / 2 - SCALE(126), 14, COLOR_WHITE, 0, 360.0);
+             SIZE / 2, SIZE / 2, SIZE / 8 + (14/2), 14,
+               COLOR_GRAY, 0, 360.0);
          arc_canvas(canvas,
-               mid, mid, mid / 2 + SCALE(126), 14, COLOR_WHITE, 0, 360.0);
+               SIZE / 2, SIZE / 2, SIZE / 2 - (14/2), 14,
+               COLOR_GRAY, 0, 360.0);
 
       }
       else {

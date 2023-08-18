@@ -1288,7 +1288,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       theta, jd - 0.5, c, jd + 0.5);
 #endif
 
-   double radius = SIZE / 2 / 2 + SCALE(128 + 16 + 5);
+   double radius = SIZE / 8 + SCALE(32);
    double angle =
       now_angle - 180.0 + 360.0 * (c - (jd - 0.5));
 
@@ -1306,7 +1306,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       }
 
       arc_canvas(canvas, SIZE / 2, SIZE / 2,
-         radius, SCALE(3), COLOR_BLOOD, narrow_begin, narrow_end);
+         radius, SCALE(6), COLOR_BLOOD, narrow_begin, narrow_end);
 
       double wide_begin = angle - 12.5;
       double wide_end = angle + 12.5;
@@ -1323,7 +1323,7 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
          }
 
          arc_canvas(canvas, SIZE / 2, SIZE / 2,
-            radius, SCALE(9), COLOR_BLOOD, wide_begin, wide_end);
+            radius, SCALE(12), COLOR_BLOOD, wide_begin, wide_end);
       }
    }
 
@@ -1339,9 +1339,9 @@ void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {
       double where_angle = FD.D - 90.0;
       int cx, cy;
       cx = canvas->w / 2 +
-         (int)((10.0 + canvas->w / 6.0) * cos_deg(where_angle));
+         (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
       cy = canvas->h / 2 +
-         (int)((10.0 + canvas->h / 6.0) * sin_deg(where_angle));
+         (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
 
       for (int dx = -SCALE(MOON_R); dx <= SCALE(MOON_R); dx++) {
          for (int dy = -SCALE(MOON_R); dy <= SCALE(MOON_R); dy++) {

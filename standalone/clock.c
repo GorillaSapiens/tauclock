@@ -831,12 +831,13 @@ do_moon_draw(Canvas * canvas,
          if (x*x+y*y < smr*smr) {
             // within the circle.
 
-//FNORD
             // from https://en.wikipedia.org/wiki/Rotation_matrix
             // ey is the rotated form of x
             // ez is the rotated form of y
-            double ey = ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) smr;
-            double ez = ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) smr;
+            double ey =
+               ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) smr;
+            double ez =
+               ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) smr;
 
             // find ex on the unit sphere
             double ex = sqrt(1.0 - ey * ey - ez * ez);
@@ -1096,7 +1097,7 @@ void do_center(struct delayed_text_queue *dtq,
 
       sprintf(time, "%02d:%02d", local.tm_hour, local.tm_min);
 
-      text_canvas(canvas, FONT_BOLD_BIG, canvas->w / 2, canvas->h / 2,
+      im_text_canvas(canvas, FONT_BOLD_BIG, canvas->w / 2, canvas->h / 2,
             COLOR_WHITE, COLOR_BLACK, time, 1, 12);
    }
 
@@ -1403,16 +1404,24 @@ void do_solar_eclipse(struct delayed_text_queue *dtq, Canvas *canvas, double jd,
    arc_canvas(canvas, SIZE / 2, SIZE / 2,
       radius, SCALE(9), COLOR_WHITE, angle - 1.875, angle + 1.875);
 
-   double where_angle = FD.D - 90.0;
-   int cx, cy;
-   cx = canvas->w / 2 +
-      (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
-   cy = canvas->h / 2 +
-      (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
-
    if (now_angle > angle - 1.875 && now_angle < angle + 1.875) {
-      im_text_canvas(canvas, ICON_FONT, cx, cy,
-         COLOR_WHITE, COLOR_BLACK, "F", 1, 3);
+      double where_angle = FD.D - 90.0;
+      int cx, cy;
+      cx = canvas->w / 2 +
+         (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
+      cy = canvas->h / 2 +
+         (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
+
+      arc_canvas(canvas, cx, cy, SCALE(MOON_R + 3), 7, COLOR_WHITE, 0, 360.0);
+
+      for (int i = 0; i < 13; i++) {
+         double theta = 360.0 * i / 13.0;
+         double ix = cx + SCALE(MOON_R + 3 + 7) * cos_deg(theta);
+         double iy = cy + SCALE(MOON_R + 3 + 7) * sin_deg(theta);
+         double ox = cx + SCALE(MOON_R + 3 + 21) * cos_deg(theta);
+         double oy = cy + SCALE(MOON_R + 3 + 21) * sin_deg(theta);
+         thick_line_canvas(canvas, (int)ix, (int)iy, (int)ox, (int)oy, COLOR_WHITE, 3);
+      }
    }
 }
 

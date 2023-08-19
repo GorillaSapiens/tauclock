@@ -73,6 +73,13 @@ uint8_t *FONT_ITALIC_MED;
 
 #define MOON_R 80
 
+#define X_MOVE_OK 1
+#define Y_MOVE_OK 2
+#define XY_MOVE_OK (X_MOVE_OK | Y_MOVE_OK)
+#define NO_XY_MOVE 0
+#define NO_X_MOVE Y_MOVE_OK
+#define NO_Y_MOVE X_MOVE_OK
+
 struct delayed_text {
    int movable;
    int x, y;
@@ -169,21 +176,21 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
             if (!(i_bot < j_top || i_top > j_bot || i_rig < j_lef || i_lef > j_rig)) {
                problems++;
                if (dti->x < dtj->x) {
-                  if (dti->movable && i_lef > 0) dti->x--;
-                  if (dtj->movable && j_rig < (canvas->w - 1)) dtj->x++;
+                  if ((dti->movable & X_MOVE_OK) && i_lef > 0) dti->x--;
+                  if ((dtj->movable & X_MOVE_OK) && j_rig < (canvas->w - 1)) dtj->x++;
                }
                else { // if (dti->x > dtj->x) {
-                  if (dti->movable && i_rig < (canvas->w - 1)) dti->x++;
-                  if (dtj->movable && j_lef > 0) dtj->x--;
+                  if ((dti->movable & X_MOVE_OK) && i_rig < (canvas->w - 1)) dti->x++;
+                  if ((dtj->movable & X_MOVE_OK) && j_lef > 0) dtj->x--;
                }
 
                if (dti->y < dtj->y) {
-                  if (dti->movable && i_top > 0) dti->y--;
-                  if (dtj->movable && j_bot < (canvas->h - 1)) dtj->y++;
+                  if ((dti->movable & Y_MOVE_OK)&& i_top > 0) dti->y--;
+                  if ((dtj->movable & Y_MOVE_OK)&& j_bot < (canvas->h - 1)) dtj->y++;
                }
                else { // if (dti->y > dtj->y) {
-                  if (dti->movable && i_bot < (canvas->h - 1)) dti->y++;
-                  if (dtj->movable && j_top > 0) dtj->y--;
+                  if ((dti->movable & Y_MOVE_OK)&& i_bot < (canvas->h - 1)) dti->y++;
+                  if ((dtj->movable & Y_MOVE_OK)&& j_top > 0) dtj->y--;
                }
             }
 
@@ -204,9 +211,9 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
 }
 
 #define text_canvas(a,b,c,d,e,f,g,h,i) \
-   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,1)
-#define im_text_canvas(a,b,c,d,e,f,g,h,i) \
-   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,0)
+   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,XY_MOVE_OK)
+#define im_text_canvas(a,b,c,d,e,f,g,h,i,k) \
+   delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,k)
 
 static void set_font(uint8_t ** target,
                      uint8_t ** choices,
@@ -1104,7 +1111,7 @@ void do_center(struct delayed_text_queue *dtq,
       sprintf(time, "%02d:%02d", local.tm_hour, local.tm_min);
 
       im_text_canvas(canvas, FONT_BOLD_BIG, canvas->w / 2, canvas->h / 2,
-            COLOR_WHITE, COLOR_BLACK, time, 1, 12);
+            COLOR_WHITE, COLOR_BLACK, time, 1, 12, NO_XY_MOVE);
    }
 
    {
@@ -1224,21 +1231,26 @@ void do_debug_info(struct delayed_text_queue *dtq,
    // now output the things...
 
    // date side
-   text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w0 / 2,
-         canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
-   text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w1 / 2,
+   im_text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w0 / 2,
+         canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3,
+         NO_X_MOVE);
+   im_text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w1 / 2,
          canvas->h - 5 - (h + 5) - h / 2, COLOR_YELLOW, COLOR_BLACK,
-         offset_buf, 1, 3);
+         offset_buf, 1, 3,
+         NO_X_MOVE);
 
    // timezone side
-   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2, canvas->h - 5 - h / 2,
-         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
-   text_canvas(canvas, FONT_BOLD_LARGER, 5 + w3 / 2,
+   im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2, canvas->h - 5 - h / 2,
+         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3,
+         NO_X_MOVE);
+   im_text_canvas(canvas, FONT_BOLD_LARGER, 5 + w3 / 2,
          canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
-         3);
-   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,
+         3,
+         NO_X_MOVE);
+   im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,
          canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
-         tzProvider, 1, 3);
+         tzProvider, 1, 3,
+         NO_X_MOVE);
 }
 
 /// @brief Draw provider information
@@ -1257,8 +1269,9 @@ void do_provider_info(
          COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
-   text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,
-         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
+   im_text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,
+         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3,
+         NO_X_MOVE);
 }
 
 void do_lunar_eclipse(Canvas *canvas, double jd, double now_angle) {

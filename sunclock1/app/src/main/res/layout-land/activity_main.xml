@@ -31,7 +31,7 @@
         android:layout_marginEnd="8dp"
         android:layout_weight="1"
         android:backgroundTint="#303030"
-        android:text="ALARMS"
+        android:text="⏰"
         android:textColor="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -44,7 +44,7 @@
         android:layout_marginBottom="8dp"
         android:layout_weight="1"
         android:backgroundTint="#303030"
-        android:text="SETTINGS"
+        android:text="🛠️"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -71,7 +71,7 @@
         android:layout_marginTop="8dp"
         android:layout_weight="1"
         android:backgroundTint="#303030"
-        android:text="Location"
+        android:text="🌎"
         android:textColor="#FFFFFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -98,7 +98,7 @@
         android:layout_marginBottom="8dp"
         android:layout_weight="1"
         android:backgroundTint="#303030"
-        android:text="TZ"
+        android:text="🕙"
         android:textColor="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

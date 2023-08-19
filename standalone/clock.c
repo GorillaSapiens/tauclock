@@ -262,6 +262,9 @@ static void set_bold(int width) {
       djsmb_20_bdf,
       djsmb_22_bdf,
       djsmb_24_bdf,
+      djsmb_26_bdf,
+      djsmb_28_bdf,
+      djsmb_30_bdf,
       djsmb_32_bdf,
       djsmb_40_bdf,
       djsmb_50_bdf,
@@ -271,7 +274,7 @@ static void set_bold(int width) {
    set_font(&FONT_BOLD_SMALL, choices, djsmb_18_bdf[1], width);
    set_font(&FONT_BOLD_MED, choices, djsmb_22_bdf[1], width);
    set_font(&FONT_BOLD_LARGE, choices, djsmb_24_bdf[1], width);
-   set_font(&FONT_BOLD_LARGER, choices, djsmb_32_bdf[1], width);
+   set_font(&FONT_BOLD_LARGER, choices, djsmb_28_bdf[1], width);
    set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
 }
 
@@ -285,6 +288,9 @@ static void set_italic_med(int width) {
       djsmo_20_bdf,
       djsmo_22_bdf,
       djsmo_24_bdf,
+      djsmo_26_bdf,
+      djsmo_28_bdf,
+      djsmo_30_bdf,
       djsmo_32_bdf,
       djsmo_40_bdf,
       djsmo_50_bdf,
@@ -1204,7 +1210,7 @@ void do_debug_info(struct delayed_text_queue *dtq,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
    int w2 = wh2 >> 16;
 
-   int wh3 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
+   int wh3 = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
    int w3 = wh3 >> 16;
 
@@ -1227,7 +1233,7 @@ void do_debug_info(struct delayed_text_queue *dtq,
    // timezone side
    text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2, canvas->h - 5 - h / 2,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
-   text_canvas(canvas, FONT_BOLD_LARGE, 5 + w3 / 2,
+   text_canvas(canvas, FONT_BOLD_LARGER, 5 + w3 / 2,
          canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
          3);
    text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,

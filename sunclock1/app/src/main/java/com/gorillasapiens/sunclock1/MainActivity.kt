@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
         else {
             var displayProvider = mProviderName
             if (displayProvider == "best") {
-                displayProvider += " ("
+                displayProvider += "\n("
                 displayProvider += mRealProviderName
                 displayProvider += ")"
             }

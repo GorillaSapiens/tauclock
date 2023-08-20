@@ -13,6 +13,7 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
@@ -534,6 +535,11 @@ class MainActivity : AppCompatActivity() {
         val info = manager.getPackageInfo(this.packageName, PackageManager.GET_ACTIVITIES)
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
+
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            actionBar?.hide()
+            supportActionBar?.hide()
+        }
 
         doEULA()
 

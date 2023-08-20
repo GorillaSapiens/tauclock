@@ -828,7 +828,7 @@ do_moon_draw(Canvas * canvas,
    struct FD FD = ə67(jd);
 
    // TODO FIX why???
-   rot = 90 - rot;
+   fprintf(stderr, "rot=%lf\n", rot);
 
    // WHERE to draw it.
    double where_angle = FD.D - 90.0;
@@ -1046,8 +1046,29 @@ void do_planet_bands(struct delayed_text_queue *dtq,
          struct αδ moon = ə27(jd, ə65(jd));
          double brightlimbangle =
             ə68(ə27(jd, ə46(jd)), moon);
-         struct Aa Aa = ə25(jd, φλ, moon);
-         do_moon_draw(canvas, jd, a[12*60] > HORIZON, brightlimbangle, Aa.A);
+
+         struct Aa Aa_moon = ə25(jd, φλ, moon);
+         struct Aa Aa_sun = ə25(jd, φλ, ə27(jd, ə46(jd)));
+         // big A is azimuth
+
+         double brng;
+
+         // TODO FIX: this can likely be optimized
+         // from https://stackoverflow.com/questions/22392045/calculating-moon-face-rotation-as-a-function-of-earth-coordinates
+         {
+            double dLon = Aa_sun.A - Aa_moon.A;
+            double y = sin_deg(dLon) * cos_deg(Aa_sun.a);
+            double x = cos_deg(Aa_moon.a) * sin_deg(Aa_sun.a) - sin_deg(Aa_moon.a) * cos_deg(Aa_sun.a) * cos_deg(dLon);
+            brng = atan2_deg(y, x);
+
+            // to bring it in line with https://www.timeanddate.com/astronomy/antarctica/mcmurdo
+            brng -= 90.0;
+
+            // to do it clockwise
+            brng = -brng;
+         }
+
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON, brightlimbangle, brng);
       }
    }
 }

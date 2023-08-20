@@ -1188,11 +1188,11 @@ void do_debug_info(struct delayed_text_queue *dtq,
    char abbrev_buf[1024];
    struct tm *tm = localtime(&now);
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
-      sprintf(abbrev_buf, "%s%s%s/%s%s%s",
-            tm->tm_isdst ? "" : "[",
+      sprintf(abbrev_buf, "\b%s%s%s/%s%s%s",
+            tm->tm_isdst ? "" : "\b[",
             tzname[0],
-            tm->tm_isdst ? "" : "]",
-            tm->tm_isdst ? "[" : "", tzname[1], tm->tm_isdst ? "]" : "");
+            tm->tm_isdst ? "" : "]\b",
+            tm->tm_isdst ? "\b[" : "", tzname[1], tm->tm_isdst ? "]\b" : "");
    }
    else if (tzname[0] != NULL) {
       sprintf(abbrev_buf, "[%s]", tzname[0]);
@@ -1202,9 +1202,16 @@ void do_debug_info(struct delayed_text_queue *dtq,
    }
 
    // setting of tz
-   const char *tz = getenv("TZ");
-   if (tz == NULL) {
-      tz = "(null)";
+   const char *env_tz = getenv("TZ");
+   if (env_tz == NULL) {
+      env_tz = "(null)";
+   }
+   char tz[128];
+   strcpy(tz, env_tz);
+   for (char *p = tz; *p; p++) {
+      if (*p == '/') {
+         *p = '\n';
+      }
    }
 
    // no buffer needed for tzProvider

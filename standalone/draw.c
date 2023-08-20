@@ -460,7 +460,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
          x += glyph.width * mult + gap * mult;
       }
       else {
-         mask ^= 0x00C0C0C0;
+         mask ^= 0x00808080;
       }
    }
 

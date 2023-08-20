@@ -863,23 +863,29 @@ do_moon_draw(Canvas * canvas,
             double lu = -ru;
             bool dark = ((u - lu) / (ru - lu)) > FD.F;
 
-            unsigned int c = COLOR_BLACK;
+            // find lat lon
+            int my = 180 - (int) acos_deg(ez / 1.0);
+            int mx = 180 + (ey > 0.0 ? 1 : -1) *
+               (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
 
-            if (!dark) {
-               // find lat lon
-               int my = 180 - (int) acos_deg(ez / 1.0);
-               int mx = 180 + (ey > 0.0 ? 1 : -1) *
-                  (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
+            //fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n",
+            //   x, y, ex, ey, ez, mx, my);
 
-               //fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n",
-               //   x, y, ex, ey, ez, mx, my);
+            if (my < 0) my = 0;
+            if (my > 179) my = 179;
+            if (mx < 0) mx = 0;
+            if (mx > 359) mx = 359;
 
-               if (my < 0) my = 0;
-               if (my > 179) my = 179;
-               if (mx < 0) mx = 0;
-               if (mx > 359) mx = 359;
+            unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 
-               c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
+            if (dark) {
+               int r = c & 0xFF;
+               int g = (c >> 8) & 0xFF;
+               int b = (c >> 16) & 0xFF;
+               r >>= 1;
+               g >>= 1;
+               b >>= 1;
+               c = 0xFF000000 | (r) | (g << 8) | (b << 16);
             }
 
             poke_canvas(canvas, cx + x, cy + y, c);

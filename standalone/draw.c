@@ -344,7 +344,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
         encoded;
         encoded = utf8parse(NULL, &context)) {
 
-      if (encoded != '\b') {
+      if (encoded != '\a') {
          struct Glyph glyph = font_find_glyph(font, encoded);
          if (encoded == ' ') {
             glyph = font_find_glyph(font, '_');
@@ -394,7 +394,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
            encoded;
            encoded = utf8parse(NULL, &context)) {
 
-         if (encoded != '\b') {
+         if (encoded != '\a') {
             struct Glyph glyph = font_find_glyph(font, encoded);
             if (encoded == ' ') {
                glyph = font_find_glyph(font, '_');
@@ -433,7 +433,7 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
         encoded;
         encoded = utf8parse(NULL, &context)) {
 
-      if (encoded != '\b') {
+      if (encoded != '\a') {
          struct Glyph glyph = font_find_glyph(font, encoded);
          if (encoded == ' ') {
             glyph = font_find_glyph(font, '_');

@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
 
    Canvas *canvas =
       do_all(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
-             "tzprovider", "p\bre\bfix\ntimezone", lightdark, NULL, NULL);
+             "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL);
 
    dump_canvas(canvas, "out.bin");
 

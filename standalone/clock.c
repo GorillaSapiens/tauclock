@@ -1188,11 +1188,11 @@ void do_debug_info(struct delayed_text_queue *dtq,
    char abbrev_buf[1024];
    struct tm *tm = localtime(&now);
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
-      sprintf(abbrev_buf, "\b%s%s%s/%s%s%s",
-            tm->tm_isdst ? "" : "\b[",
+      sprintf(abbrev_buf, "\a%s%s%s/%s%s%s",
+            tm->tm_isdst ? "" : "\a[",
             tzname[0],
-            tm->tm_isdst ? "" : "]\b",
-            tm->tm_isdst ? "\b[" : "", tzname[1], tm->tm_isdst ? "]\b" : "");
+            tm->tm_isdst ? "" : "]\a",
+            tm->tm_isdst ? "\a[" : "", tzname[1], tm->tm_isdst ? "]\a" : "");
    }
    else if (tzname[0] != NULL) {
       sprintf(abbrev_buf, "[%s]", tzname[0]);

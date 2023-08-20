@@ -49,6 +49,9 @@ uint8_t *FONT_BOLD_LARGER;
 uint8_t *FONT_BOLD_LARGE;
 uint8_t *FONT_BOLD_MED;
 uint8_t *FONT_BOLD_SMALL;
+
+uint8_t *FONT_ITALIC_LARGER;
+uint8_t *FONT_ITALIC_LARGE;
 uint8_t *FONT_ITALIC_MED;
 #endif
 
@@ -285,7 +288,7 @@ static void set_bold(int width) {
    set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
 }
 
-static void set_italic_med(int width) {
+static void set_italic(int width) {
    uint8_t *choices[] = {
       djsmo_8_bdf,
       djsmo_10_bdf,
@@ -304,6 +307,8 @@ static void set_italic_med(int width) {
       djsmo_60_bdf,
       NULL
    };
+   set_font(&FONT_ITALIC_LARGER, choices, djsmo_28_bdf[1], width);
+   set_font(&FONT_ITALIC_LARGE, choices, djsmo_24_bdf[1], width);
    set_font(&FONT_ITALIC_MED, choices, djsmo_22_bdf[1], width);
 }
 
@@ -456,7 +461,7 @@ void edgetime(struct delayed_text_queue *dtq,
    if (color == COLOR_WHITE) { bg = COLOR_BLACK; }
 
    text_canvas(canvas,
-               index < (12 * 60) ? FONT_ITALIC_MED : FONT_BOLD_MED,
+               index < (12 * 60) ? FONT_ITALIC_LARGER : FONT_BOLD_LARGER,
                x, y,
                color, bg, buf, 1, 3);
 }
@@ -1504,7 +1509,7 @@ Canvas *do_all(double lat,
    set_icon_font(width);
    set_astro_font(width);
    set_bold(width);
-   set_italic_med(width);
+   set_italic(width);
 
    struct delayed_text_queue *dtq = alloc_dtq(128);
 

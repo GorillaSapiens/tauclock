@@ -317,7 +317,9 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
             offset += h[k] + gap*3;
          }
          offset += h[j] / 2;
-         text_canvas(canvas, font, x, y + offset, fg, bg, ps[j], mult, gap);
+         text_canvas(canvas, font,
+            x - (maxw - (wh[j] >> 16)) / 2, y + offset,
+            fg, bg, ps[j], mult, gap);
       }
 
       return ret;
@@ -336,45 +338,48 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
    int fake_y = 0;
 
    const unsigned char *context;
+   unsigned int mask = 0xFFFFFFFF;
 
    for (encoded = utf8parse(p, &context);
         encoded;
         encoded = utf8parse(NULL, &context)) {
 
-      struct Glyph glyph = font_find_glyph(font, encoded);
-      if (encoded == ' ') {
-         glyph = font_find_glyph(font, '_');
-      }
-      for (int h = 0; h < glyph.height; h++) {
-         for (int w = 0; w < glyph.width; w++) {
-            int offset = w / 8;
-            int bit = glyph.data[offset] & (1 << (7 - (w % 8)));
-            if (bit) {
-               for (int mx = 0; mx < mult; mx++) {
-                  for (int my = 0; my < mult; my++) {
-                     int tx = fake_x + w * mult + mx + glyph.dx * mult;
-                     int ty = fake_y + h * mult + my + glyph.dy * mult;
+      if (encoded != '\b') {
+         struct Glyph glyph = font_find_glyph(font, encoded);
+         if (encoded == ' ') {
+            glyph = font_find_glyph(font, '_');
+         }
+         for (int h = 0; h < glyph.height; h++) {
+            for (int w = 0; w < glyph.width; w++) {
+               int offset = w / 8;
+               int bit = glyph.data[offset] & (1 << (7 - (w % 8)));
+               if (bit) {
+                  for (int mx = 0; mx < mult; mx++) {
+                     for (int my = 0; my < mult; my++) {
+                        int tx = fake_x + w * mult + mx + glyph.dx * mult;
+                        int ty = fake_y + h * mult + my + glyph.dy * mult;
 
-                     if (first || tx > max_x) {
-                        max_x = tx;
+                        if (first || tx > max_x) {
+                           max_x = tx;
+                        }
+                        if (first || tx < min_x) {
+                           min_x = tx;
+                        }
+                        if (first || ty > max_y) {
+                           max_y = ty;
+                        }
+                        if (first || ty < min_y) {
+                           min_y = ty;
+                        }
+                        first = 0;
                      }
-                     if (first || tx < min_x) {
-                        min_x = tx;
-                     }
-                     if (first || ty > max_y) {
-                        max_y = ty;
-                     }
-                     if (first || ty < min_y) {
-                        min_y = ty;
-                     }
-                     first = 0;
                   }
                }
             }
+            glyph.data += glyph.step;
          }
-         glyph.data += glyph.step;
+         fake_x += glyph.width * mult + gap * mult;
       }
-      fake_x += glyph.width * mult + gap * mult;
    }
 
    int ret = ((max_x - min_x) << 16) | (max_y - min_y);
@@ -389,6 +394,46 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
            encoded;
            encoded = utf8parse(NULL, &context)) {
 
+         if (encoded != '\b') {
+            struct Glyph glyph = font_find_glyph(font, encoded);
+            if (encoded == ' ') {
+               glyph = font_find_glyph(font, '_');
+            }
+            for (int h = 0; h < glyph.height; h++) {
+               for (int w = 0; w < glyph.width; w++) {
+                  int offset = w / 8;
+                  int bit = glyph.data[offset] & (1 << (7 - (w % 8)));
+                  if (bit) {
+                     for (int mx = 0; mx < mult; mx++) {
+                        for (int my = 0; my < mult; my++) {
+                           for (int dx =
+                                 -mult * outline; dx <= mult * outline; dx++) {
+                              for (int dy = -mult * outline; dy <= mult * outline; dy++) {
+                                 if (encoded != ' ') {
+                                    poke_canvas (canvas,
+                                          x + w * mult + mx + dx + glyph.dx * mult,
+                                          y + h * mult + my + dy + glyph.dy * mult, bg);
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+               glyph.data += glyph.step;
+            }
+            x += glyph.width * mult + gap * mult;
+         }
+      }
+   }
+
+   x = ox;
+
+   for (encoded = utf8parse(p, &context);
+        encoded;
+        encoded = utf8parse(NULL, &context)) {
+
+      if (encoded != '\b') {
          struct Glyph glyph = font_find_glyph(font, encoded);
          if (encoded == ' ') {
             glyph = font_find_glyph(font, '_');
@@ -400,15 +445,11 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
                if (bit) {
                   for (int mx = 0; mx < mult; mx++) {
                      for (int my = 0; my < mult; my++) {
-                        for (int dx =
-                              -mult * outline; dx <= mult * outline; dx++) {
-                           for (int dy = -mult * outline; dy <= mult * outline; dy++) {
-                              if (encoded != ' ') {
-                                 poke_canvas (canvas,
-                                    x + w * mult + mx + dx + glyph.dx * mult,
-                                    y + h * mult + my + dy + glyph.dy * mult, bg);
-                              }
-                           }
+                        if (encoded != ' ') {
+                           poke_canvas(canvas,
+                                 x + w * mult + mx + glyph.dx * mult,
+                                 y + h * mult + my + glyph.dy * mult,
+                                 fg & mask);
                         }
                      }
                   }
@@ -418,37 +459,9 @@ text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
          }
          x += glyph.width * mult + gap * mult;
       }
-   }
-
-   x = ox;
-
-   for (encoded = utf8parse(p, &context);
-        encoded;
-        encoded = utf8parse(NULL, &context)) {
-
-      struct Glyph glyph = font_find_glyph(font, encoded);
-      if (encoded == ' ') {
-         glyph = font_find_glyph(font, '_');
+      else {
+         mask ^= 0x00C0C0C0;
       }
-      for (int h = 0; h < glyph.height; h++) {
-         for (int w = 0; w < glyph.width; w++) {
-            int offset = w / 8;
-            int bit = glyph.data[offset] & (1 << (7 - (w % 8)));
-            if (bit) {
-               for (int mx = 0; mx < mult; mx++) {
-                  for (int my = 0; my < mult; my++) {
-                     if (encoded != ' ') {
-                        poke_canvas(canvas,
-                           x + w * mult + mx + glyph.dx * mult,
-                           y + h * mult + my + glyph.dy * mult, fg);
-                     }
-                  }
-               }
-            }
-         }
-         glyph.data += glyph.step;
-      }
-      x += glyph.width * mult + gap * mult;
    }
 
    return ret;

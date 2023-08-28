@@ -1202,7 +1202,9 @@ void do_debug_info(struct delayed_text_queue *dtq,
       }
    }
 
-   // no buffer needed for tzProvider
+   char tzpbuf[strlen(tzProvider) + 2];
+   tzpbuf[0] = '\v';
+   strcpy(tzpbuf + 1, tzProvider);
 
    // probe our font
 #define TEST_STRING "A_gy"      // includes upercase and descenders
@@ -1228,7 +1230,7 @@ void do_debug_info(struct delayed_text_queue *dtq,
    int w3 = wh3 >> 16;
 
    int wh4 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, tzProvider, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, tzpbuf, 1, 3);
    int w4 = wh4 >> 16;
 
    // find highest height
@@ -1255,7 +1257,7 @@ void do_debug_info(struct delayed_text_queue *dtq,
          NO_X_MOVE);
    im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,
          canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
-         tzProvider, 1, 3,
+         tzpbuf, 1, 3,
          NO_X_MOVE);
 }
 
@@ -1276,7 +1278,7 @@ void do_provider_info(
    int w = wh >> 16;
    int h = wh & 0xFFFF;
 
-   char buffer[strlen(locprovider + 2)];
+   char buffer[strlen(locprovider) + 2];
    buffer[0] = '\v';
    strcpy(buffer + 1, locprovider);
    im_text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,

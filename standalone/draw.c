@@ -231,30 +231,56 @@ struct Glyph {
 
 /// @brief Given a font and a unicode point, find the Glyph
 ///
+/// many things schrift happen here
+///
 /// @param font Pointer to a font
 /// @param glyph The unicode point of interest
 /// @return The Glyph struct coresponding to the unicode point
-static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
-   int font_height = font[1];
-   int font_dy = (signed char)font[3];
+static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
+   SFT_Glyph gid;
 
-   font += 4;
+   if (sft_lookup(sft, glyph, &gid) < 0) {
+      // NOT FOUND !!!
+      // us the special unicode character for this...
+      if (sft_lookup(sft, 0xFFFD, &gid) < 0) {
+         // TODO FIX ABORT
+      }
+   }
+
+   SFT_GMetrics mtx;
+   if (sft_gmetrics(sft, gid, &mtx) < 0) {
+         // TODO FIX ABORT
+   }
+
+   SFT_Image img = {
+      .width  = (mtx.minWidth + 3) & ~3,
+      .height = mtx.minHeight,
+   };
+   unsigned char pixels[img.width * img.height];
+   img.pixels = pixels;
+   if (sft_render(sft, gid, img) < 0) {
+      // TODO FIX ABORT
+   }
+
+   static uint8_t data[128 / 8 * 128];
 
    struct Glyph ret;
-   do {
-      ret.glyph = (((unsigned int)font[0]) << 8) | ((unsigned int)font[1]);
-      font += 2;
+   ret.glyph = glyph;
+   ret.width = mtx.minWidth;
+   ret.height = mtx.minHeight;
+   ret.step = (ret.width + 7) / 8;
+   ret.dx = 0; // mtx.leftSideBearing;
+   ret.dy = mtx.yOffset;
+   ret.data = data;
 
-      ret.width = font[0];
-      ret.height = font[1];
-      ret.step = (ret.width + 7) / 8;
-      ret.dx = 0;
-      ret.dy = (font_height + font_dy) - (ret.height + (signed char)font[3]);
-      ret.data = font + 4;
-
-      font += 4 + ret.step * ret.height;
+   memset(data, 0, sizeof(data));
+   for (int y = 0; y < img.height; y++) {
+      for (int x = 0; x < img.width; x++) {
+         if (pixels[y * img.width + x] >= 128) {
+            data[y * ret.step + x / 8] |= 1 << (7 - (x % 8));
+         }
+      }
    }
-   while (ret.glyph != glyph && ret.glyph != 0xFFFF);
 
    return ret;
 }
@@ -325,6 +351,12 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
       return ret;
    }
 
+   SFT sft;
+   sft.xScale = font->point * mult * 3 / 2;
+   sft.yScale = font->point * mult * 3 / 2;
+   sft.flags = SFT_DOWNWARD_Y;
+   sft.font = font->sft_font;
+
    int outline = 2;
 
    int encoded;
@@ -345,9 +377,9 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
         encoded = utf8parse(NULL, &context)) {
 
       if (encoded != '\a') {
-         struct Glyph glyph = font_find_glyph(font, encoded);
+         struct Glyph glyph = font_find_glyph(&sft, font, encoded);
          if (encoded == ' ') {
-            glyph = font_find_glyph(font, '_');
+            glyph = font_find_glyph(&sft, font, '_');
          }
          for (int h = 0; h < glyph.height; h++) {
             for (int w = 0; w < glyph.width; w++) {
@@ -395,9 +427,9 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
            encoded = utf8parse(NULL, &context)) {
 
          if (encoded != '\a') {
-            struct Glyph glyph = font_find_glyph(font, encoded);
+            struct Glyph glyph = font_find_glyph(&sft, font, encoded);
             if (encoded == ' ') {
-               glyph = font_find_glyph(font, '_');
+               glyph = font_find_glyph(&sft, font, '_');
             }
             for (int h = 0; h < glyph.height; h++) {
                for (int w = 0; w < glyph.width; w++) {
@@ -434,9 +466,9 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
         encoded = utf8parse(NULL, &context)) {
 
       if (encoded != '\a') {
-         struct Glyph glyph = font_find_glyph(font, encoded);
+         struct Glyph glyph = font_find_glyph(&sft, font, encoded);
          if (encoded == ' ') {
-            glyph = font_find_glyph(font, '_');
+            glyph = font_find_glyph(&sft, font, '_');
          }
          for (int h = 0; h < glyph.height; h++) {
             for (int w = 0; w < glyph.width; w++) {

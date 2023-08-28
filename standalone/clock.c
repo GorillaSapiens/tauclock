@@ -107,7 +107,7 @@ void handle_font_sizes(void) {
    mFONT_ITALIC_LARGER.sft_font =
    mFONT_ITALIC_LARGE.sft_font  =
    mFONT_ITALIC_MED.sft_font    =
-      sft_loadmem(bold_font, sizeof(italic_font));
+      sft_loadmem(italic_font, sizeof(italic_font));
 
    mFONT_ASTRO.point         = SCALE(mFONT_ASTRO.point);
    mFONT_BOLD_BIG.point      = SCALE(mFONT_BOLD_BIG.point);

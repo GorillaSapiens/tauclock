@@ -194,7 +194,6 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
    int problems;
    int iterations = 0;
 
-#if 0
    do {
       problems = 0;
 
@@ -238,7 +237,6 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
       iterations++;
       // fprintf(stderr, "problems=%d iterations=%d\n", problems, iterations);
    } while (problems && iterations < 9999);
-#endif
 
    for (int i = 0; i < dtq->size; i++) {
       struct delayed_text *dt = dtq->queue + i;

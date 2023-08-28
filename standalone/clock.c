@@ -1225,8 +1225,12 @@ void do_debug_info(struct delayed_text_queue *dtq,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
    int w2 = wh2 >> 16;
 
+   char tzbuf[strlen(tz) + 2];
+   tzbuf[0] = '\v';
+   strcpy(tzbuf + 1, tz);
+
    int wh3 = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, tz, 1, 3);
+         COLOR_WHITE, COLOR_BLACK, tzbuf, 1, 3);
    int w3 = wh3 >> 16;
 
    int wh4 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
@@ -1252,7 +1256,7 @@ void do_debug_info(struct delayed_text_queue *dtq,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3,
          NO_X_MOVE);
    im_text_canvas(canvas, FONT_BOLD_LARGER, 5 + w3 / 2,
-         canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tz, 1,
+         canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tzbuf, 1,
          3,
          NO_X_MOVE);
    im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,

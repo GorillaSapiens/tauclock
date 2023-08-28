@@ -14,87 +14,28 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: .part_a .part_b .part_c .part_d
-	touch .bdf
+all: AstroDotBasic.ttf dejavu-fonts-ttf-2.37/LICENSE
 
 clean:
-	rm -rf *.bdf *.ttf *.png
+	rm -f astrodotbasic.zip dejavu-fonts-ttf-2.37.tar.bz2
+	rm -f AstroDotBasic.ttf AstroDotBasic.png
+	rm -f astrodotbasic.zip dejavu-fonts-ttf-2.37.tar
 	rm -rf dejavu-fonts-ttf-2.37
-	rm -f .bdf .part_a .part_b .part_c .part_d
 
-squeaky:
-	rm -rf deja* ico* *.h *.bdf *.png *.zip *.ttf
-	rm -f .bdf .part_a .part_b .part_c .part_d
+astrodotbasic.zip:
+	wget https://astrology-symbols.com/font_files/astrodotbasic.zip
+
+AstroDotBasic.ttf: astrodotbasic.zip
+	unzip astrodotbasic.zip
+	touch AstroDotBasic.ttf
 
 dejavu-fonts-ttf-2.37.tar.bz2:
 	wget http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2
 
-.part_a: dejavu-fonts-ttf-2.37.tar.bz2
-	tar -xjvf deja*.tar.bz2
-	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_8.bdf
-	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_10.bdf
-	-otf2bdf -p 12 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_12.bdf
-	-otf2bdf -p 14 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_14.bdf
-	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_16.bdf
-	-otf2bdf -p 18 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_18.bdf
-	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_20.bdf
-	-otf2bdf -p 22 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_22.bdf
-	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_24.bdf
-	-otf2bdf -p 26 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_26.bdf
-	-otf2bdf -p 28 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_28.bdf
-	-otf2bdf -p 30 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_30.bdf
-	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_32.bdf
-	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_40.bdf
-	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_50.bdf
-	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Bold.ttf -o djsmb_60.bdf
-	-otf2bdf -p 8 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_8.bdf
-	-otf2bdf -p 10 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_10.bdf
-	-otf2bdf -p 12 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_12.bdf
-	-otf2bdf -p 14 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_14.bdf
-	-otf2bdf -p 16 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_16.bdf
-	-otf2bdf -p 18 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_18.bdf
-	-otf2bdf -p 20 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_20.bdf
-	-otf2bdf -p 22 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_22.bdf
-	-otf2bdf -p 24 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_24.bdf
-	-otf2bdf -p 26 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_26.bdf
-	-otf2bdf -p 28 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_28.bdf
-	-otf2bdf -p 30 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_30.bdf
-	-otf2bdf -p 32 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_32.bdf
-	-otf2bdf -p 40 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_40.bdf
-	-otf2bdf -p 50 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_50.bdf
-	-otf2bdf -p 60 dejavu*/ttf/DejaVuSansMono-Oblique.ttf -o djsmo_60.bdf
-	touch .part_a
+dejavu-fonts-ttf-2.37.tar: dejavu-fonts-ttf-2.37.tar.bz2
+	bunzip2 -k dejavu-fonts-ttf-2.37.tar.bz2
 
-icons:
-	rm -rf weather-underground-icons
-	git clone https://github.com/manifestinteractive/weather-underground-icons.git
-	rm -rf icons
-	mv weather-underground-icons/dist/icons .
-	rm -rf weather-underground-icons
-	(cd icons/solid-white/png/16x16 ; mogrify -bordercolor transparent -trim -format png *.png)
-	(cd icons/solid-white/png/32x32 ; mogrify -bordercolor transparent -trim -format png *.png)
-	(cd icons/solid-white/png/64x64 ; mogrify -bordercolor transparent -trim -format png *.png)
-	(cd icons/solid-white/png/128x128 ; mogrify -bordercolor transparent -trim -format png *.png)
-	(cd icons/solid-white/png/256x256 ; mogrify -bordercolor transparent -trim -format png *.png)
+dejavu-fonts-ttf-2.37/LICENSE: dejavu-fonts-ttf-2.37.tar
+	tar -xvf dejavu-fonts-ttf-2.37.tar
+	touch dejavu-fonts-ttf-2.37/LICENSE
 
-.part_b: png2h.pl icons
-	./png2h.pl icons/solid-white/png/16x16/
-	./png2h.pl icons/solid-white/png/32x32/
-	./png2h.pl icons/solid-white/png/64x64/
-	./png2h.pl icons/solid-white/png/128x128/
-	./png2h.pl icons/solid-white/png/256x256/
-	touch .part_b
-
-.part_c:
-	wget https://astrology-symbols.com/font_files/astrodotbasic.zip
-	unzip astrodotbasic.zip
-	-otf2bdf -p 16 AstroDotBasic.ttf -o astro_16.bdf
-	-otf2bdf -p 20 AstroDotBasic.ttf -o astro_20.bdf
-	-otf2bdf -p 24 AstroDotBasic.ttf -o astro_24.bdf
-	-otf2bdf -p 32 AstroDotBasic.ttf -o astro_32.bdf
-	-otf2bdf -p 50 AstroDotBasic.ttf -o astro_50.bdf
-	touch .part_c
-
-.part_d:
-	find . -name \*.bdf | xargs -L 1 ./bdf2h.pl
-	touch .part_d

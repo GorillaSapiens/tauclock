@@ -14,7 +14,7 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-//#pragma GCC optimize("Ofast")
+#pragma GCC optimize("Ofast")
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,8 +29,6 @@
 #include <math.h>
 
 #include <locale.h>
-
-#include <assert.h>
 
 #include "precise.h"
 #include "astro.h"
@@ -109,15 +107,18 @@ void handle_font_sizes(void) {
    mFONT_ITALIC_MED.sft_font    =
       sft_loadmem(italic_font, sizeof(italic_font));
 
-   mFONT_ASTRO.point         = ~1 & (int)SCALE(mFONT_ASTRO.point);
-   mFONT_BOLD_BIG.point      = ~1 & (int)SCALE(mFONT_BOLD_BIG.point);
-   mFONT_BOLD_LARGER.point   = ~1 & (int)SCALE(mFONT_BOLD_LARGER.point);
-   mFONT_BOLD_LARGE.point    = ~1 & (int)SCALE(mFONT_BOLD_LARGE.point);
-   mFONT_BOLD_MED.point      = ~1 & (int)SCALE(mFONT_BOLD_MED.point);
-   mFONT_BOLD_SMALL.point    = ~1 & (int)SCALE(mFONT_BOLD_SMALL.point);
-   mFONT_ITALIC_LARGER.point = ~1 & (int)SCALE(mFONT_ITALIC_LARGER.point);
-   mFONT_ITALIC_LARGE.point  = ~1 & (int)SCALE(mFONT_ITALIC_LARGE.point);
-   mFONT_ITALIC_MED.point    = ~1 & (int)SCALE(mFONT_ITALIC_MED.point);
+#define FONTSCALE(x) \
+   ~1 & ((int)SCALE(x) * 3 / 2)
+
+   mFONT_ASTRO.point         = FONTSCALE(mFONT_ASTRO.point);
+   mFONT_BOLD_BIG.point      = FONTSCALE(mFONT_BOLD_BIG.point);
+   mFONT_BOLD_LARGER.point   = FONTSCALE(mFONT_BOLD_LARGER.point);
+   mFONT_BOLD_LARGE.point    = FONTSCALE(mFONT_BOLD_LARGE.point);
+   mFONT_BOLD_MED.point      = FONTSCALE(mFONT_BOLD_MED.point);
+   mFONT_BOLD_SMALL.point    = FONTSCALE(mFONT_BOLD_SMALL.point);
+   mFONT_ITALIC_LARGER.point = FONTSCALE(mFONT_ITALIC_LARGER.point);
+   mFONT_ITALIC_LARGE.point  = FONTSCALE(mFONT_ITALIC_LARGE.point);
+   mFONT_ITALIC_MED.point    = FONTSCALE(mFONT_ITALIC_MED.point);
 }
 
 struct delayed_text {

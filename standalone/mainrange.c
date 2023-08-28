@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
       exit(-1);
    }
 
-   double offset = 0.0;
+   double base_offset = 0.0;
    if (argv[3]) {
       if (strchr(argv[3], '/')) {
          int year, month, day;
@@ -48,18 +48,18 @@ int main(int argc, char *argv[]) {
             tm.tm_mon = month - 1;
             tm.tm_mday = day;
             time_t t2 = mktime(&tm);
-            offset = (t2 - t) / (60 * 60 * 24);
+            base_offset = (t2 - t) / (60 * 60 * 24);
          }
          else {
             fprintf(stderr, "could not parse %s\n", argv[3]);
          }
       }
       else {
-         offset = atof(argv[3]);
+         base_offset = atof(argv[3]);
       }
    }
    if (argv[4]) {
-      offset += atof(argv[4]);
+      base_offset += atof(argv[4]);
    }
 
    char *provider = getenv("PROVIDER");
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
    for (int i = 0; i < 366*STEP; i++) {
       printf("====== %06d ======\n", i);
 
-      double offset = (double) i / (double) STEP;
+      double offset = base_offset + (double) i / (double) STEP;
 
       struct timespec before, after;
 

@@ -313,14 +313,14 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
       return failure_glyph(glyph);
    }
 
-   static uint8_t data[128 / 8 * 128];
+   static uint8_t data[4096 / 8 * 4096];
 
    struct Glyph ret;
    ret.glyph = glyph;
    ret.width = mtx.minWidth;
    ret.height = mtx.minHeight;
    ret.step = (ret.width + 7) / 8;
-   ret.dx = 0; // mtx.leftSideBearing;
+   ret.dx = mtx.leftSideBearing / 16;
    ret.dy = mtx.yOffset;
    ret.data = data;
 
@@ -339,7 +339,7 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
 /// @brief Draw text on a canvas
 ///
 /// @param canvas The Canvas to draw on
-/// @param font A pointer to the font being used
+/// @param afont A pointer to the font being used
 /// @param x The X coordinate of the center of the text
 /// @param y The Y coordinate of the center of the text
 /// @param fg The foreground color
@@ -349,8 +349,16 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
 /// @param gap The pixel gap between characters
 /// @return An integer encoding the text width and height
 int
-text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
+text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
+
+   DrawFont ofont = *afont;
+   DrawFont *font = &ofont;
+   if (ofont.point > 50) {
+      int n = ofont.point / 50;
+      ofont.point /= n;
+      mult *= n;
+   }
 
    bool left_justify = false;
    if (p[0] == '\v') {
@@ -409,8 +417,8 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
    }
 
    SFT sft;
-   sft.xScale = font->point * mult * 3 / 2;
-   sft.yScale = font->point * mult * 3 / 2;
+   sft.xScale = font->point; // * mult;
+   sft.yScale = font->point; // * mult;
    sft.flags = SFT_DOWNWARD_Y;
    sft.font = font->sft_font;
 
@@ -472,9 +480,6 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
    }
 
    int ret = ((max_x - min_x) << 16) | (max_y - min_y);
-   if (ret == 0) {
-      ret = 0x00010001;
-   }
 
    x -= ((max_x - min_x) / 2) + min_x;
    y -= ((max_y - min_y) / 2) + min_y;

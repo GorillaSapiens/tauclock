@@ -70,13 +70,16 @@ int main(int argc, char *argv[]) {
       provider = "provider\ndetail";
    }
 
+   int width = getenv("WIDTH") ? atoi(getenv("WIDTH")) : 1024;
+
    Canvas *canvas =
-      do_all(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
+      do_all(atof(argv[1]), atof(argv[2]), offset, width, provider,
              "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL);
 
    dump_canvas(canvas, "out.bin");
 
    printf("raw output written to out.bin\n");
-   printf("`convert -size 1024x1024 -depth 8 RGBA:out.bin out.png` to view\n");
+   printf("`convert -size %dx%d -depth 8 RGBA:out.bin out.png` to view\n",
+      width, width);
 }
 // vim: expandtab:noai:ts=3:sw=3

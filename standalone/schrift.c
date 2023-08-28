@@ -1,3 +1,4 @@
+#pragma GCC optimize("Ofast")
 /* This file is part of libschrift.
  *
  * © 2019-2022 Thomas Oltmann and contributors

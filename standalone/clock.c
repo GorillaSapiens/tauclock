@@ -109,15 +109,15 @@ void handle_font_sizes(void) {
    mFONT_ITALIC_MED.sft_font    =
       sft_loadmem(italic_font, sizeof(italic_font));
 
-   mFONT_ASTRO.point         = SCALE(mFONT_ASTRO.point);
-   mFONT_BOLD_BIG.point      = SCALE(mFONT_BOLD_BIG.point);
-   mFONT_BOLD_LARGER.point   = SCALE(mFONT_BOLD_LARGER.point);
-   mFONT_BOLD_LARGE.point    = SCALE(mFONT_BOLD_LARGE.point);
-   mFONT_BOLD_MED.point      = SCALE(mFONT_BOLD_MED.point);
-   mFONT_BOLD_SMALL.point    = SCALE(mFONT_BOLD_SMALL.point);
-   mFONT_ITALIC_LARGER.point = SCALE(mFONT_ITALIC_LARGER.point);
-   mFONT_ITALIC_LARGE.point  = SCALE(mFONT_ITALIC_LARGE.point);
-   mFONT_ITALIC_MED.point    = SCALE(mFONT_ITALIC_MED.point);
+   mFONT_ASTRO.point         = ~1 & (int)SCALE(mFONT_ASTRO.point);
+   mFONT_BOLD_BIG.point      = ~1 & (int)SCALE(mFONT_BOLD_BIG.point);
+   mFONT_BOLD_LARGER.point   = ~1 & (int)SCALE(mFONT_BOLD_LARGER.point);
+   mFONT_BOLD_LARGE.point    = ~1 & (int)SCALE(mFONT_BOLD_LARGE.point);
+   mFONT_BOLD_MED.point      = ~1 & (int)SCALE(mFONT_BOLD_MED.point);
+   mFONT_BOLD_SMALL.point    = ~1 & (int)SCALE(mFONT_BOLD_SMALL.point);
+   mFONT_ITALIC_LARGER.point = ~1 & (int)SCALE(mFONT_ITALIC_LARGER.point);
+   mFONT_ITALIC_LARGE.point  = ~1 & (int)SCALE(mFONT_ITALIC_LARGE.point);
+   mFONT_ITALIC_MED.point    = ~1 & (int)SCALE(mFONT_ITALIC_MED.point);
 }
 
 struct delayed_text {
@@ -1174,14 +1174,14 @@ void do_debug_info(struct delayed_text_queue *dtq,
    char abbrev_buf[1024];
    struct tm *tm = localtime(&now);
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
-      sprintf(abbrev_buf, "\v\a%s%s%s/%s%s%s",
+      sprintf(abbrev_buf, "\a%s%s%s/%s%s%s",
             tm->tm_isdst ? "" : "\a[",
             tzname[0],
             tm->tm_isdst ? "" : "]\a",
             tm->tm_isdst ? "\a[" : "", tzname[1], tm->tm_isdst ? "]\a" : "");
    }
    else if (tzname[0] != NULL) {
-      sprintf(abbrev_buf, "\v[%s]", tzname[0]);
+      sprintf(abbrev_buf, "[%s]", tzname[0]);
    }
    else {
       abbrev_buf[0] = 0;
@@ -1204,24 +1204,23 @@ void do_debug_info(struct delayed_text_queue *dtq,
    tzpbuf[0] = '\v';
    strcpy(tzpbuf + 1, tzProvider);
 
-   // probe our font
-#define TEST_STRING "A_gy"      // includes upercase and descenders
-   int whn = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, TEST_STRING, 1, 3);
-   int hn = whn & 0xFFFF;
-
    // get sizes of various pieces
    int wh0 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   int h0 = wh0 & 0xFFFF;
    int w0 = wh0 >> 16;
 
-   int wh1 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
+   int wh1 = (offset == 0.0) ? 0 :
+      text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
+   int h1 = wh1 & 0xFFFF;
    int w1 = wh1 >> 16;
 
    int wh2 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   int h2 = wh2 & 0xFFFF;
    int w2 = wh2 >> 16;
+fprintf(stderr, "??? abbrev %dx%d\n", w2, h2);
 
    char tzbuf[strlen(tz) + 2];
    tzbuf[0] = '\v';
@@ -1229,36 +1228,38 @@ void do_debug_info(struct delayed_text_queue *dtq,
 
    int wh3 = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, tzbuf, 1, 3);
+   int h3 = wh3 & 0xFFFF;
    int w3 = wh3 >> 16;
 
    int wh4 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
          COLOR_WHITE, COLOR_BLACK, tzpbuf, 1, 3);
+   int h4 = wh4 & 0xFFFF;
    int w4 = wh4 >> 16;
-
-   // find highest height
-   int h = hn;
 
    // now output the things...
 
    // date side
    im_text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w0 / 2,
-         canvas->h - 5 - h / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3,
+         canvas->h - 5 - h0 / 2, COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3,
          NO_X_MOVE);
-   im_text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w1 / 2,
-         canvas->h - 5 - (h + 5) - h / 2, COLOR_YELLOW, COLOR_BLACK,
-         offset_buf, 1, 3,
-         NO_X_MOVE);
+   if (offset != 0.0) {
+      im_text_canvas(canvas, FONT_BOLD_LARGE, canvas->w - 5 - w1 / 2,
+            canvas->h - 5 - h0 - h1 / 2, COLOR_YELLOW, COLOR_BLACK,
+            offset_buf, 1, 3,
+            NO_X_MOVE);
+   }
 
    // timezone side
-   im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2, canvas->h - 5 - h / 2,
+   im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w2 / 2,
+         canvas->h - 5 - h2 / 2,
          COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3,
          NO_X_MOVE);
    im_text_canvas(canvas, FONT_BOLD_LARGER, 5 + w3 / 2,
-         canvas->h - 5 - (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK, tzbuf, 1,
+         canvas->h - 5 - h2 - h3 / 2, COLOR_WHITE, COLOR_BLACK, tzbuf, 1,
          3,
          NO_X_MOVE);
    im_text_canvas(canvas, FONT_BOLD_LARGE, 5 + w4 / 2,
-         canvas->h - 5 - 2 * (h + 5) - h / 2, COLOR_WHITE, COLOR_BLACK,
+         canvas->h - 5 - h2 - h3 - h4 / 2, COLOR_WHITE, COLOR_BLACK,
          tzpbuf, 1, 3,
          NO_X_MOVE);
 }

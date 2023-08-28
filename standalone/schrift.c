@@ -125,7 +125,7 @@ struct SFT_Font
 
 /* function declarations */
 /* generic utility functions */
-//static void *reallocarray(void *optr, size_t nmemb, size_t size);
+static void *my_reallocarray(void *optr, size_t nmemb, size_t size);
 static inline int fast_floor(double x);
 static inline int fast_ceil (double x);
 /* file loading */
@@ -406,12 +406,11 @@ failure:
  * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW */
 #define MUL_NO_OVERFLOW	((size_t)1 << (sizeof(size_t) * 4))
 
-#if 0 // linux has this already
 /* OpenBSD's reallocarray() standard libary function.
  * A wrapper for realloc() that takes two size args like calloc().
  * Useful because it eliminates common integer overflow bugs. */
 static void *
-reallocarray(void *optr, size_t nmemb, size_t size)
+my_reallocarray(void *optr, size_t nmemb, size_t size)
 {
 	if ((nmemb >= MUL_NO_OVERFLOW || size >= MUL_NO_OVERFLOW) &&
 	    nmemb > 0 && SIZE_MAX / nmemb < size) {
@@ -420,7 +419,6 @@ reallocarray(void *optr, size_t nmemb, size_t size)
 	}
 	return realloc(optr, size * nmemb);
 }
-#endif
 
 /* TODO maybe we should use long here instead of int. */
 static inline int
@@ -638,7 +636,7 @@ grow_points(Outline *outl)
 	if (outl->capPoints > UINT16_MAX / 2)
 		return -1;
 	cap = (uint_fast16_t) (2U * outl->capPoints);
-	if (!(mem = reallocarray(outl->points, cap, sizeof *outl->points)))
+	if (!(mem = my_reallocarray(outl->points, cap, sizeof *outl->points)))
 		return -1;
 	outl->capPoints = (uint_least16_t) cap;
 	outl->points    = mem;
@@ -654,7 +652,7 @@ grow_curves(Outline *outl)
 	if (outl->capCurves > UINT16_MAX / 2)
 		return -1;
 	cap = (uint_fast16_t) (2U * outl->capCurves);
-	if (!(mem = reallocarray(outl->curves, cap, sizeof *outl->curves)))
+	if (!(mem = my_reallocarray(outl->curves, cap, sizeof *outl->curves)))
 		return -1;
 	outl->capCurves = (uint_least16_t) cap;
 	outl->curves    = mem;
@@ -670,7 +668,7 @@ grow_lines(Outline *outl)
 	if (outl->capLines > UINT16_MAX / 2)
 		return -1;
 	cap = (uint_fast16_t) (2U * outl->capLines);
-	if (!(mem = reallocarray(outl->lines, cap, sizeof *outl->lines)))
+	if (!(mem = my_reallocarray(outl->lines, cap, sizeof *outl->lines)))
 		return -1;
 	outl->capLines = (uint_least16_t) cap;
 	outl->lines    = mem;

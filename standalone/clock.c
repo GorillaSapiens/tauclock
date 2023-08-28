@@ -219,7 +219,7 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
                   if ((dti->movable & X_MOVE_OK) && i_lef > 0) dti->x--;
                   if ((dtj->movable & X_MOVE_OK) && j_rig < (canvas->w - 1)) dtj->x++;
                }
-               else { // if (dti->x > dtj->x) {
+               else { // if (dti->x > dtj->x) [
                   if ((dti->movable & X_MOVE_OK) && i_rig < (canvas->w - 1)) dti->x++;
                   if ((dtj->movable & X_MOVE_OK) && j_lef > 0) dtj->x--;
                }
@@ -228,16 +228,14 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
                   if ((dti->movable & Y_MOVE_OK)&& i_top > 0) dti->y--;
                   if ((dtj->movable & Y_MOVE_OK)&& j_bot < (canvas->h - 1)) dtj->y++;
                }
-               else { // if (dti->y > dtj->y) {
+               else { // if (dti->y > dtj->y) [
                   if ((dti->movable & Y_MOVE_OK)&& i_bot < (canvas->h - 1)) dti->y++;
                   if ((dtj->movable & Y_MOVE_OK)&& j_top > 0) dtj->y--;
                }
             }
-
          }
       }
       iterations++;
-
    } while (problems && iterations < 9999);
 
    for (int i = 0; i < dtq->size; i++) {
@@ -1084,9 +1082,9 @@ void do_center(struct delayed_text_queue *dtq,
          sprintf(location, "%0.2f%s%c,%0.2f%s%c", lat, degree, NS, lon, degree,
                EW);
       }
-      text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
+      im_text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
             canvas->h / 2 + (int)SCALE(48), COLOR_WHITE, COLOR_BLACK,
-            location, 1, 2);
+            location, 1, 2, NO_X_MOVE);
    }
 
    struct tm local = *localtime(&now);
@@ -1099,9 +1097,9 @@ void do_center(struct delayed_text_queue *dtq,
             local.tm_mon + 1,
             local.tm_mday);
 
-      text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
+      im_text_canvas(canvas, FONT_BOLD_SMALL, canvas->w / 2,
             canvas->h / 2 + (int)SCALE(72), COLOR_WHITE, COLOR_BLACK, time,
-            1, 2);
+            1, 2, NO_X_MOVE);
    }
 
    {
@@ -1121,9 +1119,9 @@ void do_center(struct delayed_text_queue *dtq,
       else {
          sprintf(text, "%s", wenam[local.tm_wday]);
       }
-      text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
+      im_text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
             canvas->h / 2 - (int)SCALE(80), COLOR_WHITE, COLOR_BLACK, text,
-            1, 2);
+            1, 2, NO_X_MOVE);
    }
 
    {
@@ -1135,9 +1133,9 @@ void do_center(struct delayed_text_queue *dtq,
          sprintf(text, "%s", monam[local.tm_mon]);
       }
       sprintf(text + strlen(text), "-%d", local.tm_mday);
-      text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
+      im_text_canvas(canvas, FONT_BOLD_MED, canvas->w / 2,
             canvas->h / 2 - (int)SCALE(50), COLOR_WHITE, COLOR_BLACK, text,
-            1, 2);
+            1, 2, NO_X_MOVE);
    }
 }
 

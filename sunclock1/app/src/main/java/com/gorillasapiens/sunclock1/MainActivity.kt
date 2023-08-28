@@ -46,6 +46,7 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.math.*
 
+
 class MainActivity : AppCompatActivity() {
     private var mDrawableInitialized = false
     private val mPermissionID = 44

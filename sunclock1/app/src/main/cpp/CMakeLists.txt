@@ -26,8 +26,9 @@ add_library( # Sets the name of the library.
 		../../../../../maths/precise.c
 		../../../../../maths/astro.c
 		../../../../../globe/globe.c
-        	../../../../../standalone/clock.c
+		../../../../../standalone/clock.c
 		../../../../../standalone/draw.c
+		../../../../../standalone/schrift.c
 		trampoline.cpp
         )
 

@@ -60,7 +60,8 @@ quat rotate(quat point, quat rot) {
 }
 
 #ifndef STANDALONE
-extern uint8_t *FONT_BOLD_BIG;
+extern DrawFont mFONT_BOLD_BIG;
+#define FONT_BOLD_BIG (&mFONT_BOLD_BIG)
 
 void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzname) {
    char location[128];
@@ -108,7 +109,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzna
     w = wh >> 16;
     h = wh & 0xffff;
 
-    text_canvas(canvas, FONT_BOLD_BIG, (w/2+10), width - (h/2+10),
+    text_canvas(canvas, &mFONT_BOLD_BIG, (w/2+10), width - (h/2+10),
                 COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
 }
 #endif

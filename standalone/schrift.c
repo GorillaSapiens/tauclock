@@ -125,7 +125,9 @@ struct SFT_Font
 
 /* function declarations */
 /* generic utility functions */
-//static void *reallocarray(void *optr, size_t nmemb, size_t size);
+#ifndef _GNU_SOURCE
+static void *reallocarray(void *optr, size_t nmemb, size_t size);
+#endif
 static inline int fast_floor(double x);
 static inline int fast_ceil (double x);
 /* file loading */
@@ -406,7 +408,7 @@ failure:
  * if both s1 < MUL_NO_OVERFLOW and s2 < MUL_NO_OVERFLOW */
 #define MUL_NO_OVERFLOW	((size_t)1 << (sizeof(size_t) * 4))
 
-#if 0 // linux has this already
+#ifndef _GNU_SOURCE
 /* OpenBSD's reallocarray() standard libary function.
  * A wrapper for realloc() that takes two size args like calloc().
  * Useful because it eliminates common integer overflow bugs. */

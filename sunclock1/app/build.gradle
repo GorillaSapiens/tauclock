@@ -10,7 +10,7 @@ android {
         applicationId "com.gorillasapiens.sunclock1"
         minSdk 26
         targetSdk 31
-        versionCode 23
+        versionCode 37
         versionName "0.37"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

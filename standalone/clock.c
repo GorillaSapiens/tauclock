@@ -37,23 +37,29 @@
 #include "draw.h"
 #include "moon_xpm.h"
 
-#define ORIG
+#include "fonts.h"
 
-#ifdef ORIG
-//#define SIZE 1024
 int SIZE = 1024;
-uint8_t *ICON_FONT;
-uint8_t *ASTRO_FONT;
-uint8_t *FONT_BOLD_BIG;
-uint8_t *FONT_BOLD_LARGER;
-uint8_t *FONT_BOLD_LARGE;
-uint8_t *FONT_BOLD_MED;
-uint8_t *FONT_BOLD_SMALL;
 
-uint8_t *FONT_ITALIC_LARGER;
-uint8_t *FONT_ITALIC_LARGE;
-uint8_t *FONT_ITALIC_MED;
-#endif
+DrawFont mFONT_ASTRO         = (DrawFont) { astro_font, sizeof(astro_font), 32};
+DrawFont mFONT_BOLD_BIG      = (DrawFont) { bold_font, sizeof(bold_font), 50};
+DrawFont mFONT_BOLD_LARGER   = (DrawFont) { bold_font, sizeof(bold_font), 28};
+DrawFont mFONT_BOLD_LARGE    = (DrawFont) { bold_font, sizeof(bold_font), 24};
+DrawFont mFONT_BOLD_MED      = (DrawFont) { bold_font, sizeof(bold_font), 22};
+DrawFont mFONT_BOLD_SMALL    = (DrawFont) { bold_font, sizeof(bold_font), 18};
+DrawFont mFONT_ITALIC_LARGER = (DrawFont) { italic_font, sizeof(italic_font), 28};
+DrawFont mFONT_ITALIC_LARGE  = (DrawFont) { italic_font, sizeof(italic_font), 24};
+DrawFont mFONT_ITALIC_MED    = (DrawFont) { italic_font, sizeof(italic_font), 22};
+
+#define FONT_ASTRO         (&mFONT_ASTRO)
+#define FONT_BOLD_BIG      (&mFONT_BOLD_BIG)
+#define FONT_BOLD_LARGER   (&mFONT_BOLD_LARGER)
+#define FONT_BOLD_LARGE    (&mFONT_BOLD_LARGE)
+#define FONT_BOLD_MED      (&mFONT_BOLD_MED)
+#define FONT_BOLD_SMALL    (&mFONT_BOLD_SMALL)
+#define FONT_ITALIC_LARGER (&mFONT_ITALIC_LARGER)
+#define FONT_ITALIC_LARGE  (&mFONT_ITALIC_LARGE)
+#define FONT_ITALIC_MED    (&mFONT_ITALIC_MED)
 
 #define SCALE(x) ((double)((double)(x) * SIZE / 1024))
 
@@ -83,6 +89,9 @@ uint8_t *FONT_ITALIC_MED;
 #define NO_X_MOVE Y_MOVE_OK
 #define NO_Y_MOVE X_MOVE_OK
 
+void handle_font_sizes(void) {
+}
+
 struct delayed_text {
    int movable;
    int x, y;
@@ -90,7 +99,7 @@ struct delayed_text {
    unsigned int fg, bg;
    const char *p;
    int mult, gap;
-   uint8_t *font;
+   DrawFont *font;
 };
 
 struct delayed_text_queue {
@@ -101,7 +110,7 @@ struct delayed_text_queue {
 
 static int delayed_text_canvas(
                                  struct delayed_text_queue *dtq,
-                                 Canvas * canvas, uint8_t * font,
+                                 Canvas * canvas, DrawFont * font,
                                  int x, int y,
                                  unsigned int fg, unsigned int bg,
                                  const char *p, int mult, int gap,
@@ -218,6 +227,7 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
 #define im_text_canvas(a,b,c,d,e,f,g,h,i,k) \
    delayed_text_canvas(dtq,a,b,c,d,e,f,g,h,i,k)
 
+#if 0
 static void set_font(uint8_t ** target,
                      uint8_t ** choices,
                      int desire,
@@ -236,81 +246,7 @@ static void set_font(uint8_t ** target,
    }
    *target = choices[close];
 }
-
-static void set_icon_font(int width) {
-   uint8_t *choices[] = {
-      icons_16x16,
-      icons_32x32,
-      icons_64x64,
-      icons_128x128,
-      icons_256x256,
-      NULL
-   };
-   set_font(&ICON_FONT, choices, icons_128x128[1], width);
-}
-
-static void set_astro_font(int width) {
-   uint8_t *choices[] = {
-      astro_16_bdf,
-      astro_20_bdf,
-      astro_24_bdf,
-      astro_32_bdf,
-      astro_50_bdf,
-      NULL
-   };
-   set_font(&ASTRO_FONT, choices, astro_32_bdf[1], width);
-}
-
-static void set_bold(int width) {
-   uint8_t *choices[] = {
-      djsmb_8_bdf,
-      djsmb_10_bdf,
-      djsmb_12_bdf,
-      djsmb_14_bdf,
-      djsmb_16_bdf,
-      djsmb_18_bdf,
-      djsmb_20_bdf,
-      djsmb_22_bdf,
-      djsmb_24_bdf,
-      djsmb_26_bdf,
-      djsmb_28_bdf,
-      djsmb_30_bdf,
-      djsmb_32_bdf,
-      djsmb_40_bdf,
-      djsmb_50_bdf,
-      djsmb_60_bdf,
-      NULL
-   };
-   set_font(&FONT_BOLD_SMALL, choices, djsmb_18_bdf[1], width);
-   set_font(&FONT_BOLD_MED, choices, djsmb_22_bdf[1], width);
-   set_font(&FONT_BOLD_LARGE, choices, djsmb_24_bdf[1], width);
-   set_font(&FONT_BOLD_LARGER, choices, djsmb_28_bdf[1], width);
-   set_font(&FONT_BOLD_BIG, choices, djsmb_50_bdf[1], width);
-}
-
-static void set_italic(int width) {
-   uint8_t *choices[] = {
-      djsmo_8_bdf,
-      djsmo_10_bdf,
-      djsmo_12_bdf,
-      djsmo_14_bdf,
-      djsmo_16_bdf,
-      djsmo_20_bdf,
-      djsmo_22_bdf,
-      djsmo_24_bdf,
-      djsmo_26_bdf,
-      djsmo_28_bdf,
-      djsmo_30_bdf,
-      djsmo_32_bdf,
-      djsmo_40_bdf,
-      djsmo_50_bdf,
-      djsmo_60_bdf,
-      NULL
-   };
-   set_font(&FONT_ITALIC_LARGER, choices, djsmo_28_bdf[1], width);
-   set_font(&FONT_ITALIC_LARGE, choices, djsmo_24_bdf[1], width);
-   set_font(&FONT_ITALIC_MED, choices, djsmo_22_bdf[1], width);
-}
+#endif
 
 /// @brief Draw the "now" hand
 ///
@@ -1012,7 +948,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             double offset = (rising ? -7.0 : 7.0);
             int x = (SIZE / 2) + radius * cos_deg(stop_angle + offset);
             int y = (SIZE / 2) + radius * sin_deg(stop_angle + offset);
-            text_canvas(canvas, ASTRO_FONT, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
+            text_canvas(canvas, FONT_ASTRO, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
          }
       }
       if (a[max] > HORIZON) {
@@ -1034,7 +970,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             double offset = -7.0;
             int x = (SIZE / 2) + radius * cos_deg(stop_angle + offset);
             int y = (SIZE / 2) + radius * sin_deg(stop_angle + offset);
-            text_canvas(canvas, ASTRO_FONT, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
+            text_canvas(canvas, FONT_ASTRO, x, y, colors[p], COLOR_BLACK, sym, 1, 1);
          }
       }
 
@@ -1537,10 +1473,7 @@ Canvas *do_all(double lat,
    // assign global SIZE used for scaling
    SIZE = width;
 
-   set_icon_font(width);
-   set_astro_font(width);
-   set_bold(width);
-   set_italic(width);
+   handle_font_sizes();
 
    struct delayed_text_queue *dtq = alloc_dtq(128);
 

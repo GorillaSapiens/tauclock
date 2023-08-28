@@ -272,7 +272,7 @@ static struct Glyph font_find_glyph(uint8_t * font, uint16_t glyph) {
 /// @param gap The pixel gap between characters
 /// @return An integer encoding the text width and height
 int
-text_canvas(Canvas * canvas, uint8_t * font, int x, int y, unsigned int fg,
+text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
 
    // mad recursion for multilined strings

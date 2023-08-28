@@ -79,51 +79,18 @@ squeaky:
 main.o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/time.h
 main.o: /usr/include/features.h /usr/include/features-time64.h
 main.o: /usr/include/stdc-predef.h /usr/include/string.h
-main.o: /usr/include/strings.h draw.h fonts/djsmb_60_bdf.h
-main.o: /usr/include/stdint.h fonts/djsmb_50_bdf.h fonts/djsmb_40_bdf.h
-main.o: fonts/djsmb_32_bdf.h fonts/djsmb_24_bdf.h fonts/djsmb_22_bdf.h
-main.o: fonts/djsmb_20_bdf.h fonts/djsmb_18_bdf.h fonts/djsmb_16_bdf.h
-main.o: fonts/djsmb_14_bdf.h fonts/djsmb_12_bdf.h fonts/djsmb_10_bdf.h
-main.o: fonts/djsmb_8_bdf.h fonts/djsmo_60_bdf.h fonts/djsmo_50_bdf.h
-main.o: fonts/djsmo_40_bdf.h fonts/djsmo_32_bdf.h fonts/djsmo_24_bdf.h
-main.o: fonts/djsmo_22_bdf.h fonts/djsmo_20_bdf.h fonts/djsmo_18_bdf.h
-main.o: fonts/djsmo_16_bdf.h fonts/djsmo_14_bdf.h fonts/djsmo_12_bdf.h
-main.o: fonts/djsmo_10_bdf.h fonts/djsmo_8_bdf.h fonts/astro_50_bdf.h
-main.o: fonts/astro_32_bdf.h fonts/astro_24_bdf.h fonts/astro_20_bdf.h
-main.o: fonts/astro_16_bdf.h fonts/icons_128x128.h clock.h
+main.o: /usr/include/strings.h draw.h clock.h
 draw.o: /usr/include/math.h /usr/include/stdio.h /usr/include/string.h
 draw.o: /usr/include/strings.h /usr/include/features.h
 draw.o: /usr/include/features-time64.h /usr/include/stdc-predef.h
 draw.o: /usr/include/stdlib.h /usr/include/fcntl.h /usr/include/unistd.h
-draw.o: draw.h fonts/djsmb_60_bdf.h /usr/include/stdint.h
-draw.o: fonts/djsmb_50_bdf.h fonts/djsmb_40_bdf.h fonts/djsmb_32_bdf.h
-draw.o: fonts/djsmb_24_bdf.h fonts/djsmb_22_bdf.h fonts/djsmb_20_bdf.h
-draw.o: fonts/djsmb_18_bdf.h fonts/djsmb_16_bdf.h fonts/djsmb_14_bdf.h
-draw.o: fonts/djsmb_12_bdf.h fonts/djsmb_10_bdf.h fonts/djsmb_8_bdf.h
-draw.o: fonts/djsmo_60_bdf.h fonts/djsmo_50_bdf.h fonts/djsmo_40_bdf.h
-draw.o: fonts/djsmo_32_bdf.h fonts/djsmo_24_bdf.h fonts/djsmo_22_bdf.h
-draw.o: fonts/djsmo_20_bdf.h fonts/djsmo_18_bdf.h fonts/djsmo_16_bdf.h
-draw.o: fonts/djsmo_14_bdf.h fonts/djsmo_12_bdf.h fonts/djsmo_10_bdf.h
-draw.o: fonts/djsmo_8_bdf.h fonts/astro_50_bdf.h fonts/astro_32_bdf.h
-draw.o: fonts/astro_24_bdf.h fonts/astro_20_bdf.h fonts/astro_16_bdf.h
-draw.o: fonts/icons_128x128.h ../maths/precise.h
+draw.o: draw.h ../maths/precise.h
 clock.o: /usr/include/stdio.h /usr/include/stdlib.h /usr/include/string.h
 clock.o: /usr/include/strings.h /usr/include/features.h
 clock.o: /usr/include/features-time64.h /usr/include/stdc-predef.h
 clock.o: /usr/include/unistd.h /usr/include/fcntl.h /usr/include/math.h
 clock.o: /usr/include/locale.h /usr/include/assert.h ../maths/precise.h
-clock.o: ../maths/astro.h /usr/include/time.h draw.h fonts/djsmb_60_bdf.h
-clock.o: /usr/include/stdint.h fonts/djsmb_50_bdf.h fonts/djsmb_40_bdf.h
-clock.o: fonts/djsmb_32_bdf.h fonts/djsmb_24_bdf.h fonts/djsmb_22_bdf.h
-clock.o: fonts/djsmb_20_bdf.h fonts/djsmb_18_bdf.h fonts/djsmb_16_bdf.h
-clock.o: fonts/djsmb_14_bdf.h fonts/djsmb_12_bdf.h fonts/djsmb_10_bdf.h
-clock.o: fonts/djsmb_8_bdf.h fonts/djsmo_60_bdf.h fonts/djsmo_50_bdf.h
-clock.o: fonts/djsmo_40_bdf.h fonts/djsmo_32_bdf.h fonts/djsmo_24_bdf.h
-clock.o: fonts/djsmo_22_bdf.h fonts/djsmo_20_bdf.h fonts/djsmo_18_bdf.h
-clock.o: fonts/djsmo_16_bdf.h fonts/djsmo_14_bdf.h fonts/djsmo_12_bdf.h
-clock.o: fonts/djsmo_10_bdf.h fonts/djsmo_8_bdf.h fonts/astro_50_bdf.h
-clock.o: fonts/astro_32_bdf.h fonts/astro_24_bdf.h fonts/astro_20_bdf.h
-clock.o: fonts/astro_16_bdf.h fonts/icons_128x128.h
+clock.o: ../maths/astro.h /usr/include/time.h draw.h moon_xpm.h
 ../maths/astro.o: /usr/include/time.h /usr/include/features.h
 ../maths/astro.o: /usr/include/features-time64.h /usr/include/stdc-predef.h
 ../maths/astro.o: ../maths/precise.h /usr/include/math.h ../maths/astro.h

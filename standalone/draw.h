@@ -17,51 +17,13 @@
 #ifndef _INCLUDE_DRAW_H_
 #define _INCLUDE_DRAW_H_
 
-#include "fonts/djsmb_60_bdf.h"
-#include "fonts/djsmb_50_bdf.h"
-#include "fonts/djsmb_40_bdf.h"
-#include "fonts/djsmb_32_bdf.h"
-#include "fonts/djsmb_30_bdf.h"
-#include "fonts/djsmb_28_bdf.h"
-#include "fonts/djsmb_26_bdf.h"
-#include "fonts/djsmb_24_bdf.h"
-#include "fonts/djsmb_22_bdf.h"
-#include "fonts/djsmb_20_bdf.h"
-#include "fonts/djsmb_18_bdf.h"
-#include "fonts/djsmb_16_bdf.h"
-#include "fonts/djsmb_14_bdf.h"
-#include "fonts/djsmb_12_bdf.h"
-#include "fonts/djsmb_10_bdf.h"
-#include "fonts/djsmb_8_bdf.h"
+#include <stdint.h>
 
-#include "fonts/djsmo_60_bdf.h"
-#include "fonts/djsmo_50_bdf.h"
-#include "fonts/djsmo_40_bdf.h"
-#include "fonts/djsmo_32_bdf.h"
-#include "fonts/djsmo_30_bdf.h"
-#include "fonts/djsmo_28_bdf.h"
-#include "fonts/djsmo_26_bdf.h"
-#include "fonts/djsmo_24_bdf.h"
-#include "fonts/djsmo_22_bdf.h"
-#include "fonts/djsmo_20_bdf.h"
-#include "fonts/djsmo_18_bdf.h"
-#include "fonts/djsmo_16_bdf.h"
-#include "fonts/djsmo_14_bdf.h"
-#include "fonts/djsmo_12_bdf.h"
-#include "fonts/djsmo_10_bdf.h"
-#include "fonts/djsmo_8_bdf.h"
-
-#include "fonts/astro_50_bdf.h"
-#include "fonts/astro_32_bdf.h"
-#include "fonts/astro_24_bdf.h"
-#include "fonts/astro_20_bdf.h"
-#include "fonts/astro_16_bdf.h"
-
-#include "fonts/icons_16x16.h"
-#include "fonts/icons_32x32.h"
-#include "fonts/icons_64x64.h"
-#include "fonts/icons_128x128.h"
-#include "fonts/icons_256x256.h"
+typedef struct DrawFont {
+   unsigned char *data;
+   size_t data_size;
+   int point;
+} DrawFont;
 
 #define COLOR_NONE       0x00000000
 #define COLOR_XOR        0x00000001
@@ -113,7 +75,7 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int c);
 void conditional_poke_canvas(Canvas * canvas, int x, int y,
       unsigned int color, unsigned int old);
 unsigned int peek_canvas(Canvas * canvas, int x, int y);
-int text_canvas(Canvas * canvas, uint8_t * font, int x, int y,
+int text_canvas(Canvas * canvas, DrawFont *font, int x, int y,
       unsigned int fg, unsigned int bg, const char *p, int mult,
       int gap);
 void blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,

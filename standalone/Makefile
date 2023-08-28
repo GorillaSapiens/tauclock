@@ -41,13 +41,13 @@ icons:
 	mv weather-underground-icons/dist/icons .
 	rm -rf weather-underground-icons
 
-calcdata: main.o draw.o clock.o ../maths/astro.o ../maths/precise.o
+calcdata: main.o draw.o schrift.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
 		$(OPTIM) -Wall \
 		$^ -lm -o calcdata
 
-calcrange: mainrange.o draw.o clock.o ../maths/astro.o ../maths/precise.o
+calcrange: mainrange.o draw.o schrift.o clock.o ../maths/astro.o ../maths/precise.o
 	gcc \
 		$(COLOR) \
 		$(OPTIM) -Wall \

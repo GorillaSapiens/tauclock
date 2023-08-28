@@ -19,9 +19,10 @@
 
 #include <stdint.h>
 
+#include "schrift.h"
+
 typedef struct DrawFont {
-   unsigned char *data;
-   size_t data_size;
+   SFT_Font *sft_font;
    int point;
 } DrawFont;
 

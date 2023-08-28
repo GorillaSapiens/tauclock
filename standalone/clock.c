@@ -41,15 +41,15 @@
 
 int SIZE = 1024;
 
-DrawFont mFONT_ASTRO         = (DrawFont) { astro_font, sizeof(astro_font), 32};
-DrawFont mFONT_BOLD_BIG      = (DrawFont) { bold_font, sizeof(bold_font), 50};
-DrawFont mFONT_BOLD_LARGER   = (DrawFont) { bold_font, sizeof(bold_font), 28};
-DrawFont mFONT_BOLD_LARGE    = (DrawFont) { bold_font, sizeof(bold_font), 24};
-DrawFont mFONT_BOLD_MED      = (DrawFont) { bold_font, sizeof(bold_font), 22};
-DrawFont mFONT_BOLD_SMALL    = (DrawFont) { bold_font, sizeof(bold_font), 18};
-DrawFont mFONT_ITALIC_LARGER = (DrawFont) { italic_font, sizeof(italic_font), 28};
-DrawFont mFONT_ITALIC_LARGE  = (DrawFont) { italic_font, sizeof(italic_font), 24};
-DrawFont mFONT_ITALIC_MED    = (DrawFont) { italic_font, sizeof(italic_font), 22};
+DrawFont mFONT_ASTRO         = (DrawFont) { NULL, 32};
+DrawFont mFONT_BOLD_BIG      = (DrawFont) { NULL, 50};
+DrawFont mFONT_BOLD_LARGER   = (DrawFont) { NULL, 28};
+DrawFont mFONT_BOLD_LARGE    = (DrawFont) { NULL, 24};
+DrawFont mFONT_BOLD_MED      = (DrawFont) { NULL, 22};
+DrawFont mFONT_BOLD_SMALL    = (DrawFont) { NULL, 18};
+DrawFont mFONT_ITALIC_LARGER = (DrawFont) { NULL, 28};
+DrawFont mFONT_ITALIC_LARGE  = (DrawFont) { NULL, 24};
+DrawFont mFONT_ITALIC_MED    = (DrawFont) { NULL, 22};
 
 #define FONT_ASTRO         (&mFONT_ASTRO)
 #define FONT_BOLD_BIG      (&mFONT_BOLD_BIG)
@@ -90,6 +90,34 @@ DrawFont mFONT_ITALIC_MED    = (DrawFont) { italic_font, sizeof(italic_font), 22
 #define NO_Y_MOVE X_MOVE_OK
 
 void handle_font_sizes(void) {
+   if (mFONT_ASTRO.sft_font != NULL) {
+      return;
+   }
+
+   mFONT_ASTRO.sft_font         =
+      sft_loadmem(astro_font, sizeof(astro_font));
+
+   mFONT_BOLD_BIG.sft_font      =
+   mFONT_BOLD_LARGER.sft_font   =
+   mFONT_BOLD_LARGE.sft_font    =
+   mFONT_BOLD_MED.sft_font      =
+   mFONT_BOLD_SMALL.sft_font    =
+      sft_loadmem(bold_font, sizeof(bold_font));
+
+   mFONT_ITALIC_LARGER.sft_font =
+   mFONT_ITALIC_LARGE.sft_font  =
+   mFONT_ITALIC_MED.sft_font    =
+      sft_loadmem(bold_font, sizeof(italic_font));
+
+   mFONT_ASTRO.point         = SCALE(mFONT_ASTRO.point);
+   mFONT_BOLD_BIG.point      = SCALE(mFONT_BOLD_BIG.point);
+   mFONT_BOLD_LARGER.point   = SCALE(mFONT_BOLD_LARGER.point);
+   mFONT_BOLD_LARGE.point    = SCALE(mFONT_BOLD_LARGE.point);
+   mFONT_BOLD_MED.point      = SCALE(mFONT_BOLD_MED.point);
+   mFONT_BOLD_SMALL.point    = SCALE(mFONT_BOLD_SMALL.point);
+   mFONT_ITALIC_LARGER.point = SCALE(mFONT_ITALIC_LARGER.point);
+   mFONT_ITALIC_LARGE.point  = SCALE(mFONT_ITALIC_LARGE.point);
+   mFONT_ITALIC_MED.point    = SCALE(mFONT_ITALIC_MED.point);
 }
 
 struct delayed_text {

@@ -22,7 +22,7 @@ COLOR=-fdiagnostics-color=always
 #OPTIM=-g -pg -Ofast
 OPTIM=-g -Og -ggdb
 
-all: fonts/.bdf calcdata calcrange html/index.html
+all: fonts.h calcdata calcrange html/index.html
 
 html/index.html: doxygen.conf clock.c draw.c ../maths/astro.c
 	doxygen doxygen.conf 1>/dev/null
@@ -33,7 +33,7 @@ indent:
 		-saf -saw -ncs -nsc -nut -sob -nfca -cp33 -ss -ts8 -il1 -brf \
 		*.[ch]
 
-fonts/.bdf: fonts/Makefile
+fonts.h: fonts/Makefile
 	(cd fonts ; make)
 
 icons:

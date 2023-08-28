@@ -14,7 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-all: AstroDotBasic.ttf dejavu-fonts-ttf-2.37/LICENSE
+../fonts.h: AstroDotBasic.ttf dejavu-fonts-ttf-2.37/LICENSE
+	./toarray.pl AstroDotBasic.ttf astro_font > ../fonts.h
+	./toarray.pl dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono-Bold.ttf bold_font >> ../fonts.h
+	./toarray.pl dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono-Oblique.ttf italic_font >> ../fonts.h
 
 clean:
 	rm -f astrodotbasic.zip dejavu-fonts-ttf-2.37.tar.bz2

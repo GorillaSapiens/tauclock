@@ -1176,14 +1176,14 @@ void do_debug_info(struct delayed_text_queue *dtq,
    char abbrev_buf[1024];
    struct tm *tm = localtime(&now);
    if (tzname[0] != NULL && (tzname[1] != NULL && tzname[1][0] != 0)) {
-      sprintf(abbrev_buf, "\a%s%s%s/%s%s%s",
+      sprintf(abbrev_buf, "\v\a%s%s%s/%s%s%s",
             tm->tm_isdst ? "" : "\a[",
             tzname[0],
             tm->tm_isdst ? "" : "]\a",
             tm->tm_isdst ? "\a[" : "", tzname[1], tm->tm_isdst ? "]\a" : "");
    }
    else if (tzname[0] != NULL) {
-      sprintf(abbrev_buf, "[%s]", tzname[0]);
+      sprintf(abbrev_buf, "\v[%s]", tzname[0]);
    }
    else {
       abbrev_buf[0] = 0;
@@ -1275,8 +1275,12 @@ void do_provider_info(
          COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
    int w = wh >> 16;
    int h = wh & 0xFFFF;
+
+   char buffer[strlen(locprovider + 2)];
+   buffer[0] = '\v';
+   strcpy(buffer + 1, locprovider);
    im_text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,
-         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3,
+         h / 2 + 20, COLOR_WHITE, COLOR_BLACK, buffer, 1, 3,
          NO_X_MOVE);
 }
 

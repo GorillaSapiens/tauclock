@@ -301,6 +301,13 @@ int
 text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
 
+   bool left_justify = false;
+   if (p[0] == '\v') {
+      p++;
+      left_justify = true;
+   }
+
+
    // mad recursion for multilined strings
    if (strchr(p, '\n')) {
       char buf[1024];
@@ -344,7 +351,7 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
          }
          offset += h[j] / 2;
          text_canvas(canvas, font,
-            x - (maxw - (wh[j] >> 16)) / 2, y + offset,
+            x - (left_justify ? (maxw - (wh[j] >> 16)) / 2 : 0), y + offset,
             fg, bg, ps[j], mult, gap);
       }
 

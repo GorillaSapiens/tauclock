@@ -220,7 +220,7 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
                      if ((dti->movable & X_MOVE_OK) && i_lef > 0) dti->x--;
                      if ((dtj->movable & X_MOVE_OK) && j_rig < (canvas->w - 1)) dtj->x++;
                   }
-                  else { // if (dti->x > dtj->x) [
+                  else if (dti->x > dtj->x) {
                      if ((dti->movable & X_MOVE_OK) && i_rig < (canvas->w - 1)) dti->x++;
                      if ((dtj->movable & X_MOVE_OK) && j_lef > 0) dtj->x--;
                   }
@@ -229,7 +229,7 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
                      if ((dti->movable & Y_MOVE_OK)&& i_top > 0) dti->y--;
                      if ((dtj->movable & Y_MOVE_OK)&& j_bot < (canvas->h - 1)) dtj->y++;
                   }
-                  else { // if (dti->y > dtj->y) [
+                  else if (dti->y > dtj->y) {
                      if ((dti->movable & Y_MOVE_OK)&& i_bot < (canvas->h - 1)) dti->y++;
                      if ((dtj->movable & Y_MOVE_OK)&& j_top > 0) dtj->y--;
                   }
@@ -238,7 +238,7 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
          }
       }
       iterations++;
-fprintf(stderr, "problems=%d iterations=%d\n", problems, iterations);
+      // fprintf(stderr, "problems=%d iterations=%d\n", problems, iterations);
    } while (problems && iterations < 9999);
 
    for (int i = 0; i < dtq->size; i++) {

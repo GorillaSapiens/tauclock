@@ -20,7 +20,7 @@ COLOR=-fdiagnostics-color=always
 #COLOR=
 
 #OPTIM=-g -pg -Ofast
-OPTIM=-g -Og -ggdb
+OPTIM=-g -ggdb
 
 all: fonts.h calcdata calcrange html/index.html
 
@@ -69,6 +69,7 @@ tidy:
 clean: tidy
 	rm -f calcdata calcrange
 	rm -rf latex html
+	rm -f *.o
 	( cd fonts ; make clean )
 
 squeaky:

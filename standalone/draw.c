@@ -307,7 +307,6 @@ text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
       left_justify = true;
    }
 
-
    // mad recursion for multilined strings
    if (strchr(p, '\n')) {
       char buf[1024];

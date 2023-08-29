@@ -88,29 +88,26 @@ void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzna
       sprintf(location, "%0.4f%s%c", lat, degree, NS);
       sprintf(location2, "%0.4f%s%c", lon, degree, EW);
    }
-   int wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
-               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
+   int wh = text_size(FONT_BOLD_BIG, location, 1, 2);
    int w = wh >> 16;
    int h = wh & 0xffff;
 
    text_canvas(canvas, FONT_BOLD_BIG, w/2+10, (h/2+10),
-               COLOR_WHITE, COLOR_BLACK, location, 1, 2);
+         COLOR_WHITE, COLOR_BLACK, location, 1, 2);
 
-   wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
-               COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
+   wh = text_size(FONT_BOLD_BIG, location2, 1, 2);
    w = wh >> 16;
    h = wh & 0xffff;
 
    text_canvas(canvas, FONT_BOLD_BIG, width - (w/2+10), (h/2+10),
-               COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
+         COLOR_WHITE, COLOR_BLACK, location2, 1, 2);
 
-    wh = text_canvas(canvas, FONT_BOLD_BIG, -1000, -1000,
-                     COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
-    w = wh >> 16;
-    h = wh & 0xffff;
+   wh = text_size(FONT_BOLD_BIG, tzname, 1, 2);
+   w = wh >> 16;
+   h = wh & 0xffff;
 
-    text_canvas(canvas, &mFONT_BOLD_BIG, (w/2+10), width - (h/2+10),
-                COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
+   text_canvas(canvas, &mFONT_BOLD_BIG, (w/2+10), width - (h/2+10),
+         COLOR_WHITE, COLOR_BLACK, tzname, 1, 2);
 }
 #endif
 

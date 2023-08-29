@@ -136,19 +136,13 @@ struct delayed_text_queue {
    struct delayed_text *queue;
 };
 
-static int delayed_text_canvas(
+static void delayed_text_canvas(
                                  struct delayed_text_queue *dtq,
                                  Canvas * canvas, DrawFont * font,
                                  int x, int y,
                                  unsigned int fg, unsigned int bg,
                                  const char *p, int mult, int gap,
                                  int movable) {
-   int ret = text_canvas(canvas, font, -10000, -10000, fg, bg, p, mult, gap);
-
-   if (x < 0 || y < 0) {
-      return ret;
-   }
-
    for (int i = 0; i < dtq->size; i++) {
       struct delayed_text *q = dtq->queue + i;
       if (x == q->x && y == q->y) {
@@ -156,7 +150,7 @@ static int delayed_text_canvas(
             if (mult == q->mult && gap == q->gap) {
                if (font == q->font) {
                   if (!strcmp(q->p, p)) {
-                     return ret;
+                     return;
                   }
                }
             }
@@ -165,12 +159,13 @@ static int delayed_text_canvas(
    }
 
    struct delayed_text *dt = dtq->queue + dtq->size;
+   int wh = text_size(font, p, mult, gap);
 
    dt->movable = movable;
    dt->x = x;
    dt->y = y;
-   dt->w = ret >> 16;
-   dt->h = ret & 0xFFFF;
+   dt->w = wh >> 16;
+   dt->h = wh & 0xFFFF;
    dt->fg = fg;
    dt->bg = bg;
    dt->p = strdup(p);
@@ -179,8 +174,6 @@ static int delayed_text_canvas(
    dt->font = font;
 
    dtq->size++;
-
-   return ret;
 }
 
 static struct delayed_text_queue *alloc_dtq(int n) {
@@ -244,9 +237,12 @@ static void resolve_delayed_text(struct delayed_text_queue *dtq, Canvas * canvas
       text_canvas(canvas, dt->font, dt->x, dt->y,
          dt->fg, dt->bg, dt->p, dt->mult, dt->gap);
       free((void *)dt->p);
+      dt->p = NULL;
    }
    free(dtq->queue);
+   dtq->queue = NULL;
    free(dtq);
+   dtq = NULL;
 }
 
 #define text_canvas(a,b,c,d,e,f,g,h,i) \
@@ -1206,34 +1202,28 @@ void do_debug_info(struct delayed_text_queue *dtq,
    strcpy(tzpbuf + 1, tzProvider);
 
    // get sizes of various pieces
-   int wh0 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, jd_buf, 1, 3);
+   int wh0 = text_size(FONT_BOLD_LARGE, jd_buf, 1, 3);
    int h0 = wh0 & 0xFFFF;
    int w0 = wh0 >> 16;
 
    int wh1 = (offset == 0.0) ? 0 :
-      text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, offset_buf, 1, 3);
+      text_size(FONT_BOLD_LARGE, offset_buf, 1, 3);
    int h1 = wh1 & 0xFFFF;
    int w1 = wh1 >> 16;
 
-   int wh2 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, abbrev_buf, 1, 3);
+   int wh2 = text_size(FONT_BOLD_LARGE, abbrev_buf, 1, 3);
    int h2 = wh2 & 0xFFFF;
    int w2 = wh2 >> 16;
-fprintf(stderr, "??? abbrev %dx%d\n", w2, h2);
 
    char tzbuf[strlen(tz) + 2];
    tzbuf[0] = '\v';
    strcpy(tzbuf + 1, tz);
 
-   int wh3 = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, tzbuf, 1, 3);
+   int wh3 = text_size(FONT_BOLD_LARGER, tzbuf, 1, 3);
    int h3 = wh3 & 0xFFFF;
    int w3 = wh3 >> 16;
 
-   int wh4 = text_canvas(canvas, FONT_BOLD_LARGE, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, tzpbuf, 1, 3);
+   int wh4 = text_size(FONT_BOLD_LARGE, tzpbuf, 1, 3);
    int h4 = wh4 & 0xFFFF;
    int w4 = wh4 >> 16;
 
@@ -1277,14 +1267,17 @@ void do_provider_info(
       struct delayed_text_queue *dtq,
       Canvas * canvas,
       const char *locprovider) {
-   int wh = text_canvas(canvas, FONT_BOLD_LARGER, -1000, -1000,
-         COLOR_WHITE, COLOR_BLACK, locprovider, 1, 3);
-   int w = wh >> 16;
-   int h = wh & 0xFFFF;
+
+   int wh, w, h;
 
    char buffer[strlen(locprovider) + 2];
    buffer[0] = '\v';
    strcpy(buffer + 1, locprovider);
+
+   wh = text_size(FONT_BOLD_LARGER, buffer, 1, 3);
+   w = wh >> 16;
+   h = wh & 0xFFFF;
+
    im_text_canvas(canvas, FONT_BOLD_LARGER, w / 2 + 20,
          h / 2 + 20, COLOR_WHITE, COLOR_BLACK, buffer, 1, 3,
          NO_X_MOVE);

@@ -287,6 +287,9 @@ static struct Glyph failure_glyph(uint16_t glyph) {
 static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
    SFT_Glyph gid;
 
+   //sft->xScale = sft->yScale = 32;
+   sft->xOffset = sft->yOffset = 0;
+
    if (sft_lookup(sft, glyph, &gid) < 0) {
       // NOT FOUND !!!
       // us the special unicode character for this...
@@ -302,12 +305,15 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
       return failure_glyph(glyph);
    }
 
-   SFT_Image img = {
-      .width  = (mtx.minWidth + 3) & ~3,
-      .height = mtx.minHeight,
-   };
+   SFT_Image img;
+   img.width  = (mtx.minWidth + 3) & ~3;
+   img.height = mtx.minHeight;
    unsigned char pixels[img.width * img.height];
+   for (int i = 0; i < img.width * img.height; i++) {
+      pixels[i] = 0;
+   }
    img.pixels = pixels;
+
    if (sft_render(sft, gid, img) < 0) {
       // TODO FIX ABORT
       return failure_glyph(glyph);
@@ -336,10 +342,116 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
    return ret;
 }
 
+int text_size(DrawFont *font, const char *p, int mult, int gap) {
+   if (p[0] == '\v') {
+      p++;
+   }
+
+   // mad recursion for multilined strings
+   if (strchr(p, '\n')) {
+      char buf[1024];
+      strcpy(buf, p);
+      p = buf;
+      int wh[16];
+      int h[16];
+      int maxw = 0;
+      int i = 0;
+      char *q;
+      do {
+         q = strchr(p, '\n');
+         if (q != NULL) {
+            *q = 0;
+            q++;
+         }
+         wh[i++] =
+            text_size(font, p, mult, gap);
+         if ((wh[i-1] >> 16) > maxw) {
+            maxw = wh[i-1] >> 16;
+         }
+         h[i - 1] = wh[i - 1] & 0xFFFF;
+         p = q;
+      } while (p != NULL && strlen(p));
+
+      int ret;
+      int height = 0;
+      for (int j = 0; j < i; j++) {
+         height += h[j];
+      }
+      height += (gap*3*(i-1));
+      ret = (maxw << 16) | height;
+
+      return ret;
+   }
+
+   SFT sft;
+   sft.xScale = font->point; // * mult;
+   sft.yScale = font->point; // * mult;
+   sft.flags = SFT_DOWNWARD_Y;
+   sft.font = font->sft_font;
+
+   int encoded;
+
+   int max_x = 0;
+   int min_x = 0;
+   int max_y = 0;
+   int min_y = 0;
+   int first = 1;
+   int fake_x = 0;
+   int fake_y = 0;
+
+   const unsigned char *context;
+
+   for (encoded = utf8parse(p, &context);
+        encoded;
+        encoded = utf8parse(NULL, &context)) {
+
+      if (encoded != '\a') {
+         struct Glyph glyph = font_find_glyph(&sft, font, encoded);
+         if (encoded == ' ') {
+            glyph = font_find_glyph(&sft, font, '_');
+         }
+         for (int h = 0; h < glyph.height; h++) {
+            for (int w = 0; w < glyph.width; w++) {
+               int offset = w / 8;
+               int bit = glyph.data[offset] & (1 << (7 - (w % 8)));
+               if (bit) {
+                  for (int mx = 0; mx < mult; mx++) {
+                     for (int my = 0; my < mult; my++) {
+                        int tx = fake_x + w * mult + mx + glyph.dx * mult;
+                        int ty = fake_y + h * mult + my + glyph.dy * mult;
+
+                        if (first || tx > max_x) {
+                           max_x = tx;
+                        }
+                        if (first || tx < min_x) {
+                           min_x = tx;
+                        }
+                        if (first || ty > max_y) {
+                           max_y = ty;
+                        }
+                        if (first || ty < min_y) {
+                           min_y = ty;
+                        }
+                        first = 0;
+                     }
+                  }
+               }
+            }
+            glyph.data += glyph.step;
+         }
+         fake_x += glyph.width * mult + gap * mult;
+      }
+   }
+
+   int ret = ((max_x - min_x) << 16) | (max_y - min_y);
+
+   return ret;
+}
+
 /// @brief Draw text on a canvas
 ///
 /// @param canvas The Canvas to draw on
-/// @param afont A pointer to the font being used
+/// @param font A pointer to the font being used
 /// @param x The X coordinate of the center of the text
 /// @param y The Y coordinate of the center of the text
 /// @param fg The foreground color
@@ -347,18 +459,9 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
 /// @param p A pointer to a UTF-8 string
 /// @param mult A magnification multiplier
 /// @param gap The pixel gap between characters
-/// @return An integer encoding the text width and height
-int
-text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
+void
+text_canvas(Canvas * canvas, DrawFont * font, int x, int y, unsigned int fg,
       unsigned int bg, const char *p, int mult, int gap) {
-
-   DrawFont ofont = *afont;
-   DrawFont *font = &ofont;
-   if (ofont.point > 50) {
-      int n = ofont.point / 50;
-      ofont.point /= n;
-      mult *= n;
-   }
 
    bool left_justify = false;
    if (p[0] == '\v') {
@@ -385,7 +488,7 @@ text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
             q++;
          }
          wh[i++] =
-            text_canvas(canvas, font, -1000, -1000, fg, bg, p, mult, gap);
+            text_size(font, p, mult, gap);
          if ((wh[i-1] >> 16) > maxw) {
             maxw = wh[i-1] >> 16;
          }
@@ -393,13 +496,11 @@ text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
          p = q;
       } while (p != NULL && strlen(p));
 
-      int ret;
       int height = 0;
       for (int j = 0; j < i; j++) {
          height += h[j];
       }
       height += (gap*3*(i-1));
-      ret = (maxw << 16) | height;
 
       // now put them where they go...
       for (int j = 0; j < i; j++) {
@@ -413,7 +514,7 @@ text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
             fg, bg, ps[j], mult, gap);
       }
 
-      return ret;
+      return;
    }
 
    SFT sft;
@@ -478,8 +579,6 @@ text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
          fake_x += glyph.width * mult + gap * mult;
       }
    }
-
-   int ret = ((max_x - min_x) << 16) | (max_y - min_y);
 
    x -= ((max_x - min_x) / 2) + min_x;
    y -= ((max_y - min_y) / 2) + min_y;
@@ -560,8 +659,6 @@ text_canvas(Canvas * canvas, DrawFont * afont, int x, int y, unsigned int fg,
          mask ^= 0x00808080;
       }
    }
-
-   return ret;
 }
 
 /// @brief Like poke_canvas(), but with a larger area

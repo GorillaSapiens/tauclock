@@ -76,9 +76,13 @@ void poke_canvas(Canvas * canvas, int x, int y, unsigned int c);
 void conditional_poke_canvas(Canvas * canvas, int x, int y,
       unsigned int color, unsigned int old);
 unsigned int peek_canvas(Canvas * canvas, int x, int y);
-int text_canvas(Canvas * canvas, DrawFont *font, int x, int y,
+
+int text_size(DrawFont *font, const char *p, int mult, int gap);
+
+void text_canvas(Canvas * canvas, DrawFont *font, int x, int y,
       unsigned int fg, unsigned int bg, const char *p, int mult,
       int gap);
+
 void blur_poke_canvas(Canvas * canvas, int x, int y, unsigned int color,
       int blur);
 void line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,

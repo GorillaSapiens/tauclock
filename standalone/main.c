@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
              "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL);
 
    dump_canvas(canvas, "out.bin");
+   delete_canvas(canvas);
 
    printf("raw output written to out.bin\n");
    printf("`convert -size %dx%d -depth 8 RGBA:out.bin out.png` to view\n",

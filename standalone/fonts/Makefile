@@ -14,9 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-../fonts.h: AstroDotBasic.ttf dejavu-fonts-ttf-2.37/LICENSE
-	./toarray.pl AstroDotBasic.ttf astro_font > ../fonts.h
+../fonts.h: Makefile AstroDotBasic.ttf dejavu-fonts-ttf-2.37/LICENSE
+	echo "// AstroDotBasic from https://astrology-symbols.com/font_files/astrodotbasic.zip" > ../fonts.h
+	./toarray.pl AstroDotBasic.ttf astro_font >> ../fonts.h
+	echo "// DejavuSansMono-Bold from http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2" >> ../fonts.h
 	./toarray.pl dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono-Bold.ttf bold_font >> ../fonts.h
+	echo "// DejavuSansMono-Oblique from http://sourceforge.net/projects/dejavu/files/dejavu/2.37/dejavu-fonts-ttf-2.37.tar.bz2" >> ../fonts.h
 	./toarray.pl dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono-Oblique.ttf italic_font >> ../fonts.h
 
 clean:

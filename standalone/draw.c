@@ -295,6 +295,7 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
       // us the special unicode character for this...
       if (sft_lookup(sft, 0xFFFD, &gid) < 0) {
          // TODO FIX ABORT
+         fprintf(stderr, "%s:%d %04x\n", __FILE__, __LINE__, glyph);
          return failure_glyph(glyph);
       }
    }
@@ -302,6 +303,7 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
    SFT_GMetrics mtx;
    if (sft_gmetrics(sft, gid, &mtx) < 0) {
       // TODO FIX ABORT
+      fprintf(stderr, "%s:%d %04x\n", __FILE__, __LINE__, glyph);
       return failure_glyph(glyph);
    }
 
@@ -316,6 +318,7 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
 
    if (sft_render(sft, gid, img) < 0) {
       // TODO FIX ABORT
+      fprintf(stderr, "%s:%d %04x\n", __FILE__, __LINE__, glyph);
       return failure_glyph(glyph);
    }
 
@@ -331,12 +334,31 @@ static struct Glyph font_find_glyph(SFT *sft, DrawFont *font, uint16_t glyph) {
    ret.data = data;
 
    memset(data, 0, sizeof(data));
+
+   bool last_empty = true; // for colons...
+   int remember = 0; // for colons ...
+
    for (int y = 0; y < img.height; y++) {
+
+      bool empty = true; // for colons...
+
       for (int x = 0; x < img.width; x++) {
          if (pixels[y * img.width + x] >= 128) {
+
+            empty = false; // for colons...
+
             data[y * ret.step + x / 8] |= 1 << (7 - (x % 8));
          }
       }
+
+      if (empty == false && last_empty == true) { // for colons...
+         remember = y;
+      }
+      last_empty = empty; // for colons;
+   }
+
+   if (glyph == ':') { // for colons...
+      ret.dy -= (img.height - remember) / 2;
    }
 
    return ret;

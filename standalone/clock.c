@@ -786,9 +786,6 @@ do_moon_draw(Canvas * canvas,
 
    struct FD FD = ə67(jd);
 
-   // TODO FIX why???
-   fprintf(stderr, "rot=%lf\n", rot);
-
    // WHERE to draw it.
    double where_angle = FD.D - 90.0;
    int cx, cy;
@@ -805,6 +802,9 @@ do_moon_draw(Canvas * canvas,
    // do the drawing
    int x, y;
    int smr = SCALE(MOON_R);
+
+   // TODO FIX why???
+   fprintf(stderr, "rot=%lf %lf %lf\n", FD.F, bla, rot);
 
    for (y = -smr; y < smr; y++) {
       for (x = -smr; x < smr; x++) {

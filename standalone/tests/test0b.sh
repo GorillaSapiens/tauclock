@@ -19,7 +19,7 @@
 echo LC_ALL=$LC_ALL
 echo LANG=$LANG
 #./weather.pl 34.0007 -81.0348 > weather.txt
-echo ./calcdata 34.0007 -81.0348 $1 $2
-./calcdata 34.0007 -81.0348 $1 $2
+echo ./calcdata  41.852117, -119.002410
+./calcdata  41.852117, -119.002410
 convert -size 1024x1024 -depth 8 RGBA:out.bin tmp.png
 mv tmp.png out.png

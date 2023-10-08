@@ -1019,12 +1019,6 @@ void do_planet_bands(struct delayed_text_queue *dtq,
             double y = sin_deg(dLon) * cos_deg(Aa_sun.a);
             double x = cos_deg(Aa_moon.a) * sin_deg(Aa_sun.a) - sin_deg(Aa_moon.a) * cos_deg(Aa_sun.a) * cos_deg(dLon);
             brng = atan2_deg(y, x);
-
-            // to bring it in line with https://www.timeanddate.com/astronomy/antarctica/mcmurdo
-            brng -= 90.0;
-
-            // to do it clockwise
-            brng = -brng;
          }
 
          do_moon_draw(canvas, jd, a[12*60] > HORIZON, brightlimbangle, brng);

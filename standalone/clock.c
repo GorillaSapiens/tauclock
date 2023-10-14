@@ -78,7 +78,7 @@ DrawFont mFONT_ITALIC_MED    = (DrawFont) { NULL, 22};
 #define COLOR_SATURN          COLOR_LIGHTBLUE
 #define COLOR_ARIES           COLOR_GREEN
 
-#define MOON_R 80
+#define MOON_R 120
 
 #define X_MOVE_OK 1
 #define Y_MOVE_OK 2
@@ -790,9 +790,9 @@ do_moon_draw(Canvas * canvas,
    double where_angle = FD.D - 90.0;
    int cx, cy;
    cx = canvas->w / 2 +
-      (int)((canvas->w * 17.0 / 48.0) * cos_deg(where_angle));
+      (int)((canvas->w * 17.5 / 48.0) * cos_deg(where_angle));
    cy = canvas->h / 2 +
-      (int)((canvas->h * 17.0 / 48.0) * sin_deg(where_angle));
+      (int)((canvas->h * 17.5 / 48.0) * sin_deg(where_angle));
 
    // for u,v calc, below...
    double blarot = -(90.0 - bla);

@@ -1414,7 +1414,7 @@ void do_solar_eclipse(struct delayed_text_queue *dtq, Canvas *canvas, double jd,
       theta = 360.0 - theta;
    }
 
-   if (theta > 18.5) {
+   if (theta > 18.5 && theta < (180.0 - 18.5)) {
       // solar eclipse not possible!
       return;
    }

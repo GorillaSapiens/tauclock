@@ -773,26 +773,24 @@ double do_sun_bands(struct delayed_text_queue *dtq,
 ///
 /// @param canvas The Canvas to draw on
 /// @param jd The current Julian Date
+/// @param cx Center X coordinate
+/// @param cy Center Y coordinate
+/// @param radius Radius of drawing
+/// @param FD computed FD data
 /// @param is_up Whether or not the moon is currently up
 /// @param bla The angle position of the moon's bright limb
 /// @param rot The visual rotation angle
 /// @return void
 void
-do_moon_draw(Canvas * canvas,
+do_moon_draw_helper(Canvas * canvas,
              double jd,
+             int cx,
+             int cy,
+             int radius,
+             struct FD FD,
              int is_up,
              double bla,
              double rot) {
-
-   struct FD FD = ə67(jd);
-
-   // WHERE to draw it.
-   double where_angle = FD.D - 90.0;
-   int cx, cy;
-   cx = canvas->w / 2 +
-      (int)((canvas->w * 17.5 / 48.0) * cos_deg(where_angle));
-   cy = canvas->h / 2 +
-      (int)((canvas->h * 17.5 / 48.0) * sin_deg(where_angle));
 
    // for u,v calc, below...
    double blarot = -(90.0 - bla);
@@ -801,23 +799,19 @@ do_moon_draw(Canvas * canvas,
 
    // do the drawing
    int x, y;
-   int smr = SCALE(MOON_R);
 
-   // TODO FIX why???
-   fprintf(stderr, "rot=%lf %lf %lf\n", FD.F, bla, rot);
-
-   for (y = -smr; y < smr; y++) {
-      for (x = -smr; x < smr; x++) {
-         if (x*x+y*y < smr*smr) {
+   for (y = -radius; y < radius; y++) {
+      for (x = -radius; x < radius; x++) {
+         if (x*x+y*y < radius*radius) {
             // within the circle.
 
             // from https://en.wikipedia.org/wiki/Rotation_matrix
             // ey is the rotated form of x
             // ez is the rotated form of y
             double ey =
-               ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) smr;
+               ((double)x * cos_deg(rot) - (double)y * sin_deg(rot)) / (double) radius;
             double ez =
-               ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) smr;
+               ((double)x * sin_deg(rot) + (double)y * cos_deg(rot)) / (double) radius;
 
             // find ex on the unit sphere
             double ex = sqrt(1.0 - ey * ey - ez * ez);
@@ -860,8 +854,77 @@ do_moon_draw(Canvas * canvas,
       }
    }
 
-   arc_canvas(canvas, cx, cy, SCALE(MOON_R + 3), 7,
+   arc_canvas(canvas, cx, cy, radius + 3, 7,
       is_up ? COLOR_WHITE : COLOR_BLACK, 0, 360.0);
+}
+
+void
+do_moon_draw_tf(Canvas * canvas,
+             double jd,
+             int is_up,
+             struct φλ φλ,
+             bool debug) {
+
+   struct αδ moon = ə27(jd, ə65(jd));
+   double brightlimbangle =
+      ə68(ə27(jd, ə46(jd)), moon);
+
+   struct Aa Aa_moon = ə25(jd, φλ, moon);
+   struct Aa Aa_sun = ə25(jd, φλ, ə27(jd, ə46(jd)));
+   // big A is azimuth
+
+   double brng;
+
+   // TODO FIX: this can likely be optimized
+   // from https://stackoverflow.com/questions/22392045/calculating-moon-face-rotation-as-a-function-of-earth-coordinates
+   {
+      double dLon = Aa_sun.A - Aa_moon.A;
+      double y = sin_deg(dLon) * cos_deg(Aa_sun.a);
+      double x = cos_deg(Aa_moon.a) * sin_deg(Aa_sun.a) - sin_deg(Aa_moon.a) * cos_deg(Aa_sun.a) * cos_deg(dLon);
+      brng = atan2_deg(y, x);
+
+      // equation requires adjustment
+      brng -= 90.0;
+      // equation gives clockwise, we want anticlockwise
+      brng = -brng;
+   }
+
+   struct FD FD = ə67(jd);
+
+   // WHERE to draw it.
+   double where_angle = FD.D - 90.0;
+   int cx, cy;
+   cx = canvas->w / 2 +
+      (int)((canvas->w * 17.5 / 48.0) * cos_deg(where_angle));
+   cy = canvas->h / 2 +
+      (int)((canvas->h * 17.5 / 48.0) * sin_deg(where_angle));
+   int radius = SCALE(MOON_R);
+
+   if (!debug) {
+      do_moon_draw_helper(canvas, jd, cx, cy, radius,
+                         FD, is_up, brightlimbangle, brng);
+   }
+   else {
+      printf("bla=%lf brng=%lf\n", brightlimbangle, brng);
+      do_moon_draw_helper(canvas, jd, 512, 512, 512,
+                         FD, is_up, brightlimbangle, brng);
+   }
+}
+
+void
+do_moon_draw(Canvas * canvas,
+             double jd,
+             int is_up,
+             struct φλ φλ) {
+   do_moon_draw_tf(canvas, jd, is_up, φλ, false);
+}
+
+void
+do_moon_draw_debug(Canvas * canvas,
+             double jd,
+             int is_up,
+             struct φλ φλ) {
+   do_moon_draw_tf(canvas, jd, is_up, φλ, true);
 }
 
 void do_planet_bands(struct delayed_text_queue *dtq,
@@ -1002,26 +1065,7 @@ void do_planet_bands(struct delayed_text_queue *dtq,
       max = -1;
 
       if (p == 0) {
-         struct αδ moon = ə27(jd, ə65(jd));
-         double brightlimbangle =
-            ə68(ə27(jd, ə46(jd)), moon);
-
-         struct Aa Aa_moon = ə25(jd, φλ, moon);
-         struct Aa Aa_sun = ə25(jd, φλ, ə27(jd, ə46(jd)));
-         // big A is azimuth
-
-         double brng;
-
-         // TODO FIX: this can likely be optimized
-         // from https://stackoverflow.com/questions/22392045/calculating-moon-face-rotation-as-a-function-of-earth-coordinates
-         {
-            double dLon = Aa_sun.A - Aa_moon.A;
-            double y = sin_deg(dLon) * cos_deg(Aa_sun.a);
-            double x = cos_deg(Aa_moon.a) * sin_deg(Aa_sun.a) - sin_deg(Aa_moon.a) * cos_deg(Aa_sun.a) * cos_deg(dLon);
-            brng = atan2_deg(y, x);
-         }
-
-         do_moon_draw(canvas, jd, a[12*60] > HORIZON, brightlimbangle, brng);
+         do_moon_draw(canvas, jd, a[12*60] > HORIZON, φλ);
       }
    }
 }
@@ -1548,6 +1592,8 @@ Canvas *do_all(double lat,
 
    // actually draw the text for realsies
    resolve_delayed_text(dtq, canvas);
+
+   //do_moon_draw_debug(canvas, jd, 0, φλ);
 
    return canvas;
 }

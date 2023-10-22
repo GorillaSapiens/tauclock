@@ -288,7 +288,7 @@ void do_now_hand(Canvas * canvas, double now_angle) {
    double yc2 =
       canvas->h / 2.0 + (canvas->h / 2.0) * sin_deg(now_angle);
 
-   thick_line_canvas(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
+   thick_line_canvas_semilock(canvas, (int)xc2, (int)yc2, (int)xc, (int)yc, COLOR_RED, 3);
 }
 
 /// @brief Draw ticks every hour around the outside edge
@@ -849,7 +849,12 @@ do_moon_draw_helper(Canvas * canvas,
                c = 0xFF000000 | (r) | (g << 8) | (b << 16);
             }
 
-            poke_canvas(canvas, cx + x, cy + y, c);
+            if ((cx+x+cy+y) % 2) {
+               poke_canvas(canvas, cx + x, cy + y, LOCK(c));
+            }
+            else {
+               poke_canvas(canvas, cx + x, cy + y, c);
+            }
          }
       }
    }

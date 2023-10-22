@@ -754,6 +754,43 @@ thick_line_canvas(Canvas * canvas, int x1, int y1, int x2, int y2,
    }
 }
 
+void
+thick_line_canvas_semilock(Canvas * canvas, int x1, int y1, int x2, int y2,
+      unsigned int color, int thickness) {
+
+   if (abs(x1 - x2) < 2 && abs(y1 - y2) < 2) {
+      for (int x = -thickness; x < thickness; x++) {
+         for (int y = -thickness; y < thickness; y++) {
+            int dx = x1 + x;
+            int dy = y1 + y;
+
+            if ((dx + dy) % 2) {
+               poke_canvas(canvas, dx, dy, color);
+            }
+            else {
+               poke_canvas(canvas, dx, dy, LOCK(color));
+            }
+
+            dx = x2 + x;
+            dy = y2 + y;
+
+            if ((dx + dy) % 2) {
+               poke_canvas(canvas, dx, dy, color);
+            }
+            else {
+               poke_canvas(canvas, dx, dy, LOCK(color));
+            }
+         }
+      }
+   }
+   else {
+      int mx = (x1 + x2) / 2;
+      int my = (y1 + y2) / 2;
+      thick_line_canvas_semilock(canvas, x1, y1, mx, my, color, thickness);
+      thick_line_canvas_semilock(canvas, mx, my, x2, y2, color, thickness);
+   }
+}
+
 static inline double biggestof4(double a, double b, double c, double d) {
    double ret = a;
    if (b > ret) { ret = b; }

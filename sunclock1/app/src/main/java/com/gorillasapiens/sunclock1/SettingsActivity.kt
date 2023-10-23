@@ -98,6 +98,7 @@ class SettingsActivity : AppCompatActivity() {
                     val parent = editText.parent as ViewGroup
                     if (parent.getChildCount() == 2) {
                         val choices = AutoCompleteTextView(editText.context)
+                        choices.setSingleLine()
                         val adapter = ArrayAdapter<String>(editText.context,android.R.layout.simple_dropdown_item_1line, resources.getStringArray(R.array.cities))
                         choices.setAdapter(adapter)
                         parent.addView(choices, 1, editText.layoutParams)
@@ -178,6 +179,8 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             var manualOffset = findPreference<EditTextPreference>("manual_offset")
+            manualOffset?.setOnBindEditTextListener { it.setSingleLine() }
+
             var offsetProviders = findPreference<ListPreference>("offset")
             if (offsetProviders != null) {
 

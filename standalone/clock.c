@@ -78,7 +78,7 @@ DrawFont mFONT_ITALIC_MED    = (DrawFont) { NULL, 22};
 #define COLOR_SATURN          COLOR_LIGHTBLUE
 #define COLOR_ARIES           COLOR_GREEN
 
-#define MOON_R 120
+#define MOON_R 100
 
 #define X_MOVE_OK 1
 #define Y_MOVE_OK 2

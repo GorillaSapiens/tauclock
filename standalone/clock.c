@@ -889,25 +889,32 @@ do_moon_draw_tf(Canvas * canvas,
       brng = atan2_deg(y, x);
 
       // equation requires adjustment
-      brng -= 90.0;
+//      brng -= 90.0;
       // equation gives clockwise, we want anticlockwise
-      brng = -brng;
+//      brng = -brng;
    }
 
    struct FD FD = ə67(jd);
 
-   // WHERE to draw it.
-   double where_angle = FD.D - 90.0;
-   int cx, cy;
-   cx = canvas->w / 2 +
-      (int)((canvas->w * 17.5 / 48.0) * cos_deg(where_angle));
-   cy = canvas->h / 2 +
-      (int)((canvas->h * 17.5 / 48.0) * sin_deg(where_angle));
-   int radius = SCALE(MOON_R);
-
    if (!debug) {
+      // WHERE to draw it.
+      double where_angle = FD.D - 90.0;
+      int cx, cy;
+      cx = canvas->w / 2 +
+         (int)((canvas->w * 17.5 / 48.0) * cos_deg(where_angle));
+      cy = canvas->h / 2 +
+         (int)((canvas->h * 17.5 / 48.0) * sin_deg(where_angle));
+      int radius = SCALE(MOON_R);
+
+#if 0
+      // PLOT TWIST!
+      radius = (canvas->w / 2) * (sqrt(2.0) - 1.0) / 2.5;
+      cx = canvas->w - radius - SCALE(10);
+      cy = radius + SCALE(10);
+#endif
+
       do_moon_draw_helper(canvas, jd, cx, cy, radius,
-                         FD, is_up, brightlimbangle, brng);
+            FD, is_up, brightlimbangle, brng);
    }
    else {
       printf("bla=%lf brng=%lf\n", brightlimbangle, brng);

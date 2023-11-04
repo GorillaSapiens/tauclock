@@ -889,9 +889,9 @@ do_moon_draw_tf(Canvas * canvas,
       brng = atan2_deg(y, x);
 
       // equation requires adjustment
-//      brng -= 90.0;
+      brng += 90.0;
       // equation gives clockwise, we want anticlockwise
-//      brng = -brng;
+      brng = -brng;
    }
 
    struct FD FD = ə67(jd);

@@ -1606,7 +1606,7 @@ Canvas *do_all(double lat,
    // actually draw the text for realsies
    resolve_delayed_text(dtq, canvas);
 
-   do_moon_draw_debug(canvas, jd, 0, φλ);
+   //do_moon_draw_debug(canvas, jd, 0, φλ);
 
    return canvas;
 }

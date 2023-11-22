@@ -889,7 +889,8 @@ do_moon_draw_tf(Canvas * canvas,
       brng = atan2_deg(y, x);
 
       // equation requires adjustment
-      brng += 90.0;
+      brng += brightlimbangle;
+
       // equation gives clockwise, we want anticlockwise
       brng = -brng;
    }
@@ -1605,7 +1606,7 @@ Canvas *do_all(double lat,
    // actually draw the text for realsies
    resolve_delayed_text(dtq, canvas);
 
-   //do_moon_draw_debug(canvas, jd, 0, φλ);
+   do_moon_draw_debug(canvas, jd, 0, φλ);
 
    return canvas;
 }

@@ -21,13 +21,13 @@ LON=-80
 #LAT=-70
 #LON=0
 
-DATE=0
+DATE=-1
 
 #DATE=2023/12/21
 #DATE=2023/10/21
 
-#LD=0
-LD=257
+LD=0
+#LD=257
 
 rm out*
 #echo ./calcdata $LAT $LON $DATE 0.000 $LD

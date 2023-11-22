@@ -40,5 +40,5 @@ foreach $x (@x) {
    $i++;
 }
 
-`montage -border 0 -geometry 1024x moon0.png moon1.png moon2.png moon3.png moon4.png moon5.png moon0_all.png`;
-`mv moon0_all.png moon_all.png`;
+print `montage -border 0 -geometry 1024x moon0.png moon1.png moon2.png moon3.png moon4.png moon5.png moon0_all.png`;
+print `mv moon0_all.png moon.png`;

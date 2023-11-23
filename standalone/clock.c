@@ -853,6 +853,21 @@ do_moon_draw_helper(Canvas * canvas,
                poke_canvas(canvas, cx + x, cy + y, LOCK(c));
             }
             else {
+#if 0
+               unsigned int color = peek_canvas(canvas, cx + x, cy + y);
+               int r = c & 0xFF;
+               int g = (c >> 8) & 0xFF;
+               int b = (c >> 16) & 0xFF;
+               int r2 = color & 0xFF;
+               int g2 = (color >> 8) & 0xFF;
+               int b2 = (color >> 16) & 0xFF;
+
+               r = (r/2+128) * r2 / 256;
+               g = (g/2+128) * g2 / 256;
+               b = (b/2+128) * b2 / 256;
+
+               c = 0xFF000000 | (r) | (g << 8) | (b << 16);
+#endif
                poke_canvas(canvas, cx + x, cy + y, c);
             }
          }

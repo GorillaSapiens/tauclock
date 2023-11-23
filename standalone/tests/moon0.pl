@@ -25,20 +25,22 @@ foreach $x (@x) {
    $a[0] =~ s/\&amp;/\&/g;
    $a[0] =~ s/^/https:\/\/www.timeanddate.com\/scripts\/moon.php/g;
 
-   $cmd3 = "wget \"$a[0]\" -O moon.png";
+   $cmd3 = "wget \"$a[0]\" -O moonx.png";
    `$cmd3`;
+
+   `convert moonx.png -scale 1024x1024 -background black -flatten moon.png`;
 
    @b = `$cmd2`;
    print @b;
 
    `convert -size 1024x1024 -depth 8 RGBA:out.bin out.png`;
 
-   `composite moon.png out.png moon$i\_.png`;
+   `montage -border 0 -geometry 1024x moon.png out.png moon$i\_.png`;
 
-   `convert moon$i\_.png -strokewidth 3 -stroke white -fill black -pointsize 144 -gravity north -font DejaVu-Sans-Mono-Bold -draw "text 0,128 $place" moon$i.png`;
+   `convert moon$i\_.png -strokewidth 5 -stroke white -fill black -pointsize 144 -gravity center -font DejaVu-Sans-Mono-Bold -draw "text 0,0 $place" moon$i.png`;
 
    $i++;
 }
 
-print `montage -border 0 -geometry 1024x moon0.png moon1.png moon2.png moon3.png moon4.png moon5.png moon0_all.png`;
+print `montage -border 0 -geometry 1024x -tile 2x3 moon0.png moon1.png moon2.png moon3.png moon4.png moon5.png moon0_all.png`;
 print `mv moon0_all.png moon.png`;

@@ -840,6 +840,7 @@ do_moon_draw_helper(Canvas * canvas,
             unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 
             if (dark) {
+#if 0
                int r = c & 0xFF;
                int g = (c >> 8) & 0xFF;
                int b = (c >> 16) & 0xFF;
@@ -847,6 +848,8 @@ do_moon_draw_helper(Canvas * canvas,
                g >>= 1;
                b >>= 1;
                c = 0xFF000000 | (r) | (g << 8) | (b << 16);
+#endif
+               c = COLOR_BLACK;
             }
 
             if ((cx+x+cy+y) % 2) {

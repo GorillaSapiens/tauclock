@@ -230,7 +230,8 @@ class MainActivity : AppCompatActivity() {
                     offset,
                     min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                     displayProvider, mTimeZoneProvider, tzname,
-                    ((mLight shl 8) or mDark), monthnames, weekdaynames
+                    ((mLight shl 8) or mDark), monthnames, weekdaynames,
+                    true
                 )
                 mSunClockDrawable?.setThing(something)
                 mImageView?.invalidate()
@@ -942,7 +943,8 @@ class MainActivity : AppCompatActivity() {
         width: Int, provider: String, tzprovider: String, tz: String,
         lightdark: Int,
         monthnames: Array<String>,
-        weekdaynames: Array<String>
+        weekdaynames: Array<String>,
+        clock: Boolean
     ) : IntArray
     private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
 }

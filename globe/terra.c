@@ -256,7 +256,7 @@ int main (int argc, char **argv) {
    double lon = atof(argv[3]);
    double spin = atof(argv[4]);
 
-   Canvas *canvas = do_globe(lat, lon, spin, size, NULL);
+   Canvas *canvas = do_terra(lat, lon, spin, size, NULL);
    dump_canvas(canvas, NULL);
 }
 #endif

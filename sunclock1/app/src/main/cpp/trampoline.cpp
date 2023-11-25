@@ -31,7 +31,8 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doClock(JNIEnv *env,
                      jstring tz,
                      jint lightdark,
                      jobjectArray monthnames,
-                     jobjectArray weekdaynames) {
+                     jobjectArray weekdaynames,
+                     jboolean clock) {
     const char *ccProvider = env->GetStringUTFChars(provider, nullptr);
     const char *ccTz = env->GetStringUTFChars(tz, nullptr);
     const char *ccTzProvider = env->GetStringUTFChars(tzprovider, nullptr);
@@ -56,7 +57,7 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doClock(JNIEnv *env,
 
     Canvas *canvas = do_clock(lat, lon, offset,
                             width, ccProvider, ccTzProvider, ccTz,
-                            lightdark, monam, wenam);
+                            lightdark, monam, wenam, clock);
 
 
     for (int i = 0; i < nbrMElements && i < 12; i++) {

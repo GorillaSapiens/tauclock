@@ -37,7 +37,7 @@ foreach $x (@x) {
 
    `montage -border 0 -geometry 1024x moon.png out.png moon$i\_.png`;
 
-   `convert moon$i\_.png -strokewidth 5 -stroke white -fill black -pointsize 144 -gravity center -font DejaVu-Sans-Mono-Bold -draw "text 0,0 $place" moon$i.png`;
+   `convert moon$i\_.png -strokewidth 10 -stroke red -fill transparent -pointsize 288 -gravity center -font DejaVu-Sans-Mono-Bold -draw "text 0,0 $place" moon$i.png`;
 
    $i++;
 }

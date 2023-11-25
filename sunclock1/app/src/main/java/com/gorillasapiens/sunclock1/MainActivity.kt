@@ -175,10 +175,20 @@ class MainActivity : AppCompatActivity() {
                 catch (e: Exception) {
                     // ignore it
                 }
+                var offset = 0.0
+                if (mOffset == "manual") {
+                    try {
+                        offset = manualOffset2Double()
+                    }
+                    catch (e: Exception) {
+                        // do nothing
+                    }
+                }
                 val something = doGlobe(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
                     mLastLocation?.altitude ?: 0.0,
+                    offset,
                     min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                     tzname
                 )
@@ -243,6 +253,7 @@ class MainActivity : AppCompatActivity() {
                         mLastLocation?.latitude ?: -181.0,
                         mLastLocation?.longitude ?: -181.0,
                         mLastLocation?.altitude ?: 0.0,
+                        offset,
                         min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                         tzname
                     )
@@ -983,5 +994,5 @@ class MainActivity : AppCompatActivity() {
         weekdaynames: Array<String>,
         clock: Boolean
     ) : IntArray
-    private external fun doGlobe(lat:Double, lon:Double, spin:Double, width:Int, tzname:String) : IntArray
+    private external fun doGlobe(lat:Double, lon:Double, spin:Double, offset:Double, width:Int, tzname:String) : IntArray
 }

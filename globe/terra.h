@@ -22,7 +22,7 @@
 Canvas *do_terra(double lat,
                  double lon,
                  double spin,
-                 double jd,
+                 double offset,
                  int width,
                  const char *tzname);
 

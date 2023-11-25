@@ -124,10 +124,30 @@ void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzna
 Canvas *do_terra(double lat,
                  double lon,
                  double spin,
-                 double jd,
+                 double offset,
                  int width,
                  const char *tzname) {
 
+   time_t now = time(NULL) + offset * 24.0 * 60.0 * 60.0;
+
+   if (offset > 19000000.0) { // it's a date!
+      struct tm tm = { 0 };
+      tm.tm_year = (int)(offset / 10000.0) - 1900;
+      tm.tm_mon = ((int)(offset / 100.0) % 100) - 1;
+      tm.tm_mday = ((int)(offset) % 100);
+      now = mktime(&tm);
+
+      //printf("%f %d %d %d %d %ld\n", offset,
+      //   (int)offset, tm.tm_year, tm.tm_mon, tm.tm_mday, now);
+
+      now += (offset - (double)((int)offset)) * 24.0 * 60.0 * 60.0;
+   }
+
+   // round to nearest minute
+   now = (now + 30) / 60;
+   now *= 60;
+
+   double jd = time_t2julian(now);
    struct λβ λβ = ə46(jd);
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);

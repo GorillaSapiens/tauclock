@@ -91,11 +91,12 @@ JNIEXPORT jintArray JNICALL
 Java_com_gorillasapiens_sunclock1_MainActivity_doGlobe(JNIEnv *env, jobject thiz, jdouble lat,
                                                        jdouble lon,
                                                        jdouble spin,
+                                                       jdouble offset,
                                                        jint width,
                                                        jstring tzname) {
     jboolean garbage = false;
     const char *str = env->GetStringUTFChars(tzname, &garbage);
-    Canvas *canvas = do_terra(lat, lon, spin, width, str);
+    Canvas *canvas = do_terra(lat, lon, spin, offset, width, str);
     env->ReleaseStringUTFChars(tzname, str);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;

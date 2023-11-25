@@ -48,6 +48,7 @@ import kotlin.math.*
 
 
 class MainActivity : AppCompatActivity() {
+    private var mMode = 0
     private var mDrawableInitialized = false
     private val mPermissionID = 44
     private var mSunClockDrawable: SunclockDrawable? = null
@@ -224,17 +225,43 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             try {
-                val something = doClock(
-                    mLastLocation?.latitude ?: -181.0,
-                    mLastLocation?.longitude ?: -181.0,
-                    offset,
-                    min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
-                    displayProvider, mTimeZoneProvider, tzname,
-                    ((mLight shl 8) or mDark), monthnames, weekdaynames,
-                    true
-                )
-                mSunClockDrawable?.setThing(something)
-                mImageView?.invalidate()
+                if (mMode == 0) {
+                    val something = doClock(
+                        mLastLocation?.latitude ?: -181.0,
+                        mLastLocation?.longitude ?: -181.0,
+                        offset,
+                        min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                        displayProvider, mTimeZoneProvider, tzname,
+                        ((mLight shl 8) or mDark), monthnames, weekdaynames,
+                        true
+                    )
+                    mSunClockDrawable?.setThing(something)
+                    mImageView?.invalidate()
+                }
+                else if (mMode == 1) {
+                    val something = doGlobe(
+                        mLastLocation?.latitude ?: -181.0,
+                        mLastLocation?.longitude ?: -181.0,
+                        mLastLocation?.altitude ?: 0.0,
+                        min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                        tzname
+                    )
+                    mSunClockDrawable?.setThing(something)
+                    mImageView?.invalidate()
+                }
+                else if (mMode == 2) {
+                    val something = doClock(
+                        mLastLocation?.latitude ?: -181.0,
+                        mLastLocation?.longitude ?: -181.0,
+                        offset,
+                        min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
+                        displayProvider, mTimeZoneProvider, tzname,
+                        ((mLight shl 8) or mDark), monthnames, weekdaynames,
+                        false
+                    )
+                    mSunClockDrawable?.setThing(something)
+                    mImageView?.invalidate()
+                }
             }
             catch (e: Exception) {
                 Log.d("debug", e.toString())
@@ -628,6 +655,16 @@ class MainActivity : AppCompatActivity() {
             ).show()
             mNeedUpdate = true
             exportSettings()
+        }
+
+        val modeButton: Button = findViewById(R.id.modeButton)
+        modeButton.setOnClickListener { v ->
+            val labels = arrayOf("【🌞】🌍🌔", "🌞【🌍】🌔", "🌞🌍【🌔】")
+            mMode++
+            mMode %= 3
+            val modeButton: Button = findViewById(R.id.modeButton)
+            modeButton.setText(labels[mMode])
+            mNeedUpdate = true
         }
 
         val settingsButton: Button = findViewById(R.id.settingsButton)

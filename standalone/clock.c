@@ -788,7 +788,7 @@ do_moon_draw_helper(Canvas * canvas,
              int cy,
              int radius,
              struct FD FD,
-             int is_up,
+             bool is_up,
              double bla,
              double rot) {
 
@@ -840,37 +840,13 @@ do_moon_draw_helper(Canvas * canvas,
             unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 
             if (dark) {
-#if 0
-               int r = c & 0xFF;
-               int g = (c >> 8) & 0xFF;
-               int b = (c >> 16) & 0xFF;
-               r >>= 1;
-               g >>= 1;
-               b >>= 1;
-               c = 0xFF000000 | (r) | (g << 8) | (b << 16);
-#endif
-               c = COLOR_BLACK;
+               c = COLOR_DRAGON(48); //COLOR_MOONBAND;
             }
 
             if ((cx+x+cy+y) % 2) {
                poke_canvas(canvas, cx + x, cy + y, LOCK(c));
             }
             else {
-#if 0
-               unsigned int color = peek_canvas(canvas, cx + x, cy + y);
-               int r = c & 0xFF;
-               int g = (c >> 8) & 0xFF;
-               int b = (c >> 16) & 0xFF;
-               int r2 = color & 0xFF;
-               int g2 = (color >> 8) & 0xFF;
-               int b2 = (color >> 16) & 0xFF;
-
-               r = (r/2+128) * r2 / 256;
-               g = (g/2+128) * g2 / 256;
-               b = (b/2+128) * b2 / 256;
-
-               c = 0xFF000000 | (r) | (g << 8) | (b << 16);
-#endif
                poke_canvas(canvas, cx + x, cy + y, c);
             }
          }
@@ -884,7 +860,7 @@ do_moon_draw_helper(Canvas * canvas,
 void
 do_moon_draw_tf(Canvas * canvas,
              double jd,
-             int is_up,
+             bool is_up,
              struct φλ φλ,
              bool debug) {
 
@@ -945,7 +921,7 @@ do_moon_draw_tf(Canvas * canvas,
 void
 do_moon_draw(Canvas * canvas,
              double jd,
-             int is_up,
+             bool is_up,
              struct φλ φλ) {
    do_moon_draw_tf(canvas, jd, is_up, φλ, false);
 }
@@ -953,7 +929,7 @@ do_moon_draw(Canvas * canvas,
 void
 do_moon_draw_debug(Canvas * canvas,
              double jd,
-             int is_up,
+             bool is_up,
              struct φλ φλ) {
    do_moon_draw_tf(canvas, jd, is_up, φλ, true);
 }
@@ -1624,7 +1600,7 @@ Canvas *do_all(double lat,
    // actually draw the text for realsies
    resolve_delayed_text(dtq, canvas);
 
-   //do_moon_draw_debug(canvas, jd, 0, φλ);
+   //do_moon_draw_debug(canvas, jd, true, φλ);
 
    return canvas;
 }

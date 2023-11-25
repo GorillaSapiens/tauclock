@@ -36,9 +36,10 @@ typedef struct DrawFont {
 #endif
 
 #define COLOR_BLACK      RGB(  0,   0,   0)
+#define COLOR_DRAGON(n)  RGB(  n,   n,   n)
 #define COLOR_BLUE       RGB(  0,   0, 255)
 #define COLOR_CYAN       RGB(  0, 255, 255)
-#define COLOR_DARKBLUE   RGB(  0,   0, 128)
+#define COLOR_DARKBLUE   RGB(  0,   0, 127)
 #define COLOR_DARKGRAY   RGB( 64,  64,  64)
 #define COLOR_GRAY       RGB(128, 128, 128)
 #define COLOR_GREEN      RGB(  0, 255,   0)

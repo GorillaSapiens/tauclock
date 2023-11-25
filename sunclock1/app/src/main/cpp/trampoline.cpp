@@ -20,7 +20,7 @@ Java_com_gorillasapiens_sunclock1_AlarmStorage_doWhenIsIt(JNIEnv *env, jobject t
 
 extern "C"
 JNIEXPORT jintArray JNICALL
-Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
+Java_com_gorillasapiens_sunclock1_MainActivity_doClock(JNIEnv *env,
                      jobject thiz,
                      jdouble lat,
                      jdouble lon,
@@ -54,7 +54,7 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doAll(JNIEnv *env,
        wenam[i] = env->GetStringUTFChars(elem, nullptr);
     }
 
-    Canvas *canvas = do_all(lat, lon, offset,
+    Canvas *canvas = do_clock(lat, lon, offset,
                             width, ccProvider, ccTzProvider, ccTz,
                             lightdark, monam, wenam);
 

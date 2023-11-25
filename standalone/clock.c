@@ -1189,7 +1189,7 @@ void do_center(struct delayed_text_queue *dtq,
 /// @param canvas The Canvas to draw on
 /// @param now The current time_t
 /// @param JD The current Julian Date
-/// @param offset The offset passed into do_all
+/// @param offset The offset passed into do_clock
 /// @param tzProvider Name of the timezone provider
 /// @return void
 void do_debug_info(struct delayed_text_queue *dtq,
@@ -1526,16 +1526,16 @@ void do_eclipses(struct delayed_text_queue *dtq, Canvas *canvas, double jd, doub
 /// @param monam Array of month names for localization, Jan=0
 /// @param wenam Array of weekday names for localization, Sun=0
 /// @return A canvas that has been drawn upon
-Canvas *do_all(double lat,
-               double lon,
-               double offset,
-               int width,
-               const char *locprovider,
-               const char *tzprovider,
-               const char *tz,
-               int lightdark,
-               const char *monam[],
-               const char *wenam[]) {
+Canvas *do_clock(double lat,
+                 double lon,
+                 double offset,
+                 int width,
+                 const char *locprovider,
+                 const char *tzprovider,
+                 const char *tz,
+                 int lightdark,
+                 const char *monam[],
+                 const char *wenam[]) {
 
    // clear locale, to use the system provided locale
    setlocale(LC_ALL, "");

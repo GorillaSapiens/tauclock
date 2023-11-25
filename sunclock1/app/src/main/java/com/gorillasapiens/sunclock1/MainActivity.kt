@@ -224,7 +224,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             try {
-                val something = doAll(
+                val something = doClock(
                     mLastLocation?.latitude ?: -181.0,
                     mLastLocation?.longitude ?: -181.0,
                     offset,
@@ -309,13 +309,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkSystemAlertPermission() {
         val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
-        if (activityManager.isLowRamDevice()) {
+        if (activityManager.isLowRamDevice) {
             val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(this)
             alertDialogBuilder.setTitle("Low Ram Device")
             alertDialogBuilder.setMessage(
                 "Repeating alarms will not function on low RAM devices.")
             alertDialogBuilder.setPositiveButton("Ok",
-                DialogInterface.OnClickListener { arg0, arg1 ->
+                { arg0, arg1 ->
                 })
             alertDialogBuilder.setCancelable(false)
             alertDialogBuilder.show()
@@ -330,7 +330,7 @@ class MainActivity : AppCompatActivity() {
                                 "for proper functioning of repeating alarms, and needs to be turned on manually " +
                                 "for this app in system settings.")
                     alertDialogBuilder.setPositiveButton("Ok",
-                        DialogInterface.OnClickListener { arg0, arg1 ->
+                        { arg0, arg1 ->
                             val intent = Intent(
                                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                 Uri.parse("package:$packageName")
@@ -399,7 +399,7 @@ class MainActivity : AppCompatActivity() {
                     mLastLocation?.longitude = matcher.group(2)?.toDouble() ?: -181.0
                     mLastLocation?.altitude = 0.0
                 }
-                catch (e: Exception) {
+                catch (_: Exception) {
                 }
             }
         }
@@ -512,7 +512,7 @@ class MainActivity : AppCompatActivity() {
                     "FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER " +
                     "DEALINGS IN THE SOFTWARE.")
         alertDialogBuilder.setPositiveButton("Ok",
-            DialogInterface.OnClickListener { arg0, arg1 ->
+            { arg0, arg1 ->
                 if (!checkBox.isChecked) {
                     doEULA()
                 }
@@ -537,7 +537,7 @@ class MainActivity : AppCompatActivity() {
         actionBar?.title = "ταμ clock v" + info.versionName
         supportActionBar?.title = "ταμ clock v" + info.versionName
 
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             actionBar?.hide()
             supportActionBar?.hide()
         }
@@ -643,7 +643,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(v!!.context, "Offset Provider setting is not 'manual'", Toast.LENGTH_SHORT).show()
                         return
                     }
-                    manualOffsetAdjust(-1);
+                    manualOffsetAdjust(-1)
                     mNeedUpdate = true
                     exportSettings()
                 }
@@ -937,7 +937,7 @@ class MainActivity : AppCompatActivity() {
         mNeedUpdate = true
     }
 
-    private external fun doAll(
+    private external fun doClock(
         lat: Double, lon: Double, offset: Double,
         width: Int, provider: String, tzprovider: String, tz: String,
         lightdark: Int,

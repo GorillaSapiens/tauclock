@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "astro.h"
 #include "precise.h"
 #include "draw.h"
 #include "globei.h"
@@ -115,9 +116,19 @@ void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzna
 ///
 /// @param lat The observer's Latitude in degrees, South is negative
 /// @param lon The observer's Longitude in degrees, West is negative
-/// @param offset An offset from the current Julian Date
+/// @param spin Spin to put on the globe
+/// @param jd The current julian date
+/// @param width The canvas width
+/// @param tzname timezone name to display
 /// @return A canvas that has been drawn upon
-Canvas *do_terra(double lat, double lon, double spin, int width, const char *tzname) {
+Canvas *do_terra(double lat,
+                 double lon,
+                 double spin,
+                 double jd,
+                 int width,
+                 const char *tzname) {
+
+   struct λβ λβ = ə46(jd);
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
@@ -157,8 +168,8 @@ Canvas *do_terra(double lat, double lon, double spin, int width, const char *tzn
    for (int r = 1; r < size/2; r += RSTEP(r)) {
       for (double t = 0.0; t < 360.0; t += TSTEP(r)) {
 
-	      int x = ((double)size/2.0) + (double) r * cos_deg(t) + .5;
-	      int y = ((double)size/2.0) + (double) r * sin_deg(t) + .5;
+         int x = ((double)size/2.0) + (double) r * cos_deg(t) + .5;
+         int y = ((double)size/2.0) + (double) r * sin_deg(t) + .5;
 
          // compute z based on x and y
 
@@ -199,6 +210,9 @@ Canvas *do_terra(double lat, double lon, double spin, int width, const char *tzn
             double lat = asin_deg(-yy / (double) radius);
             double lon = atan2_deg(xx, -zz);
 
+            struct φλ φλ = { lat, lon };
+            struct Aa Aa = ə25(jd, φλ, ə27(jd, λβ));
+
             // now convert to bitmap coordinates
             int by = round((180.0 - (lat + 90.0)) * ((double) rows) / 180.0);
             int bx = round((lon + 180.0) * ((double) columns) / 360.0);
@@ -215,6 +229,9 @@ Canvas *do_terra(double lat, double lon, double spin, int width, const char *tzn
             ccc |= (c & 0x000000FF) << 16;
             c = ccc;
 #endif
+            if (Aa.a < 0.0) {
+               c = ((c & 0xFEFEFEFE) >> 1) | 0x80000000;
+            }
 
             int xl = RSTEP(r) / 2;
             int yl = xl;
@@ -256,7 +273,7 @@ int main (int argc, char **argv) {
    double lon = atof(argv[3]);
    double spin = atof(argv[4]);
 
-   Canvas *canvas = do_terra(lat, lon, spin, size, NULL);
+   Canvas *canvas = do_terra(lat, lon, spin, 0.0, size, NULL);
    dump_canvas(canvas, NULL);
 }
 #endif

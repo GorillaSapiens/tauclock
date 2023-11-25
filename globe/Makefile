@@ -21,7 +21,7 @@ all:
 	composite globe2.png globe_top_bathy_bigger.png globe.png
 	convert globe.png globe.xpm
 	./bitmapish.pl < globe.xpm > globei.h
-	gcc -g -DSTANDALONE -I../maths -I../standalone ../maths/trig1.c ../standalone/draw.c globe.c -lm
+	gcc -g -DSTANDALONE -I../maths -I../standalone ../maths/astro.c ../maths/precise.c ../standalone/draw.c ../standalone/schrift.c terra.c -lm
 	./a.out 512 0 0 0 > zero.raw
 	convert -size 512x512 -depth 8 RGBA:zero.raw -scale 1024x1024 zero.png
 	./a.out 512 90 0 0 > x.raw

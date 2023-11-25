@@ -17,6 +17,8 @@
 #ifndef _INCLUDE_CLOCK_H_
 #define _INCLUDE_CLOCK_H_
 
+#include <stdbool.h>
+
 #include "draw.h"
 
 Canvas *do_clock(double lat,
@@ -28,7 +30,8 @@ Canvas *do_clock(double lat,
                  const char *tz,
                  int lightdark,
                  const char *monam[],
-                 const char *wenam[]);
+                 const char *wenam[],
+                 bool clock);
 
 int do_when_is_it(double lat, double lon, int category, int type, int delayMinutes);
 

@@ -74,7 +74,8 @@ int main(int argc, char *argv[]) {
 
    Canvas *canvas =
       do_clock(atof(argv[1]), atof(argv[2]), offset, width, provider,
-             "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL);
+             "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL,
+             true);
 
    dump_canvas(canvas, "out.bin");
    delete_canvas(canvas);

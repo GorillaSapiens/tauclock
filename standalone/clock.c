@@ -913,8 +913,9 @@ do_moon_draw_tf(Canvas * canvas,
    }
    else {
       printf("bla=%lf brng=%lf\n", brightlimbangle, brng);
-      do_moon_draw_helper(canvas, jd, 512, 512, 512,
-                         FD, is_up, brightlimbangle, brng);
+      do_moon_draw_helper(canvas, jd,
+         canvas->w / 2, canvas->h / 2, canvas->w / 2,
+         FD, is_up, brightlimbangle, brng);
    }
 }
 
@@ -1525,6 +1526,7 @@ void do_eclipses(struct delayed_text_queue *dtq, Canvas *canvas, double jd, doub
 /// @param lightdark controls which regions are considered light and dark
 /// @param monam Array of month names for localization, Jan=0
 /// @param wenam Array of weekday names for localization, Sun=0
+/// @param clock true for clock, false for luna
 /// @return A canvas that has been drawn upon
 Canvas *do_clock(double lat,
                  double lon,
@@ -1535,7 +1537,8 @@ Canvas *do_clock(double lat,
                  const char *tz,
                  int lightdark,
                  const char *monam[],
-                 const char *wenam[]) {
+                 const char *wenam[],
+                 bool clock) {
 
    // clear locale, to use the system provided locale
    setlocale(LC_ALL, "");
@@ -1580,16 +1583,23 @@ Canvas *do_clock(double lat,
    //// drawing begins here
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 
-   if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
-      double now_angle =
-         do_sun_bands(dtq, canvas, now, jd, φλ, lightdark);
-      do_planet_bands(dtq, canvas, now_angle, jd, φλ);
+   if (clock) {
+      if (!(lat > 90.0 || lon > 180.0 || lat < -90.0 || lon < -180.0)) {
+         double now_angle =
+            do_sun_bands(dtq, canvas, now, jd, φλ, lightdark);
+         do_planet_bands(dtq, canvas, now_angle, jd, φλ);
 
-      do_eclipses(dtq, canvas, jd, now_angle);
+         do_eclipses(dtq, canvas, jd, now_angle);
+      }
+
+      // information in the center
+      do_center(dtq, canvas, now, φλ, monam, wenam);
    }
-
-   // information in the center
-   do_center(dtq, canvas, now, φλ, monam, wenam);
+   else {
+      struct Aa Aa = ə25(jd, φλ, ə27(jd, ə65(jd)));
+      double HORIZON = 0.0;
+      do_moon_draw_debug(canvas, jd, Aa.a > HORIZON, φλ);
+   }
 
    // lower right corner
    do_debug_info(dtq, canvas, now, jd, offset, tzprovider);
@@ -1599,8 +1609,6 @@ Canvas *do_clock(double lat,
 
    // actually draw the text for realsies
    resolve_delayed_text(dtq, canvas);
-
-   //do_moon_draw_debug(canvas, jd, true, φλ);
 
    return canvas;
 }

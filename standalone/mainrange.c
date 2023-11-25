@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
 
       clock_gettime(CLOCK_MONOTONIC, &before);
       Canvas *canvas =
-         do_all(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
+         do_clock(atof(argv[1]), atof(argv[2]), offset, 1024, provider,
                "tzprovider", "timezone", 0, NULL, NULL);
       clock_gettime(CLOCK_MONOTONIC, &after);
 

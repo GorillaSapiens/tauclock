@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
    int width = getenv("WIDTH") ? atoi(getenv("WIDTH")) : 1024;
 
    Canvas *canvas =
-      do_all(atof(argv[1]), atof(argv[2]), offset, width, provider,
+      do_clock(atof(argv[1]), atof(argv[2]), offset, width, provider,
              "tzprovider", "p\are\afix\ntimezone", lightdark, NULL, NULL);
 
    dump_canvas(canvas, "out.bin");

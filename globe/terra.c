@@ -185,11 +185,17 @@ Canvas *do_terra(double lat,
 #define RSTEP(r) (((r) < size/6) ? (1) : (((r) < size/3) ? (3) : (5)))
 #define TSTEP(r) (RSTEP(r) * (360.0 / (2.0 * 3.1415 * (double)(r))))
 
+#ifdef OLD
    for (int r = 1; r < size/2; r += RSTEP(r)) {
       for (double t = 0.0; t < 360.0; t += TSTEP(r)) {
 
          int x = ((double)size/2.0) + (double) r * cos_deg(t) + .5;
          int y = ((double)size/2.0) + (double) r * sin_deg(t) + .5;
+#else
+   for (int y = 0; y < size; y++) {
+      int k = (size/2) * cos_deg(asin_deg((double)(y - (size/2)) / (double)(size/2)));
+      for (int x = size/2 - k; x < size/2 + k; x++) {
+#endif
 
          // compute z based on x and y
 
@@ -253,6 +259,7 @@ Canvas *do_terra(double lat,
                c = ((c & 0xFEFEFEFE) >> 1) | 0x80000000;
             }
 
+#ifdef OLD
             int xl = RSTEP(r) / 2;
             int yl = xl;
             for (int dx = -xl; dx < xl+1; dx++) {
@@ -260,6 +267,9 @@ Canvas *do_terra(double lat,
                   poke_canvas(canvas, x+dx, y+dy, c);
                }
             }
+#else
+            poke_canvas(canvas, x, y, c);
+#endif
          }
       }
    }

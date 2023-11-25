@@ -8,7 +8,7 @@
 extern "C" {
 #include "clock.h"
 #include "draw.h"
-#include "globe.h"
+#include "terra.h"
 }
 
 extern "C"
@@ -94,7 +94,7 @@ Java_com_gorillasapiens_sunclock1_MainActivity_doGlobe(JNIEnv *env, jobject thiz
                                                        jstring tzname) {
     jboolean garbage = false;
     const char *str = env->GetStringUTFChars(tzname, &garbage);
-    Canvas *canvas = do_globe(lat, lon, spin, width, str);
+    Canvas *canvas = do_terra(lat, lon, spin, width, str);
     env->ReleaseStringUTFChars(tzname, str);
     jintArray ret = env->NewIntArray(2 + canvas->h * canvas->w);
     jint w = canvas->w;

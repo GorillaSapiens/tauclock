@@ -25,7 +25,7 @@ add_library( # Sets the name of the library.
 
 		../../../../../maths/precise.c
 		../../../../../maths/astro.c
-		../../../../../globe/globe.c
+		../../../../../globe/terra.c
 		../../../../../standalone/clock.c
 		../../../../../standalone/draw.c
 		../../../../../standalone/schrift.c

@@ -117,7 +117,7 @@ void do_text(Canvas *canvas, int width, double lat, double lon, const char *tzna
 /// @param lon The observer's Longitude in degrees, West is negative
 /// @param offset An offset from the current Julian Date
 /// @return A canvas that has been drawn upon
-Canvas *do_globe(double lat, double lon, double spin, int width, const char *tzname) {
+Canvas *do_terra(double lat, double lon, double spin, int width, const char *tzname) {
 
    Canvas *canvas = new_canvas(width, width, COLOR_BLACK);
 

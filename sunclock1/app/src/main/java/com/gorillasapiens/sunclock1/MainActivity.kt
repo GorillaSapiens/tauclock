@@ -670,13 +670,14 @@ class MainActivity : AppCompatActivity() {
 
         val modeButton: Button = findViewById(R.id.modeButton)
         modeButton.setOnClickListener { v ->
-            val labels = arrayOf("【🌞】🌍🌔", "🌞【🌍】🌔", "🌞🌍【🌔】")
+            val labels = arrayOf("〖🌞〗🌍🌔", "🌞〖🌍〗🌔", "🌞🌍〖🌔〗")
             mMode++
             mMode %= 3
             val modeButton: Button = findViewById(R.id.modeButton)
             modeButton.setText(labels[mMode])
             mNeedUpdate = true
         }
+        modeButton.setText("〖🌞〗🌍🌔")
 
         val settingsButton: Button = findViewById(R.id.settingsButton)
         settingsButton.setOnClickListener { v ->

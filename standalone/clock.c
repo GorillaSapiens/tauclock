@@ -841,15 +841,8 @@ do_moon_draw_helper(Canvas * canvas,
             unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 
             if (dark) {
-               if ((y+cy) % 2) {
-                  if (!((x + cx) % 2)) {
-                     c = COLOR_DRAGON(0);
-                  }
-               }
-               else {
-                  if ((x + cx - 2*(((y + cy) % 4)/2)) % 4) {
-                     c = COLOR_DRAGON(0);
-                  }
+               if (((cy+y) % 2) || ((cx+x) % 2)) {
+                  c = COLOR_DRAGON(0);
                }
             }
 
@@ -924,7 +917,7 @@ do_moon_draw_tf(Canvas * canvas,
    else {
       printf("bla=%lf brng=%lf\n", brightlimbangle, brng);
       do_moon_draw_helper(canvas, jd,
-         canvas->w / 2 - 7, canvas->h / 2 - 7, canvas->w / 2 - 7,
+         canvas->w / 2, canvas->h / 2, (canvas->w / 2) - 20,
          FD, is_up, brightlimbangle, brng);
    }
 }

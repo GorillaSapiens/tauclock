@@ -924,7 +924,7 @@ do_moon_draw_tf(Canvas * canvas,
    else {
       printf("bla=%lf brng=%lf\n", brightlimbangle, brng);
       do_moon_draw_helper(canvas, jd,
-         canvas->w / 2, canvas->h / 2, canvas->w / 2,
+         canvas->w / 2 - 7, canvas->h / 2 - 7, canvas->w / 2 - 7,
          FD, is_up, brightlimbangle, brng);
    }
 }

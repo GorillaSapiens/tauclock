@@ -164,17 +164,9 @@ class MainActivity : AppCompatActivity() {
                 if (mRealProviderName != "manual") {
                     mLastLocation?.altitude = 0.0
                 }
-                var tzname = "(initializing...)"
-                try {
-                    val zoneId = mTimeZoneEngine!!.query(
-                        mLastLocation?.latitude ?: 0.0,
-                        mLastLocation?.longitude ?: 0.0
-                    )
-                    tzname = zoneId?.get()?.toString() ?: ""
-                }
-                catch (e: Exception) {
-                    // ignore it
-                }
+                var tzname = getTZname(
+                    mLastLocation?.latitude ?: 0.0,
+                    mLastLocation?.longitude ?: 0.0)
                 var offset = 0.0
                 if (mOffset == "manual") {
                     try {
@@ -210,17 +202,10 @@ class MainActivity : AppCompatActivity() {
                 displayProvider += " [DISABLED!]"
             }
             var tzname : String = TimeZone.getDefault().toZoneId().toString()
-            if (mTimeZoneProvider == "location") {
-                tzname = try {
-                    val zoneId = mTimeZoneEngine!!.query(
-                        mLastLocation?.latitude ?: 0.0,
-                        mLastLocation?.longitude ?: 0.0
-                    )
-                    zoneId?.get()?.toString() ?: ""
-                } catch (e: Exception) {
-                    // do nothing
-                    "(initializing...)"
-                }
+            if (mMode == 1 || mTimeZoneProvider == "location") {
+                tzname = getTZname(
+                    mLastLocation?.latitude ?: 0.0,
+                    mLastLocation?.longitude ?: 0.0)
             }
             else if (mTimeZoneProvider == "manual") {
                 tzname = mManualTimeZone
@@ -248,7 +233,7 @@ class MainActivity : AppCompatActivity() {
                     mSunClockDrawable?.setThing(something)
                     mImageView?.invalidate()
                 }
-                else if (mMode == 1) {
+                else if (mMode == 1) { // earth
                     val something = doGlobe(
                         mLastLocation?.latitude ?: -181.0,
                         mLastLocation?.longitude ?: -181.0,
@@ -260,7 +245,7 @@ class MainActivity : AppCompatActivity() {
                     mSunClockDrawable?.setThing(something)
                     mImageView?.invalidate()
                 }
-                else if (mMode == 2) {
+                else if (mMode == 2) { // moon
                     val something = doClock(
                         mLastLocation?.latitude ?: -181.0,
                         mLastLocation?.longitude ?: -181.0,
@@ -280,6 +265,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         mImageView?.invalidate()
+    }
+
+    private fun getTZname(latitude: Double, longitude: Double): String {
+        var tzname = "(initializing...)"
+        try {
+            val zoneId = mTimeZoneEngine!!.query(
+                latitude, longitude
+            )
+            tzname = zoneId?.get()?.toString() ?: ""
+        } catch (e: Exception) {
+            // ignore it
+        }
+        return tzname
     }
 
     private val runVeryOften: Runnable = object : Runnable {

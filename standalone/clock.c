@@ -824,18 +824,19 @@ do_moon_draw_helper(Canvas * canvas,
             double lu = -ru;
             bool dark = ((u - lu) / (ru - lu)) > FD.F;
 
-            // find lat lon
-            int my = 180 - (int) acos_deg(ez / 1.0);
-            int mx = 180 + (ey > 0.0 ? 1 : -1) *
-               (int) acos_deg(ex / sqrt(ex*ex+ey*ey));
+            // find lat lon pixel
+            // NB: xpm is 720x360, so everything is doubled
+            int my = 360 - (int) (2.0 * acos_deg(ez / 1.0));
+            int mx = 360 + (ey > 0.0 ? 1 : -1) *
+               (int) (2.0 * acos_deg(ex / sqrt(ex*ex+ey*ey)));
 
             //fprintf(stderr, "%d %d => %lf %lf %lf => %d %d\n",
             //   x, y, ex, ey, ez, mx, my);
 
             if (my < 0) my = 0;
-            if (my > 179) my = 179;
+            if (my > 359) my = 359;
             if (mx < 0) mx = 0;
-            if (mx > 359) mx = 359;
+            if (mx > 719) mx = 719;
 
             unsigned int c = moon_xpm_palette[moon_xpm_pixels[my][mx]];
 

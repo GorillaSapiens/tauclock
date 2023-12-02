@@ -2,7 +2,7 @@
 
 $src = $ARGV[0];
 
-@xpm = `convert \"$src\" -scale 360x180 -colors 96 xpm:-`;
+@xpm = `convert \"$src\" -scale 720x360 -colors 96 xpm:-`;
 
 while (!($xpm[0] =~ /^\"/)) {
    shift @xpm;
@@ -45,7 +45,7 @@ print "};\n";
 
 shift @xpm;
 
-print "static unsigned char moon_xpm_pixels[180][360] = {\n";
+print "static unsigned char moon_xpm_pixels[360][720] = {\n";
 while ($xpm[0] =~ /^\"/) {
    $l = shift @xpm;
    $l =~ s/[\x0a\x0d\"]//g;

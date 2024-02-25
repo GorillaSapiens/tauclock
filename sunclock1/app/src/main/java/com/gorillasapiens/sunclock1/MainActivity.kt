@@ -237,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                     val something = doGlobe(
                         mLastLocation?.latitude ?: -181.0,
                         mLastLocation?.longitude ?: -181.0,
-                        mLastLocation?.altitude ?: 0.0,
+                        0.0, // mLastLocation?.altitude ?: 0.0,
                         offset,
                         min(mImageView?.width ?: 1024, mImageView?.height ?: 1024),
                         tzname
